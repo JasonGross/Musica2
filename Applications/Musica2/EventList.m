@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`EventList` *)
 
 (* :History:
+  2004-08-10  bch :  changed MidiToEventList to call MidiSetState
   2004-08-06  bch :  created
 *)
 
@@ -89,7 +90,7 @@ MidiToEventList[m_] :=
             ]
           ]
         ] & /@ #)) & /@
-        MidiSetTimeUnit[MidiSetTiming[MidiSetShape[m, MidiFile], MidiAbsolute], MidiTick][[2]]
+        MidiSetState[m, {MidiShape->MidiFile, MidiTiming->MidiAbsolute, MidiTimeUnit->MidiTick}][[2]]
       )
     ]
 

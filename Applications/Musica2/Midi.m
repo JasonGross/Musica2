@@ -29,7 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
-  2004-08-09  bch :  used Reap/Sow and AppendTo as a speed boost
+  2004-08-10  bch :  added MidiRest* and MidiTie*
+  2004-08-09  bch :  used Reap/Sow and AppendTo as a speed boost, changed param to MidiVoiceReleaseTimeFunction
   2004-08-08  bch :  added this whole "state"-thing, all the MidiSetXxx called by a MidiSetStateLow will have its code moved to its caller and then be deleted
   2004-08-06  bch :  extended MidiVoiceReleaseTimeFunction to also take pitch and velocity
                      added some help/usage-text
@@ -90,9 +91,12 @@ Unprotect[
   MidiPatternTrack,
   MidiPatternType,
   MidiPatternVoice,
-  (*MidiPrintHeader,*)
   MidiRest,
+  MidiRestPitch,
+  MidiRestPitchQ,
   MidiRestQ,
+  MidiRestVelocity,
+  MidiRestVelocityQ,
   MidiSec,
   MidiSetState,
   MidiSetStateLow,
@@ -158,9 +162,12 @@ MidiPatternTiming::usage = ""
 MidiPatternTrack::usage = ""
 MidiPatternType::usage = ""
 MidiPatternVoice::usage = ""
-(*MidiPrintHeader::usage = ""*)
 MidiRest::usage = ""
+MidiRestPitch::usage = ""
+MidiRestPitchQ::usage = ""
 MidiRestQ::usage = "MidiRestQ[expr]"
+MidiRestVelocity::usage = ""
+MidiRestVelocityQ::usage = ""
 MidiSec::usage = ""
 MidiSetState::usage = "MidiSetState[m : Midi[_, _], s_, opts___]"
 MidiSetStateLow::usage = "MidiSetState[m : Midi[_, _], s_, opts___]"
@@ -185,9 +192,6 @@ MidiVoiceReleaseTimeFunction::usage = "Function[{{on, off}, {p, v}, {track, ch}}
 MidiQPM::usage = ""
 
 Begin["`Private`"]
-
-ST[{}] := {}
-ST[x_List] := Transpose[x]/;0<Length[x]
 
 EOT = {MidiEOT,{}};
 
@@ -247,13 +251,15 @@ MidiExpandStates[s_] :=
     Sort[r]
     ]
 
-FillPath[f_,t_] := (* return all in f not in t *)
+(* fill path *)
+FP[f_,t_] := (* return t and all in f not in t *)
   Module[{r=t},
     Scan[If[!MemberQ[t,#[[1]]->_],AppendTo[r,#];]&,f];
     Sort[r]
     ]
 
-FillState[s_]:=
+(* fill state *)
+FS[s_] :=
   Module[{miss},
     (* wich state-parts is missing in s *)
     miss=Complement[#[[1]]&/@MidiStates,#[[1]]&/@s];
@@ -267,11 +273,11 @@ MidiExpandStatePaths[p_] :=
       from = #[[1]];
       to = #[[2]];
       (* fill in missing state - parts with a _ *)
-      from = FillState[from];
+      from = FS[from];
       (* make "from" a list of from's *)
       from = Cases[MidiStatesExpanded, from];
       (* make "to" a list of to's *)
-      to = FillPath[#, to] & /@ from;
+      to = FP[#, to] & /@ from;
       (* make a list of {from, to} *)
       Transpose[{from, to}]
       ) & /@ r;
@@ -460,7 +466,7 @@ MidiImportSMF[fn_String,opts___]:=
       Do[AppendTo[t,ReadTrack[f]],{n}];
       Close[f];
       (*
-      If[MidiPrintHeader/.{opts}/.{MidiPrintHeader->False},
+      If[Verbose/.{opts}/.{Verbose->False},
         Print["FileFormat: ",MidiFileFormat/.h];
         Print["TPQ: ",MidiTPQ/.h];
         Print["Tracks: ",Length[t]];
@@ -494,7 +500,7 @@ MidiNoteOff = 0;
 
 MidiNoteOn = 1;
 
-MidiPatternData = ({_Integer...}|Null);
+MidiPatternData = ({_Integer...}|Null|_MidiTie);
 MidiPatternChord = {{{MidiPatternType,{MidiPatternTrack...}},{{MidiPatternTiming,{MidiPatternData...}}...}}...};
 MidiPatternFile = {{{MidiPatternTiming,{MidiPatternType,MidiPatternData}}...}...};
 MidiPatternInfo = {(
@@ -512,16 +518,24 @@ MidiPatternTrack = (_Integer|{_Integer,_Integer,_Integer});
 MidiPatternType = (MidiNoteOff|MidiNoteOn|2|MidiControlChange|4|5|6|7|MidiSysX0|MidiSysX7|{MidiMeta,_Integer});
 MidiPatternVoice = {{{MidiPatternType,MidiPatternTrack},{{MidiPatternTiming,MidiPatternData}...}}...};
 
-MidiRest = {128,-1}
+MidiRest = {MidiRestPitch,MidiRestVelocity}
 
-MidiRestQ[expr] := MatchQ[expr,{_Integer,_Integer}] && Times@@Sign/@expr==-1
+MidiRestPitch = 128
+
+MidiRestPitchQ[expr_] :=  MatchQ[expr,MidiRestPitch|-MidiRestPitch]
+
+MidiRestQ[expr_] := MatchQ[expr,MidiRest|-MidiRest]
+
+MidiRestVelocity = 128
+
+MidiRestVelocityQ[expr_] := MatchQ[expr,MidiRestVelocity|-MidiRestVelocity]
 
 MidiSetState[m : Midi[_, _], s_, opts___] :=
   Module[
     {
       pr = Verbose /. {opts} /. {Verbose->False},
       f,
-      t = FillPath[MidiGetState[m], MidiGetState[s]],
+      t = FP[MidiGetState[m], MidiGetState[s]],
       p,
       r = m
       },
@@ -638,7 +652,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiVoice) /. (MidiTiming -> _) -> (MidiTiming -> MidiDelta)],
       Sort[tr]
       ]
-    ] /; MatchQ[MidiGetState[m],FillState[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m],FS[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiVoice,MidiTiming->MidiDelta}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -664,7 +678,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Flatten[
         Cases[
           #[[2]],
-          {t$_, e$_, {p$_,v$_}} /; (0 < v$) -> {
+          {t$_, e$_, d$:{p$_,v$_}} /; !MidiRestQ[d$] -> {
               {t$, {MidiNoteOn, {#[[1,2]],p$,v$}}},
               {e$, {MidiNoteOff, {#[[1,2]],p$,0}}}
               }
@@ -688,7 +702,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiFile)],
       tr
       ]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->MidiVoice,MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiVoice,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiFile}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -751,7 +765,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiChord)],
       g
       ]
-    ] /; MatchQ[MidiGetState[m],FillState[{MidiShape->MidiVoice,MidiTimeUnit->MidiTick,MidiTiming->MidiDelta}]]&&(* DONT ALLOW MidiSec HERE!!! *)
+    ] /; MatchQ[MidiGetState[m],FS[{MidiShape->MidiVoice,MidiTimeUnit->MidiTick,MidiTiming->MidiDelta}]]&&(* DONT ALLOW MidiSec HERE!!! *)
          Complement[s,MidiGetState[m]]=={MidiShape->MidiChord}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -793,7 +807,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiVoice)],
       g
       ]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->MidiChord, MidiTiming->MidiDelta}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiChord, MidiTiming->MidiDelta}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiVoice}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -802,7 +816,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiSec)],
       ({f[#[[1]]],#[[2]]}& /@ #)& /@ m[[2]]
       ]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->MidiFile,MidiTimeUnit->MidiTick, MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTimeUnit->MidiTick, MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiSec}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -811,7 +825,7 @@ Module[{f=MidiGetTickToSecFunction[m]},
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiSec)],
       {#[[1]],{f[#[[1]]],#[[2]]}& /@ #[[2]]}&/@m[[2]]
       ]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->(MidiVoice|MidiChord), MidiTimeUnit->MidiTick,MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTimeUnit->MidiTick,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiSec}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -820,7 +834,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiTick)],
       ({f[#[[1]]],#[[2]]}& /@ #)&/@m[[2]]
       ]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->MidiFile,MidiTimeUnit->MidiSec, MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTimeUnit->MidiSec, MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiTick}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
@@ -829,37 +843,38 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiTick)],
       {#[[1]],{f[#[[1]]],#[[2]]}& /@ #[[2]]}&/@m[[2]]
       ]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->(MidiVoice|MidiChord), MidiTimeUnit->MidiSec,MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTimeUnit->MidiSec,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiTick}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiAbsolute)],
     If[0<Length[#],Module[{td=Transpose[#]},td[[1]]=Drop[DeltasToValues[td[[1]]],1];Transpose[td]],#]& /@ m[[2]]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->MidiFile,MidiTiming->MidiDelta}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTiming->MidiDelta}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiAbsolute}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiAbsolute)],
     {#[[1]],Module[{td=Transpose[#[[2]]]},Transpose[{Drop[DeltasToValues[td[[1]]],1],td[[2]]}]]}&/@m[[2]]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->(MidiVoice|MidiChord), MidiTiming->MidiDelta}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTiming->MidiDelta}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiAbsolute}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiDelta)],
     If[0<Length[#],Module[{td=Transpose[Sort[#]]},td[[1]]=ValuesToDeltas[Prepend[td[[1]],0]];Transpose[td]],#]& /@ m[[2]]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiDelta}
 
 MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiDelta)],
     {#[[1]],Module[{td=Transpose[Sort[#[[2]]]]},Transpose[{ValuesToDeltas[Prepend[td[[1]],0]],td[[2]]}]]}&/@m[[2]]
-    ] /; MatchQ[MidiGetState[m], FillState[{MidiShape->(MidiVoice|MidiChord), MidiTiming->MidiAbsolute}]]&&
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiDelta}
 
+(* if you change this, you must run CalcMidiStateRoutes *)
 MidiStates = {
   {MidiShape, {MidiFile, MidiVoice, MidiChord}},
   {MidiTimeUnit, {MidiTick, MidiSec}},
@@ -868,6 +883,7 @@ MidiStates = {
 
 MidiStatesExpanded = MidiExpandStates[MidiStates]
 
+(* if you change this, you must run CalcMidiStateRoutes *)
 MidiStatePaths = {
   (* Shape *)
   {{MidiShape -> MidiFile, MidiTiming -> MidiAbsolute}, {MidiShape -> MidiVoice, MidiTiming->MidiDelta}},
@@ -888,6 +904,7 @@ MidiStatePaths = {
 
 MidiStatePathsExpanded = MidiExpandStatePaths[MidiStatePaths]
 
+(* this data is generated by CalcMidiStateRoutes and then manually pasted in here *)
 MidiStateRoutes = {{{1}, {1, 2}, {1, 3}, {1, 3, 4}, {1, 2, 10, 9, 5}, {1, 2, 10, 9, 5, 6}, {1,
       3, 4, 12, 11, 7}, {1, 3, 4, 12, 11, 7, 8}, {1, 2, 10, 9}, {1, 2,
       10}, {1, 3, 4, 12, 11}, {1, 3, 4, 12}}, {{2, 1}, {2}, {2, 1, 3}, {2, 1,
@@ -927,13 +944,15 @@ MidiSysX7 = 16^^F7;
 
 MidiTempo = {MidiMeta,16^^51};
 
-MidiTie[d_] := -d
+MidiTie[d_?NumberQ] := -d
 
-MidiTieQ[d_] := (IntegerQ[d]&&d<0) || (ListQ[d]&&d[[1]]<0) || (d===-Null)
+MidiTie[d_List] := MidiTie /@ d
+
+MidiTieQ[d_] := MatchQ[d,_MidiTie] || (NumberQ[d]&&d<0) || (ListQ[d]&&Or@@(MidiTieQ/@d))
 
 MidiTimeSignature = {MidiMeta,16^^58};
 
-(* private functions used by MidiImportSMF and MidiExportSMF *)
+(******** private functions used by MidiImportSMF and MidiExportSMF ********)
 
 ReadInt[f_,n_]:=Total[ReadList[f,Byte,n] Table[256^i,{i,n-1,0,-1}]]
 
@@ -1065,9 +1084,12 @@ Protect[
   MidiPatternTrack,
   MidiPatternType,
   MidiPatternVoice,
-  (*MidiPrintHeader,*)
   MidiRest,
+  MidiRestPitch,
+  MidiRestPitchQ,
   MidiRestQ,
+  MidiRestVelocity,
+  MidiRestVelocityQ,
   MidiSec,
   MidiSetState,
   MidiSetStateLow,

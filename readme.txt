@@ -25,14 +25,23 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 :Contact: bo@gcab.net
 
 :History:
+  2004-08-10  bch :  then added some
   2004-08-05  bch :  started writing it
 
 ------------------------------------------------------------
 
-Welcome to Musica2!
+Welcome to Musica2.
 
-Musica2 is an attempt to rewrite musica into something that at least I find easier to use and understand.
-While this might not be achieved I have left the original musica untouched at SourceForge, both the original package and the CVS.
+Musica is an open source project that aims at the creation of a complete Mathematica package for the exploration of the interconnection between Mathematics and Music.
+
+History:
+
+The original Musica was first created by Costis Merziotis and placed at Wolfram:
+http://library.wolfram.com/infocenter/MathSource/4945/
+After contacting Costis we decided to place Musica at SourceForge so that we could both contribute to it.
+Being new to Mathematica I too often couldnt quite get Costis ideas, so when he got too busy at his daytime job and decided to hand Musica over to me I took the chance to make some changes.
+Musica2 is an attempt to rewrite Musica into something that at least I find easier to use and understand.
+While this might not be achieved I have left the original Musica untouched at SourceForge, both the original package and the CVS.
 
 Download:
 
@@ -48,17 +57,16 @@ http://cvs.sourceforge.net/viewcvs.py/musica/Musica2/
 
 Installation:
 
-Im not sure how to do this on Windows, but on Linux I'd put a copy of the Musica2 folder from /Musica2/Applications into the .Mathematica/Applications folder in my home-folder (actually I have a link pointing to the folder, not a copy).
+Im not sure how to do this on Windows, but on Linux I put a copy of the Musica2 folder from /Musica2.yyymmdd/Applications into the .Mathematica/Applications folder in my home-folder (actually I have a link pointing to the folder, not a copy).
 
 Then You just have to do <<Musica2` inside Mathematica as expected.
 
 Feedback:
 
 Please give me feedback! This is the only way this package might get useful for You too.
-You can mail me at bo@gcab.net and hopefully Your mail will not be treated as spam (I'll do my best),
-or You can attend to one of the forums at :
+You can mail me at bo@gcab.net and hopefully Your mail will not be treated as spam (I'll do my best), or You can attend to one of the forums at :
 http://sourceforge.net/forum/?group_id=90149
 
 But most important, Have fun!
 
-Regards/Bo C. Herlin
+/Bo C. Herlin

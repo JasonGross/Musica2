@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Utils`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-9 at 17:9 *)
+(* :History: File created 2004-8-10 at 8:45 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -28,12 +28,13 @@ DeclarePackage["Musica2`Midi`",
  "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", "MidiPatternChord", 
  "MidiPatternData", "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", 
  "MidiPatternMusic", "MidiPatternTiming", "MidiPatternTrack", 
- "MidiPatternType", "MidiPatternVoice", "MidiQPM", "MidiRest", "MidiRestQ", 
- "MidiSec", "MidiSetState", "MidiSetStateLow", "MidiShape", "MidiStatePaths", 
- "MidiStatePathsExpanded", "MidiStateRoutes", "MidiStates", 
- "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", "MidiTick", 
- "MidiTie", "MidiTieQ", "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", 
- "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
+ "MidiPatternType", "MidiPatternVoice", "MidiQPM", "MidiRest", 
+ "MidiRestPitch", "MidiRestPitchQ", "MidiRestQ", "MidiRestVelocity", 
+ "MidiRestVelocityQ", "MidiSec", "MidiSetState", "MidiSetStateLow", 
+ "MidiShape", "MidiStatePaths", "MidiStatePathsExpanded", "MidiStateRoutes", 
+ "MidiStates", "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", 
+ "MidiTick", "MidiTie", "MidiTieQ", "MidiTimeSignature", "MidiTimeUnit", 
+ "MidiTiming", "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
 ];
 
 DeclarePackage["Musica2`Setup`",

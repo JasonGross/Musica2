@@ -76,7 +76,7 @@ COP[e_, p_] :=
     ]
 
 CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
-  Module[{e, g,c,p,pr=Verbose/.{opts}/.{Verbose->False}},
+  Module[{e, g,c,p,sc,pr=Verbose/.{opts}/.{Verbose->False}},
     Unprotect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
     MidiStatesExpanded = MidiExpandStates[MidiStates];
     MidiStatePathsExpanded = MidiExpandStatePaths[MidiStatePaths];
@@ -84,17 +84,17 @@ CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
     e = SW[e, m, pr];
     If[MemberQ[e, {{_, _}, \[Infinity]}], Print["not connected?"]];
     g = AddEdges[EmptyGraph[Length[MidiStatesExpanded], Type -> Directed], ReplacePart[#, EdgeWeight -> #[[2]], {2}] & /@ e];
-    If[pr,ShowGraph[g, VertexNumber -> True]];
+    If[pr,ShowGraph[SetVertexLabels[g,StringJoin[(StringTake[ToString[#[[2]]], {5}]) & /@ #] & /@ MidiStatesExpanded], VertexNumber -> True]];
+    sc=Length[MidiStatesExpanded];
     c=0;
     MidiStateRoutes = Table[
       p=ShortestPath[g, f, t];
       If[1<Length[p],c+=COP[e,p]];
       p,
-      {f, Length[MidiStatesExpanded]},
-      {t, Length[MidiStatesExpanded]}
+      {f, sc},{t, sc}
       ];
     Protect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
-    c/Length[MidiStatesExpanded]^2
+    c/(#^2-#)&[sc]
     ]
 
 MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m",opts___] :=
