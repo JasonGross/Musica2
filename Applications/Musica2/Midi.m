@@ -29,9 +29,12 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-08-15  bch :  dropped the voice-nr from shape voice and chord
+                     renamed MidiAddEOT to MidiFixEOT and MidiNormalizeNoteOff to MidiFixNoteOff
   2004-08-14  bch :  yet another rest/tie scheme, now with MidiDataAnyValue and MidiDataNoValue, MidiRest* is removed
                      added MidiMilliSec as an integer MidiTimeUnit
                      added MidiPar and MidiSeq
+                     changed MidiEmpty to have one empty track rather than no track at all
   2004-08-13  bch :  added Midi(Add|Get|Rem|Set)(Notes|QPM) and MidiEmpty
                      renamed MidiEqualizeEOT to MidiAddEOT
   2004-08-10  bch :  removed MidiAddEOT, now incorporated into MidiEqualizeEOT
@@ -58,7 +61,6 @@ BeginPackage["Musica2`Midi`",
 Unprotect[
   Midi,
   MidiAbsolute,
-  MidiAddEOT,
   MidiAddEvents,
   MidiAddNotes,
   MidiAddQPM,
@@ -76,6 +78,8 @@ Unprotect[
   MidiExportSMF,
   MidiFile,
   MidiFileFormat,
+  MidiFixEOT,
+  MidiFixNoteOff,
   MidiGetChannels,
   MidiGetDuration,
   MidiGetDurations,
@@ -93,7 +97,6 @@ Unprotect[
   MidiKeySignature,
   MidiMeta,
   MidiMilliSec,
-  MidiNormalizeNoteOff,
   MidiNoteOff,
   MidiNoteOn,
   MidiPar,
@@ -140,7 +143,6 @@ Unprotect[
 
 Midi::usage = "Midi[i, d] represents a midi object where i is the info about d, the midi data."
 MidiAbsolute::usage = "MidiTiming can be either MidiAbsolute or MidiDelta. If MidiTiming is MidiAbsolute, all timing information are absolute values. Observe that when in shape MidiVoice or MidiChord, MidiAbsolute means end-timing"
-MidiAddEOT::usage = "MidiAddEOT[m_Midi]"
 MidiAddEvents::usage = "MidiAddEvents[mx_Midi,e:MidiPatternFile]"
 MidiAddNotes::usage = "MidiAddNotes[m_Midi,n : {{{{_,_},{_,_,_}}...}...}]"
 MidiAddQPM::usage = "MidiAddQPM[m_Midi, q : {{_, _} ...}]"
@@ -158,6 +160,8 @@ MidiExpandStatePaths::usage = "MidiExpandStatePaths[p_]"
 MidiExportSMF::usage = "MidiExportSMF[fn_String,m_Midi,opts___]"
 MidiFile::usage = ""
 MidiFileFormat::usage = ""
+MidiFixEOT::usage = "MidiFixEOT[m_Midi]"
+MidiFixNoteOff::usage = "MidiFixNoteOff[m_Midi, v2z_:False]"
 MidiGetChannels::usage = "MidiGetChannels[m_Midi]"
 MidiGetDuration::usage = "MidiGetDuration[m_Midi]"
 MidiGetDurations::usage = "MidiGetDurations[m_Midi]"
@@ -175,7 +179,6 @@ MidiImportSMF::usage = "MidiImportSMF[fn_String,opts___]"
 MidiKeySignature::usage = ""
 MidiMeta::usage = ""
 MidiMilliSec::usage = "MidiMilliSec"
-MidiNormalizeNoteOff::usage = "MidiNormalizeNoteOff[m_Midi, v2z_:False]"
 MidiNoteOff::usage = ""
 MidiNoteOn::usage = ""
 MidiPar::usage = "MidiPar[m:{_Midi,_Midi...}, opts___]"
@@ -241,20 +244,6 @@ Options[Midi]=
     MidiFileFormat -> 1,
     MidiTPQ -> 960
     }
-
-MidiAddEOT[mx_Midi,keep_:False] := (* this function also adds EOT if missing. if the keep parameter is true the max-duration is kept *)
-  Module[{d,m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]},
-    If[keep,d=MidiGetDuration[m]];
-    m[[2]] = Cases[Sort[#],e$_/;!MatchQ[e$,{_,EOT}]->e$]& /@ m[[2]];
-    If[!keep,d=MidiGetDuration[m]];
-    MidiSetState[
-      Midi[
-        Sort[m[[1]]],
-        Append[#,{d,EOT}]& /@ m[[2]]
-        ],
-      MidiGetState[mx]
-      ]
-    ]
 
 MidiAddEvents[mx_Midi,e_]:=
   Module[{m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}],t,te,tm},
@@ -347,7 +336,7 @@ MidiExpandStatePaths[p_] :=
 MidiExportSMF[fn_String,mx_Midi, opts___] :=
   Module[{m=mx,f=Null},
     m = MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiDelta,MidiTimeUnit->MidiTick}];
-    m = MidiAddEOT[m];(* an option for this? especially since it sorts the events! *)
+    m = MidiFixEOT[m];(* an option for this? especially since it sorts the events! *)
     f = OpenWriteBinary[fn];
     Catch[
       WriteString[f,"MThd"];
@@ -365,6 +354,34 @@ MidiExportSMF[fn_String,mx_Midi, opts___] :=
     m
     ]
 
+MidiFixEOT[mx_Midi,keep_:False] := (* this function also adds EOT if missing. if the keep parameter is true the max-duration is kept *)
+  Module[{d,m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]},
+    If[keep,d=MidiGetDuration[m]];
+    m[[2]] = Cases[Sort[#],e$_/;!MatchQ[e$,{_,EOT}]->e$]& /@ m[[2]];
+    If[!keep,d=MidiGetDuration[m]];
+    MidiSetState[
+      Midi[
+        Sort[m[[1]]],
+        Append[#,{d,EOT}]& /@ m[[2]]
+        ],
+      MidiGetState[mx]
+      ]
+    ]
+
+MidiFixNoteOff[m_Midi,v2z_:False]:=
+  Midi[
+    Sort[m[[1]]],
+    (
+      If[MatchQ[#,{_,{MidiNoteOn,{_,_,0}}}],
+        ReplacePart[#,MidiNoteOff,{2,1}],
+        If[v2z && MatchQ[#,{_,{MidiNoteOff,{_,_,_}}}],
+          ReplacePart[#,0,{2,2,3}],
+          #
+          ]
+        ]& /@ #
+      )& /@ m[[2]]
+    ] /; MidiGetShape[m]===MidiFile
+
 MidiGetChannels[m_Midi] :=
   Union[
     Cases[#,{_,{MidiNoteOn,{c$_,_,_}}}->c$]
@@ -377,7 +394,7 @@ MidiGetDurations[m_Midi] := (Max[#[[1]]& /@ #]& /@ MidiSetState[m,{MidiShape->Mi
 MidiGetInfo[m_Midi] := m[[1]]
 
 MidiGetNotes[mx_Midi] :=
-  Module[{m = MidiNormalizeNoteOff[MidiSetState[mx, {MidiShape -> MidiFile, MidiTiming -> MidiAbsolute}]], on, off},
+  Module[{m = MidiFixNoteOff[MidiSetState[mx, {MidiShape -> MidiFile, MidiTiming -> MidiAbsolute}]], on, off},
     Function[t,
       (* get note-on as {{ch, p, tick, v} ...} *)
       on = Cases[t, {tick$_, {MidiNoteOn, {c$_, p$_, v$_}}} -> {c$, p$, tick$, v$}];
@@ -554,20 +571,6 @@ MidiKeySignature = {MidiMeta,16^^59};
 
 MidiMeta = 16^^FF;
 
-MidiNormalizeNoteOff[m_Midi,v2z_:False]:=
-  Midi[
-    Sort[m[[1]]],
-    (
-      If[MatchQ[#,{_,{MidiNoteOn,{_,_,0}}}],
-        ReplacePart[#,MidiNoteOff,{2,1}],
-        If[v2z && MatchQ[#,{_,{MidiNoteOff,{_,_,_}}}],
-          ReplacePart[#,0,{2,2,3}],
-          #
-          ]
-        ]& /@ #
-      )& /@ m[[2]]
-    ] /; MidiGetShape[m]===MidiFile
-
 MidiNoteOff = 0;
 
 MidiNoteOn = 1;
@@ -576,7 +579,7 @@ MidiPar[mx:{_Midi,_Midi...}, opts___] :=
   Module[{m=MidiSetState[#,{MidiSetShape->MidiFile,MidiTiming->MidiAbsolute,MidiTimeUnit->MidiSec}]&/@mx,d},
     d = Flatten[Join[{m[[1,2]]},Drop[#[[2]],1]&/@Drop[m,1]],1];
     MidiSetState[
-      MidiAddEOT[Midi[m[[1,1]],d]],
+      MidiFixEOT[Midi[m[[1,1]],d]],
       MidiGetState[mx[[1]]]
       ]
     ]
@@ -596,7 +599,7 @@ MidiPatternInfo = {(
 MidiPatternMidi = Midi[MidiPatternInfo,MidiPatternMusic];
 MidiPatternMusic = (MidiPatternFile|MidiPatternVoice|MidiPatternChord);
 MidiPatternTiming = (_Integer|_Real);
-MidiPatternTrack = (_Integer|{_Integer,_Integer,_Integer});
+MidiPatternTrack = (_Integer|{_Integer,_Integer});
 MidiPatternType = (MidiNoteOff|MidiNoteOn|2|MidiControlChange|4|5|6|7|MidiSysX0|MidiSysX7|{MidiMeta,_Integer});
 MidiPatternVoice = {{{MidiPatternType,MidiPatternTrack},{{MidiPatternTiming,MidiPatternData}...}}...};
 
@@ -640,7 +643,7 @@ MidiSeq[mx:{_Midi,_Midi...}, opts___] :=
       ][[2]];
     d=If[#==={},#,#[[1]]]&/@d;
     MidiSetState[
-      MidiAddEOT[Midi[m[[1,1]],d]],
+      MidiFixEOT[Midi[m[[1,1]],d]],
       MidiGetState[mx[[1]]]
       ]
     ]
@@ -673,7 +676,7 @@ MidiSetState[m_Midi, s_, opts___] :=
 MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[
     {
-      am = MidiNormalizeNoteOff[m],
+      am = MidiFixNoteOff[m],
       tr, trm, tron, troff, trn,
       (* get a list of durations, one for each track *)
       d = MidiGetDurations[m],
@@ -720,7 +723,7 @@ MidiSetStateLow[m_Midi,s_, opts___]:=
     trn = Split[trn, (#1[[1]] === #2[[1]]) &];
     (* then reverse each event to get {{{{on, off}, {p, v}, {track, ch}}...}...} *)
     trn = (Reverse /@ #) & /@ trn;
-    (* make monophonic voices, set to {{{{{on, off}, {p, v}, {track, ch, voice}}...}...}...} *)
+    (* make monophonic voices, set to {{{{{on, off}, {p, v}, {track, ch}}...}...}...} *)
     trn =
       Function[trni, (* trni is {{{on, off}, {p, v}, {track, ch}}...} *)
         Reap[
@@ -735,14 +738,14 @@ MidiSetStateLow[m_Midi,s_, opts___]:=
                 (* add a rest ? *)
                 If[tim[[v,1]]!=#[[1,1]],
                   (* add a tuple, not just an atom, so that Transpose works when trying to get pitch *)
-                  Sow[{{tim[[v,1]],#[[1,1]]},{MidiDataNoValue,MidiDataNoValue},Append[#[[3]],v]},v]
+                  Sow[{{tim[[v,1]],#[[1,1]]},{MidiDataNoValue,MidiDataNoValue},#[[3]]},v]
                   ];
                 (* calculate release-time *)
                 rt = rtf[#[[3,1]],{#[[1]],Prepend[#[[2]],#[[3,2]]]}];
                 (* update tim *)
                 tim[[v]]={#[[1,2]]+rt,v};
                 (* add the note *)
-                Sow[ReplacePart[#,Append[#[[3]],v],{3}],v];
+                Sow[#,v];
                 ]&,
               Sort[trni]
               ];
@@ -794,7 +797,7 @@ MidiSetStateLow[m_Midi,s_, opts___]:=
 
     (* get all notes as {{{type, track}, {{end-tick, data}...}}...} *)
     trn = Select[m[[2]], MatchQ[#[[1, 1]], MidiNoteOn] &];
-    (* set to {{{track,c}, {{tick, end-tick, data}...}}...} and ignore the voice info *)
+    (* set to {{{track,c}, {{tick, end-tick, data}...}}...} *)
     trn = {{#[[1, 2, 1]],#[[1,2,2]]}, Module[{td=Transpose[#[[2]]]},Transpose[{Prepend[Drop[td[[1]],-1],0],td[[1]],td[[2]]}]]} & /@ trn;
     (* set to {{track, {{tick, {type, data}}...}}...} *)
     trn = {
@@ -1289,7 +1292,6 @@ End[]
 Protect[
   Midi,
   MidiAbsolute,
-  MidiAddEOT,
   MidiAddEvents,
   MidiAddNotes,
   MidiAddQPM,
@@ -1307,6 +1309,8 @@ Protect[
   MidiExportSMF,
   MidiFile,
   MidiFileFormat,
+  MidiFixEOT,
+  MidiFixNoteOff,
   MidiGetChannels,
   MidiGetDuration,
   MidiGetDurations,
@@ -1324,7 +1328,6 @@ Protect[
   MidiKeySignature,
   MidiMeta,
   MidiMilliSec,
-  MidiNormalizeNoteOff,
   MidiNoteOff,
   MidiNoteOn,
   MidiPar,

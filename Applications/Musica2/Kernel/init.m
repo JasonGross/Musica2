@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-14 at 17:37 *)
+(* :History: File created 2004-8-15 at 20:11 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -22,19 +22,19 @@ DeclarePackage["Musica2`Midi`",
  "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDataAnyValue", 
  "MidiDataAnyValueQ", "MidiDataNoValue", "MidiDataNoValueQ", "MidiDelta", 
  "MidiEmpty", "MidiEOT", "MidiExpandStatePaths", "MidiExpandStates", 
- "MidiExportSMF", "MidiFile", "MidiFileFormat", "MidiGetChannels", 
- "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", "MidiGetNotes", 
- "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
- "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
- "MidiGetTPQ", "MidiImportSMF", "MidiKeySignature", "MidiMeta", 
- "MidiMilliSec", "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", 
- "MidiPar", "MidiPatternChord", "MidiPatternData", "MidiPatternFile", 
- "MidiPatternInfo", "MidiPatternMidi", "MidiPatternMusic", 
- "MidiPatternTiming", "MidiPatternTrack", "MidiPatternType", 
- "MidiPatternVoice", "MidiQPM", "MidiRemEvents", "MidiRemNotes", 
- "MidiRemQPM", "MidiSec", "MidiSeq", "MidiSetNotes", "MidiSetQPM", 
- "MidiSetState", "MidiSetStateLow", "MidiShape", "MidiStatePaths", 
- "MidiStatePathsExpanded", "MidiStateRoutes", "MidiStates", 
+ "MidiExportSMF", "MidiFile", "MidiFileFormat", "MidiFixEOT", 
+ "MidiFixNoteOff", "MidiGetChannels", "MidiGetDuration", "MidiGetDurations", 
+ "MidiGetInfo", "MidiGetNotes", "MidiGetQPM", "MidiGetSecToTickFunction", 
+ "MidiGetShape", "MidiGetState", "MidiGetTickToSecFunction", 
+ "MidiGetTimeUnit", "MidiGetTiming", "MidiGetTPQ", "MidiImportSMF", 
+ "MidiKeySignature", "MidiMeta", "MidiMilliSec", "MidiNormalizeNoteOff", 
+ "MidiNoteOff", "MidiNoteOn", "MidiPar", "MidiPatternChord", 
+ "MidiPatternData", "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", 
+ "MidiPatternMusic", "MidiPatternTiming", "MidiPatternTrack", 
+ "MidiPatternType", "MidiPatternVoice", "MidiQPM", "MidiRemEvents", 
+ "MidiRemNotes", "MidiRemQPM", "MidiSec", "MidiSeq", "MidiSetNotes", 
+ "MidiSetQPM", "MidiSetState", "MidiSetStateLow", "MidiShape", 
+ "MidiStatePaths", "MidiStatePathsExpanded", "MidiStateRoutes", "MidiStates", 
  "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", "MidiTick", 
  "MidiTie", "MidiTieQ", "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", 
  "MidiTPQ", "MidiUnTie", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
