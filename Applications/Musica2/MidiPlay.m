@@ -43,7 +43,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`MidiPlay`",
   {
+    "Musica2`Common`",
     "Musica2`Midi`",
+    "Musica2`Note`",
     "Musica2`Sound`",
     "Musica2`Utils`"
     }
@@ -60,7 +62,7 @@ Unprotect[
 MidiExportWav::usage = "MidiExportWav[fn_String, m_Midi] writes a WAV file out of the Midi-object using sine-waves, just as MidiPlay."
 MidiPlay::usage = "MidiPlay[m_Midi] plays the Midi-object using sine.waves."
 MidiToSound::usage = "MidiToSound[m_Midi, f_, opts___] creates a Sound-object from a Midi-object. The f-argument must be a function taking duration, pitch, velocity and mean-pitch as arguments and returning a Sound-object. MidiToSound then uses SoundSeq and SoundPar to assemble the Sound-object returned."
-SoundBySample::usage = "SoundBySample[s_Sound, opts___] returns a possible f-argument to MidiToSound that uses SoundPitchShift and SoundSetDuration."
+SoundBySample::usage = "SoundBySample[s_Sound, opts___] returns a possible f-argument to MidiToSound that uses SoundPitchShift and SetDuration."
 SoundBySine::usage = "SoundBySine[opts___] returns a possible f-argument to MidiToSound."
 
 Begin["`Private`"]
@@ -74,20 +76,22 @@ sqr = Function[{f, a}, N[-a Sign[FractionalPart[f#] - 0.5]] &];
 m2s[mx_Midi] := (* this one should be even faster, but i cant get it to work *)
   Module[{m = MidiSetState[mx, {MidiShape -> MidiMelody, MidiTimeUnit -> MidiSec, MidiTiming -> MidiDelta}], v},
     v = MidiGetMelodies[m] /. {DataNoValue -> 0};
-    v = ({#[[1]], zin[p2f[#[[2, 1]]], v2a[#[[2, 2]]]]} & /@ #[[2]]) & /@ v;
+    v = GetData[#[[2]]]& /@ v;
+    v = ({#[[1]], zin[p2f[#[[2, 1]]], v2a[#[[2, 2]]]]} & /@ #) & /@ v;
     v = MakeNestedIfs[#, 0. &] & /@ v;
     v = Function[t, Evaluate[#[t][t]]] & /@ v;
-    s = SoundMakeFunc[v, SoundDuration -> MidiGetDuration[m]];
+    s = SoundMakeFunc[v, Duration -> GetDuration[m]];
     SoundMixStereo[s]
     ]
 
 m2s[mx_Midi] := (* this one seems to be a little bit faster than the previous version *)
   Module[{m = MidiSetState[mx, {MidiShape -> MidiMelody, MidiTimeUnit -> MidiSec, MidiTiming -> MidiDelta}],v,f,a,w,s},
     v = MidiGetMelodies[m] /. {DataNoValue -> 0};
-    f = MakeNestedIfs[{#[[1]], p2f[#[[2, 1]]]} & /@ #[[2]]] & /@ v;
-    a = MakeNestedIfs[{#[[1]], v2a[#[[2, 2]]]} & /@ #[[2]]] & /@ v;
+    v = GetData[#[[2]]]& /@ v;
+    f = MakeNestedIfs[{#[[1]], p2f[#[[2, 1]]]} & /@ #] & /@ v;
+    a = MakeNestedIfs[{#[[1]], v2a[#[[2, 2]]]} & /@ #] & /@ v;
     w = MapThread[Function[{fi, ai}, Evaluate[Function[t, zin[fi[t], ai[t]][t]]]], {f, a}];
-    s = SoundMakeFunc[w,SoundDuration->MidiGetDuration[m]];
+    s = SoundMakeFunc[w,Duration->GetDuration[m]];
     SoundMixStereo[s]
     ]
 
@@ -101,15 +105,14 @@ MidiToSound[m_Midi, f_, opts___] :=
     (* get the music as {{{timing, {p, v}} ...} ...} *)
     r = Cases[
       MidiSetState[m, {MidiTimeUnit -> MidiSec, MidiShape -> MidiMelody, MidiTiming -> MidiDelta}][[2]],
-      {{MidiNoteOn, _},
-      d$_} -> d$
+      {{MidiNoteOn, _},d$_} -> d$
       ];
     (* calculate mean pitch *)
     mp = N[Mean[Flatten[(If[! DataNoValueQ[#[[2]]], #[[2, 1]], {}] & /@ #) & /@ r]]];
     (* make them into lists of sound - objects *)
     r = (
       If[DataNoValueQ[#[[2]]],
-        SoundOfSilence[SoundChannelCount -> 1, SoundDuration -> #[[1]], opts],
+        SoundOfSilence[SoundChannelCount -> 1, Duration -> #[[1]], opts],
         f[#[[1]], #[[2, 1]], #[[2, 2]], mp]
         ] & /@ #
       ) & /@ r;
@@ -121,9 +124,9 @@ MidiToSound[m_Midi, f_, opts___] :=
     SoundMixStereo[r]
     ]
 
-SoundBySample[s_Sound, opts___] := Function[{d, p, v, mp}, SoundSetDuration[SoundPitchShift[s, p2f[p]/p2f[mp], opts], d, opts]]
+SoundBySample[s_Sound, opts___] := Function[{d, p, v, mp}, SetDuration[SoundPitchShift[s, p2f[p]/p2f[mp], opts], d, opts]]
 
-SoundBySine[opts___] := Function[{d, p, v, mp}, SoundMakeFunc[zin[p2f[p], v2a[v]], SoundDuration -> d, opts]]
+SoundBySine[opts___] := Function[{d, p, v, mp}, SoundMakeFunc[zin[p2f[p], v2a[v]], Duration -> d, opts]]
 
 End[]
 

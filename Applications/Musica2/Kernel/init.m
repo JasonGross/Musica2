@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-9-6 at 16:31 *)
+(* :History: File created 2004-9-12 at 12:28 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -14,7 +14,8 @@ If[!MemberQ[$Packages,"Musica2`"],
 ];
 
 DeclarePackage["Musica2`Common`",
-{"Duration", "GetDuration", "GetDurations", "SetDuration", "SetDurations"}
+{"Duration", "GetData", "GetDuration", "GetDurations", "GetInfo", "SetData", 
+ "SetDuration", "SetDurations", "SetInfo"}
 ];
 
 DeclarePackage["Musica2`EventList`",
@@ -26,8 +27,7 @@ DeclarePackage["Musica2`Midi`",
  "MidiAddNotes", "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDelta", 
  "MidiEmpty", "MidiEOT", "MidiExportSMF", "MidiFile", "MidiFileFormat", 
  "MidiFixEOT", "MidiFixNoteOff", "MidiFixTime", "MidiGetChannels", 
- "MidiGetChords", "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", 
- "MidiGetMelodies", "MidiGetNotes", "MidiGetPitchRange", 
+ "MidiGetChords", "MidiGetMelodies", "MidiGetNotes", "MidiGetPitchRange", 
  "MidiGetPitchRanges", "MidiGetQPM", "MidiGetSecToTickFunction", 
  "MidiGetShape", "MidiGetState", "MidiGetTickToSecFunction", 
  "MidiGetTimeUnit", "MidiGetTiming", "MidiGetTPQ", "MidiImportSMF", 
@@ -59,8 +59,8 @@ DeclarePackage["Musica2`Note`",
  "GetPitchCodeMean", "GetPitchCodeRange", "GetPitchCodes", 
  "GetVelocityCenter", "GetVelocityMean", "GetVelocityRange", "GetVelocitys", 
  "MelodiesToChords", "Melody", "MelodyOfSilence", "MelodyQ", "Note", "Scale", 
- "ScaleQ", "SetPitchCode", "SetPitchCodes", "SetVelocity", "SetVelocitys", 
- "Velocity"}
+ "ScaleQ", "ScaleStepToPitchCode", "SetPitchCode", "SetPitchCodes", 
+ "SetVelocity", "SetVelocitys", "Velocity"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -68,14 +68,12 @@ DeclarePackage["Musica2`Setup`",
 ];
 
 DeclarePackage["Musica2`Sound`",
-{"FuncToList", "ListToFunc", "SoundChannelCount", "SoundDuration", 
- "SoundExportWav", "SoundFuncQ", "SoundGetChannelCount", "SoundGetDuration", 
- "SoundGetFunc", "SoundGetInfo", "SoundGetList", "SoundGetSampleCount", 
- "SoundGetSampleRate", "SoundImportWav", "SoundListQ", "SoundLoop", 
- "SoundMakeFunc", "SoundMakeList", "SoundMix", "SoundMixStereo", 
+{"FuncToList", "ListToFunc", "SoundChannelCount", "SoundExportWav", 
+ "SoundFuncQ", "SoundGetChannelCount", "SoundGetFunc", "SoundGetList", 
+ "SoundGetSampleCount", "SoundGetSampleRate", "SoundImportWav", "SoundListQ", 
+ "SoundLoop", "SoundMakeFunc", "SoundMakeList", "SoundMix", "SoundMixStereo", 
  "SoundOfSilence", "SoundPar", "SoundPitchShift", "SoundSampleCount", 
- "SoundSeq", "SoundSetDuration", "SoundType", "SoundUnPar", "SoundUnSeq", 
- "Zound"}
+ "SoundSeq", "SoundType", "SoundUnPar", "SoundUnSeq", "Zound"}
 ];
 
 DeclarePackage["Musica2`Utils`",

@@ -29,7 +29,10 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
-  2004-09-??  bch :  Changed all Moeldys to Melodies, ok?
+  2004-09-12  bch :  using Common.m, MidiGetDuration(s) is now GetDuration(s), MidiGetInfo is now GetInfo
+  2004-09-11  bch :  added use of Note.m's Chord- and Melody-types
+                     added use of Util.m's ParOfSeqToSeqOfPar and SeqOfParToParOfSeq
+  2004-09-??  bch :  changed all Moeldys to Melodies, ok?
   2004-09-04  bch :  added MidiQ
   2004-09-02  bch :  renamed MidiData*Value* to Data*Value* and moved them to Utils.m
                      renamed MidiTie* to DataTie* and moved them to Utils.m
@@ -71,9 +74,18 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Midi`",
   {
     "Utilities`BinaryFiles`",
+    "Musica2`Common`",
+    "Musica2`Note`",
     "Musica2`Utils`"
     }
 ]
+
+Unprotect[
+  GetData,
+  GetDuration,
+  GetDurations,
+  GetInfo
+  ];
 
 Unprotect[
   Midi,
@@ -96,9 +108,6 @@ Unprotect[
   MidiFixTime,
   MidiGetChannels,
   MidiGetChords,
-  MidiGetDuration,
-  MidiGetDurations,
-  MidiGetInfo,
   MidiGetMelodies,
   MidiGetNotes,
   MidiGetPitchRange,
@@ -205,9 +214,6 @@ MidiFixNoteOff::usage = "MidiFixNoteOff[m_Midi, v2z_:False] changes all NoteOn's
 MidiFixTime::usage = "MidiFixTime[m_Midi, q_] quantifies the timing's in m. MidiFixTime calls MidiSetTime with function-parameter (q*Round[#/q])&."
 MidiGetChannels::usage = "MidiGetChannels[m_Midi] returns a nested list with channel-numbers for each track for which there are notes."
 MidiGetChords::usage = "MidiGetChords[m_Midi] returns the chords in m. The timing will be MidiDelta."
-MidiGetDuration::usage = "MidiGetDuration[m_Midi] return the duration for m. See also MidiGetDurations."
-MidiGetDurations::usage = "MidiGetDurations[m_Midi] returns a list with the duration for each track in m. See also MidiGetDuration."
-MidiGetInfo::usage = "MidiGetInfo[m_Midi] returns the info-part of m."
 MidiGetMelodies::usage = "MidiGetMelodies[m_Midi] returns the voices in m. THe timing will be MidiDelta."
 MidiGetNotes::usage = "MidiGetNotes[m_Midi] returns the notes in m. The timing will be MidiAbsolute."
 MidiGetPitchRange::usage = "MidiGetPitchRange[m_Midi] returns the pitch-range in m. See also MidiGetPitchRanges."
@@ -305,6 +311,10 @@ Format[m_Midi] :=
     ] /; MidiQ[m]
 *)
 
+GetData[m_?MidiQ] := m[[2]]
+
+GetInfo[m_?MidiQ] := m[[1]]
+
 Options[Midi]=
   {
     MidiQPM -> 120,
@@ -312,21 +322,29 @@ Options[Midi]=
     MidiTPQ -> 960
     }
 
-MidiAddChords[mx_Midi,n:{{{_,_}...},{{_,{{_,_}...}}...}}]:=
-  Module[{m = MidiSetState[mx,{MidiShape->MidiChord,MidiTiming->MidiDelta}],c},
+Midi[c_?ChordQ] := Midi[{c}]
+Midi[c:{_?ChordQ...}] := MidiAddChords[MidiOfSilence[1,0],c]
+Midi[m_?MelodyQ] := Midi[{m}]
+Midi[m:{_?MelodyQ...}] := MidiAddMelodies[MidiOfSilence[1,0],m]
+
+MidiAddChords[mx_Midi,c_?ChordQ] := MidiAddChords[mx,{c}]
+MidiAddChords[mx_Midi,c:{_?ChordQ...}] := MidiAddChords[mx,{Table[{i+1,0},{i,Max[GetNoteCount/@c]}],c}]
+MidiAddChords[mx_Midi,n:{{{_,_}...},{_?ChordQ...}}] :=
+  Module[{m = MidiSetState[mx,{MidiShape->MidiChord,MidiTiming->MidiDelta}],c,d,g},
+    g = GetData[#]& /@ n[[2]];
     (* get the polyphony(s) in n *)
-    c = Union[Length[#[[2]]]& /@ n[[2]]];
+    c = Union[Length[#[[2]]]& /@ g];
     (* there can only be one! *)
     If[Length[c]==1 && Length[n[[1]]] == c[[1]],
       d = Sort[m[[2]]];
       If[0 < Length[d] && d[[1,1,1]]===MidiNoteOn,
         If[c[[1]]==Length[d[[1,1,2]]],
-          (* TODO what about the track- and channel-info? *)
-          d[[1,2]] = Join[d[[1,2]],n[[2]]],
-          (* TODO error! what to do? *)
+          (* todo, what about the track- and channel-info? *)
+          d[[1,2]] = Join[d[[1,2]],g],
+          (* todo, error! what to do? *)
           Null
           ],
-        d = Prepend[d,{{MidiNoteOn,n[[1]]},n[[2]]}]
+        d = Prepend[d,{{MidiNoteOn,n[[1]]},g}]
         ];
       MidiSetState[
         Midi[
@@ -335,7 +353,7 @@ MidiAddChords[mx_Midi,n:{{{_,_}...},{{_,{{_,_}...}}...}}]:=
           ],
         MidiGetState[mx]
         ],
-      (* TODO error1, what to do? *)
+      (* todo, error1, what to do? *)
       Null
       ]
     ]
@@ -352,9 +370,11 @@ MidiAddEvents[mx_Midi,e:{{{_,{_,_}}...}...}]:=
       ]
     ]
 
-MidiAddMelodies[mx_Midi,n:{{{_,_},{{_,{_,_}}...}}...}]:=
+MidiAddMelodies[mx_Midi,m_?MelodyQ] := MidiAddMelodies[mx,{m}]
+MidiAddMelodies[mx_Midi,m:{_?MelodyQ...}] := MidiAddMelodies[mx,Table[{{i+1,0},m[[i]]},{i,Length[m]}]] (* todo, better setting of default-track-nr *)
+MidiAddMelodies[mx_Midi,n:{{{_,_},_?MelodyQ}...}] :=
   Module[{m = MidiSetState[mx,{MidiShape->MidiMelody,MidiTiming->MidiDelta}],d},
-    d = {{MidiNoteOn,#[[1]]},#[[2]]}& /@ n;
+    d = {{MidiNoteOn,#[[1]]},GetData[#[[2]]]}& /@ n;
     MidiSetState[
       Midi[
         m[[1]],
@@ -455,9 +475,9 @@ MidiExportSMF[fn_String,mx_Midi, opts___] :=
 
 MidiFixEOT[mx_Midi, keep_:False] := (* this function also adds EOT if missing. if the keep parameter is true the max-duration is kept *)
   Module[{d,m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]},
-    If[keep,d=MidiGetDuration[m]];
+    If[keep,d=GetDuration[m]];
     m[[2]] = Cases[Sort[#],e$_/;!MatchQ[e$,{_,EOT}]->e$]& /@ m[[2]];
-    If[!keep,d=MidiGetDuration[m]];
+    If[!keep,d=GetDuration[m]];
     MidiSetState[
       Midi[
         Sort[m[[1]]],
@@ -491,19 +511,17 @@ MidiGetChannels[m_Midi] :=
 MidiGetChords[mx_Midi] :=
   Module[{m = MidiSetState[mx, {MidiShape -> MidiChord, MidiTiming -> MidiDelta}],d},
     d = Sort[m[[2]]];
-    If [0 < Length[d] && d[[1,1,1]] === MidiNoteOn, {d[[1,1,2]],d[[1,2]]}, {{},{}}]
+    If [0 < Length[d] && d[[1,1,1]] === MidiNoteOn, {d[[1,1,2]],Chord /@ d[[1,2]]}, {{},{}}]
     ]
 
-MidiGetDuration[m_Midi] := Max[MidiGetDurations[m]]
+GetDuration[m_Midi] := Max[GetDurations[m]]
 
-MidiGetDurations[m_Midi] := (Max[#[[1]]& /@ #]& /@ MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}][[2]])
-
-MidiGetInfo[m_Midi] := m[[1]]
+GetDurations[m_Midi] := (Max[#[[1]]& /@ #]& /@ MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}][[2]])
 
 MidiGetMelodies[mx_Midi] :=
   Module[{m = MidiSetState[mx,{MidiShape->MidiMelody,MidiTiming->MidiDelta}],d},
     d = Cases[Sort[m[[2]]],{{MidiNoteOn,{_,_}},_}];
-    {#[[1,2]],#[[2]]}& /@ d
+    {#[[1,2]],Melody[#[[2]]]}& /@ d
     ]
 
 MidiGetNotes[mx_Midi] :=
@@ -627,7 +645,7 @@ MidiGetShape[m_Midi] := MidiShape /. m[[1]]
 
 MidiGetState[s_List] := Module[{t = #[[1]] & /@ MidiStates}, Sort[Cases[s, Rule[p$_, _] /; MemberQ[t, p$]]]]
 
-MidiGetState[m_Midi] := MidiGetState[MidiGetInfo[m]]
+MidiGetState[m_Midi] := MidiGetState[GetInfo[m]]
 
 MidiGetTickToSecFunction[m_Midi] :=
   Module[
@@ -813,7 +831,7 @@ MidiSeq[mx:{_Midi,_Midi...}, opts___] :=
     d=Reap[
       Scan[(* per midi *)
         (
-          q=MidiGetDuration[#];
+          q=GetDuration[#];
           t=1;
           Scan[( (* per track *)
             Scan[ (* per event *)
@@ -837,10 +855,10 @@ MidiSeq[mx:{_Midi,_Midi...}, opts___] :=
       ]
     ]
 
-MidiSetChords[m_Midi,n:{{{_,_}...},{{_,{{_,_}...}}...}}]:=
+MidiSetChords[m_Midi,n:{{{_,_}...},{_?ChordQ...}}]:=
   MidiSetState[MidiAddChords[MidiRemChords[MidiSetState[m,{MidiShape->MidiChord,MidiTiming->MidiDelta}]],n],MidiGetState[m]]
 
-MidiSetMelodies[m_Midi,n:{{{_,_},{{_,{_,_}}...}}...}]:=
+MidiSetMelodies[m_Midi,n:{{{_,_},_?MelodyQ}...}]:=
   MidiSetState[MidiAddMelodies[MidiRemMelodies[MidiSetState[m,{MidiShape->MidiMelody,MidiTiming->MidiDelta}]],n],MidiGetState[m]]
 
 MidiSetNotes[m_Midi, n : {{{{_,_},{_,_,_}}...}...}]:=
@@ -880,7 +898,7 @@ MidiSetStateLow[m_Midi,s_, opts___]:=
       am = MidiFixNoteOff[m],
       tr, trm, tron, troff, trn,
       (* get a list of durations, one for each track *)
-      d = MidiGetDurations[m],
+      d = GetDurations[m],
       rtf = MidiMelodyReleaseTimeFunction /. {opts} /. {MidiMelodyReleaseTimeFunction -> (0&)}
       },
     (* get meta and sysex as {{{{type, data}, tick}...}...} *)
@@ -1042,7 +1060,7 @@ MidiSetStateLow[m_Midi,s_, opts___] :=
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiMelody,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiFile}
 
-MidiSetStateLow[m_Midi,s_, opts___]:=
+MidiSetStateLowOld[m_Midi,s_, opts___]:= (* todo, use ParOfSeqToSeqOfPar, (done below), then delete this one when it works *)
   Module[{g},
     (* group each type together, set g to {{{{type,track},{{timing,data}...}}...}...} *)
     g = Split[Sort[m[[2]]],(#1[[1,1]]===#2[[1,1]])&];
@@ -1106,6 +1124,22 @@ MidiSetStateLow[m_Midi,s_, opts___]:=
          Complement[s,MidiGetState[m]]=={MidiShape->MidiChord}
 
 MidiSetStateLow[m_Midi,s_, opts___]:=
+  Module[{g},
+    (* group each type together, set g to {{{{type,track},{{timing,data}...}}...}...} *)
+    g = Split[Sort[m[[2]]],(#1[[1,1]]===#2[[1,1]])&];
+    (* set to {{{type,{track...}},{{timing,{data...}}...}}...} *)
+    g = {
+      {#[[1,1,1]],#[[1,2]]& /@ #},
+      ParOfSeqToSeqOfPar[#[[2]]& /@ #]
+      }& /@ g;
+    Midi[
+      Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiChord)],
+      g
+      ]
+    ] /; MatchQ[MidiGetState[m],FS[{MidiShape->MidiMelody,MidiTimeUnit->MidiTick,MidiTiming->MidiDelta}]]&&(* DONT ALLOW MidiSec HERE!!! *)
+         Complement[s,MidiGetState[m]]=={MidiShape->MidiChord}
+
+MidiSetStateLowOld[m_Midi,s_, opts___]:= (* todo, use SeqOfParToParOfSeq, (done below), then delete this one when it works *)
   Module[{g=m[[2]]},
     (* g is {{{type,{track...}},{{timing,{data...}}...}}...}, remember? *)
     (* set to {{{{type,track}...},{{{timing,data}...}...}}...} *)
@@ -1140,6 +1174,21 @@ MidiSetStateLow[m_Midi,s_, opts___]:=
         ]
       }& /@ g;
 
+    Midi[
+      Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiMelody)],
+      g
+      ]
+    ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiChord, MidiTiming->MidiDelta}]]&&
+         Complement[s,MidiGetState[m]]=={MidiShape->MidiMelody}
+
+MidiSetStateLow[m_Midi,s_, opts___]:=
+  Module[{g=m[[2]]},
+    (* g is {{{type,{track...}},{{timing,{data...}}...}}...}, remember? *)
+    g = Transpose[{
+      Function[t,{#[[1,1]],t}] /@ #[[1,2]],
+      SeqOfParToParOfSeq[#[[2]]]
+      }]& /@ g;
+    g = Flatten[g,1];
     Midi[
       Sort[m[[1]] /. (MidiShape -> _) -> (MidiShape -> MidiMelody)],
       g
@@ -1531,6 +1580,13 @@ WriteTrack[f_,t_]:=
 End[]
 
 Protect[
+  GetData,
+  GetDuration,
+  GetDurations,
+  GetInfo
+  ];
+
+Protect[
   Midi,
   MidiAbsolute,
   MidiAddChords,
@@ -1551,9 +1607,6 @@ Protect[
   MidiFixTime,
   MidiGetChannels,
   MidiGetChords,
-  MidiGetDuration,
-  MidiGetDurations,
-  MidiGetInfo,
   MidiGetMelodies,
   MidiGetNotes,
   MidiGetPitchRange,

@@ -47,8 +47,10 @@ BeginPackage["Musica2`Note`",
   ]
 
 Unprotect[
+  GetData,
   GetDuration,
   GetDurations,
+  GetInfo,
   SetDuration,
   SetDurations
   ];
@@ -78,6 +80,7 @@ Unprotect[
   MelodyQ,
   Note,
   Scale,
+  ScaleStepToPitchCode,
   ScaleQ,
   SetPitchCode,
   SetPitchCodes,
@@ -86,47 +89,45 @@ Unprotect[
   Velocity
   ];
 
-Chord::todo = "Make Midi(Add|Get|Set)Chords use Chord as data."
-Melody::todo = "Make Midi(Add|Get|Set)Melodies use Melody as data."
+Note::todo = "Write help/usage-text's for the package."
 
-Chord::usage = ""<>ToDoString<>Chord::todo
-ChordOfSilence::usage = ""
-ChordQ::usage = ""
-ChordsToMelodies::usage = ""
-GetDurationCenter::usage = ""
-GetDurationGCD::usage = ""
-GetDurationLCM::usage = ""
-GetDurationMean::usage = ""
-GetDurationRange::usage = ""
-GetNoteCount::usage = ""
-GetPitchCodes::usage = ""
-GetPitchCodeCenter::usage = ""
-GetPitchCodeMean::usage = ""
-GetPitchCodeRange::usage = ""
-GetVelocitys::usage = ""
-GetVelocityCenter::usage = ""
-GetVelocityMean::usage = ""
-GetVelocityRange::usage = ""
-MelodiesToChords::usage = ""
-Melody::usage = ""<>ToDoString<>Melody::todo
-MelodyOfSilence::usage = ""
-MelodyQ::usage = ""
-Note::usage = ""
-Scale::usage = ""
-ScaleQ::usage = ""
-SetPitchCode::usage = ""
-SetPitchCodes::usage = ""
-SetVelocity::usage = ""
-SetVelocitys::usage = ""
-Velocity::usage = ""
+Chord::usage = "todo"
+ChordOfSilence::usage = "todo"
+ChordQ::usage = "todo"
+ChordsToMelodies::usage = "todo"
+GetDurationCenter::usage = "todo"
+GetDurationGCD::usage = "todo"
+GetDurationLCM::usage = "todo"
+GetDurationMean::usage = "todo"
+GetDurationRange::usage = "todo"
+GetNoteCount::usage = "todo"
+GetPitchCodes::usage = "todo"
+GetPitchCodeCenter::usage = "todo"
+GetPitchCodeMean::usage = "todo"
+GetPitchCodeRange::usage = "todo"
+GetVelocitys::usage = "todo"
+GetVelocityCenter::usage = "todo"
+GetVelocityMean::usage = "todo"
+GetVelocityRange::usage = "todo"
+MelodiesToChords::usage = "todo"
+Melody::usage = "todo"
+MelodyOfSilence::usage = "todo"
+MelodyQ::usage = "todo"
+Note::usage = "todo"<>ToDoString<>Note::todo
+Scale::usage = "todo"
+ScaleStepToPitchCode::usage = "todo"
+ScaleQ::usage = "todo"
+SetPitchCode::usage = "todo"
+SetPitchCodes::usage = "todo"
+SetVelocity::usage = "todo"
+SetVelocitys::usage = "todo"
+Velocity::usage = "todo"
 
 Begin["`Private`"]
 
-(*
 Format[n_Chord] := "\[SkeletonIndicator]Chord\[SkeletonIndicator]" /; ChordQ[n]
-Format[n_Melody] := "\[SkeletonIndicator]Melody\[SkeletonIndicator]" /; MelodyQ[n]
-Format[s_Scale] := "\[SkeletonIndicator]Scale\[SkeletonIndicator]" /; ScaleQ[n]
-*)
+Format[m_Melody] := "\[SkeletonIndicator]Melody\[SkeletonIndicator]" /; MelodyQ[m]
+Format[s_Scale] := "\[SkeletonIndicator]Scale\[SkeletonIndicator]" /; ScaleQ[s]
 
 Options[Chord] =
   {
@@ -157,6 +158,8 @@ ChordQ[expr_] := MatchQ[expr,Chord[_?OptionQ,{_,{{_,_}...}}]]
 
 ChordsToMelodies[c:{_Chord,_Chord...}] := Melody/@SeqOfParToParOfSeq[#[[2]]&/@c]
 
+GetData[x_?((ChordQ[#]||MelodyQ[#])&)] := x[[2]]
+
 GetDuration[c_?ChordQ] := c[[2,1]]
 GetDuration[m_?MelodyQ] := Total[GetDurations[m]]
 GetDurations[m_?MelodyQ] := #[[1]]& /@ m[[2]]
@@ -166,11 +169,14 @@ GetDurationLCM[x_] := LCM@@Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$
 GetDurationMean[x_] := Mean[Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]]
 GetDurationRange[x_] := {Min[#],Max[#]}&[Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]]
 
+GetInfo[x_?((ChordQ[#]||MelodyQ[#])&)] := x[[1]]
+
 GetNoteCount[c_?ChordQ] := Length[c[[2,2]]]
 GetNoteCount[m_?MelodyQ] := Length[m[[2]]]
 
 GetPitchCodes[c_?ChordQ] := #[[1]]& /@ c[[2,2]]
 GetPitchCodes[m_?MelodyQ] := #[[2,1]]& /@ m[[2]]
+GetPitchCodes[s_?ScaleQ] := s[[2,2]]
 GetPitchCodeCenter[x_] := Mean[GetPitchCodeRange[x]]
 GetPitchCodeMean[x_] := Mean[Cases[Flatten[GetPitchCodes[x]],p$_/;(!DataNoValueQ[p$])]]
 GetPitchCodeRange[x_] := {Min[#],Max[#]}&[Cases[Flatten[GetPitchCodes[x]],p$_/;(!DataNoValueQ[p$])]]
@@ -191,9 +197,24 @@ MelodyOfSilence[n_Integer, opts___?OptionQ] := Melody[Table[DataNoValue,{n}],opt
 
 MelodyQ[expr_] := MatchQ[expr,Melody[_?OptionQ,{{_,{_,_}}...}]]
 
-Scale[] := Scale[{12,{0,2,4,5,7,9,11}}]
+Scale[opts___?OptionQ] := Scale[{12,{0,2,4,5,7,9,11}},opts]
+Scale[p:{__Integer}, opts___?OptionQ] := Scale[{12,p},opts]
+Scale[op:{_Integer,{__Integer}}, opts___?OptionQ] := Scale[{opts},op]
 
-Scale[x:{_Integer,{__Integer}}, opts___?OptionQ] := Scale[{opts},x]
+ScaleStepToPitchCode[ss_Integer,s_?ScaleQ] :=
+  Module[{scalesize=Length[s[[2,2]]]},
+    Floor[ss/scalesize]*s[[2,1]] + s[[2,2,Mod[ss,scalesize]+1]]
+    ]
+
+ScaleStepToPitchCode[x_?((ChordQ[#]||MelodyQ[#])&),s_?ScaleQ] :=
+  SetPitchCodes[x,
+    If[DataNoValueQ[#],#,
+      If[DataTieQ[#],
+        DataTie[ScaleStepToPitchCode[DataUnTie[#],s]],
+        ScaleStepToPitchCode[#,s]
+        ]
+      ]& /@ GetPitchCodes[x]
+    ]
 
 ScaleQ[expr_] := MatchQ[expr,Scale[_?OptionQ,{_Integer,{__Integer}}]]
 
@@ -216,8 +237,10 @@ SetVelocitys[m_?MelodyQ, v_List] := Module[{r=m}, Do[r[[2,i,2,2]] = v[[i]], {i,G
 End[]
 
 Protect[
+  GetData,
   GetDuration,
   GetDurations,
+  GetInfo,
   SetDuration,
   SetDurations
   ];
@@ -247,6 +270,7 @@ Protect[
   MelodyQ,
   Note,
   Scale,
+  ScaleStepToPitchCode,
   ScaleQ,
   SetPitchCode,
   SetPitchCodes,

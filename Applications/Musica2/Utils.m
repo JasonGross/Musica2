@@ -77,9 +77,6 @@ Begin["`Private`"]
 ToDoString = "\[NewLine]\[NewLine]ToDo: "
 End[]
 
-ParOfSeqToSeqOfPar::todo = "Make MidiSetStateLow use this function."
-SeqOfParToParOfSeq::todo = "Make MidiSetStateLow use this function."
-
 DataAnyValue::usage = "The symbol indicating non-empty data. Will be handy..."
 DataAnyValueQ::usage = "DataAnyValueQ[expr_] tests if expr is/contains the symbol DataAnyValue, tied or not."
 DataNoValue::usage = "The symbol indicating no-data, like a rest."
@@ -91,8 +88,8 @@ DeltasToValues::usage = "DeltasToValues[d_List, c_Integer:0] is the opposite to 
 FunctionQ::usage = "FunctionQ[expr_] tests if expr is a function."
 MakeNestedIfs::usage = "MakeNestedIfs[de$:{{_,_}...}, default$_] and MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] creates a function containing nested if's. The de-argument is a list of {delta,expr} which describes the function to return. The default-argument is the expr the function returned will return when called whith a parameter outside the normal range and defaults to 0 (zero)."
 NormalizeList::usage = "NormalizeList[d_,opts___] takes a list of numbers and normalize them to range from -1 to 1. opts can take PlayRange->{lo,hi} as an argument which otherwise will be calculated."
-ParOfSeqToSeqOfPar::usage = "x"<>ToDoString<>ParOfSeqToSeqOfPar::todo
-SeqOfParToParOfSeq::usage = "x"<>ToDoString<>SeqOfParToParOfSeq::todo
+ParOfSeqToSeqOfPar::usage = "todo"
+SeqOfParToParOfSeq::usage = "todo"
 UnCompile::usage = "UnCompile[f_] returns f in an uncompiled version."
 ValuesToDeltas::usage = "ValuesToDeltas[v_List] is the opposite to DeltasToValues and calculates the deltas between the values in the list.";
 
@@ -165,7 +162,7 @@ NormalizeList[d_,opts___] :=
     N[(d-md)/sp]
     ]
 
-ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] :=
+ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to chords *)
   Module[{at,ut,st,al,ad,sd},
     (* get all timing *)
     at = (#[[1]]& /@ #)& /@ pos;
@@ -205,19 +202,20 @@ ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] :=
     Transpose[{ut,sd}]
     ]
 
-SeqOfParToParOfSeq[sop:{{_,{__}},{_,{__}}...}] :=
+SeqOfParToParOfSeq[sop:{{_,{__}},{_,{__}}...}] := (* chords to melodies *)
   Module[{v},
     Reap[
       Do[
         p = {0,DataNoValue};
-        Do[
-          v = If[i<=Length[sop[[j,2]]],sop[[j,2,i]],DataNoValue];
+        Scan[(
+          v = If[i<=Length[#[[2]]],#[[2,i]],DataNoValue];
           If[DataTieQ[v],
-            p[[1]]+=sop[[j,1]],
+            p[[1]] += #[[1]],
             If[0<p[[1]],Sow[p,i]];
-            p={sop[[j,1]],v}
-            ],
-          {j,Length[sop]}
+            p={#[[1]],v}
+            ]
+          )&,
+          sop
           ];
         If[0<p[[1]],Sow[p,i]],
         {i,Max[Length[#[[2]]]& /@ sop]}

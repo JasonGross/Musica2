@@ -44,23 +44,25 @@ BeginPackage["Musica2`Common`",
 
 Unprotect[
   Duration,
+  GetData,
   GetDuration,
   GetDurations,
+  GetInfo,
+  SetData,
   SetDuration,
-  SetDurations
+  SetDurations,
+  SetInfo
   ];
 
-Duration::todo = "Make Midi and Sound use the name Duration"
-GetDuration::todo = "Make Midi and Sound use the name GetDuration"
-GetDurations::todo = "Make Midi and Sound use the name GetDurations"
-SetDuration::todo = "Make Midi and Sound use the name SetDuration"
-SetDurations::todo = "Make Midi and Sound use the name SetDurations"
-
 Duration::usage = ""
+GetData::usage = ""
 GetDuration::usage = ""
 GetDurations::usage = ""
+GetInfo::usage = ""
+SetData::usage = ""
 SetDuration::usage = ""
 SetDurations::usage = ""
+SetInfo::usage = ""
 
 Begin["`Private`"]
 
@@ -68,10 +70,14 @@ End[]
 
 Protect[
   Duration,
+  GetData,
   GetDuration,
   GetDurations,
+  GetInfo,
+  SetData,
   SetDuration,
-  SetDurations
+  SetDurations,
+  SetInfo
   ];
 
 EndPackage[]

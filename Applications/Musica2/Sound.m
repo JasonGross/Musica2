@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-09-12  bch :  using Common.m, Sound(G|S)etDuration is now (G|S)etDuration, SoundGetInfo is now GetInfo
   2004-08-28  bch :  added SoundMixStereo
   2004-08-27  bch :  removed " from some help/usage-text
                      added message todo
@@ -52,21 +53,25 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Sound`",
   {
+    "Musica2`Common`",
     "Musica2`Utils`"
     }
   ]
 
 Unprotect[
+  GetDuration,
+  SetDuration,
+  GetInfo
+  ];
+
+Unprotect[
   FuncToList,
   ListToFunc,
   SoundChannelCount,
-  SoundDuration,
   SoundExportWav,
   SoundFuncQ,
   SoundGetChannelCount,
-  SoundGetDuration,
   SoundGetFunc,
-  SoundGetInfo,
   SoundGetList,
   SoundGetSampleCount,
   SoundGetSampleRate,
@@ -81,7 +86,6 @@ Unprotect[
   SoundPar,
   SoundPitchShift,
   SoundSampleCount,
-  SoundSetDuration,
   SoundSeq,
   SoundType,
   SoundUnPar,
@@ -93,37 +97,32 @@ SoundMakeFunc::todo = "Make it possible to give not just pure functions as funct
 SoundMakeList::todo = "Make it possible to give not just pure functions as function-argument."
 SoundPar::todo = "Handle the list-only-case without making func's."
 SoundPitchShift::todo = "Handle the list-only-case without making func's."
-SoundSetDuration::todo = "Handle the list-only-case without making func's."
 SoundSeq::todo = "Handle the list-only-case without making func's."
 SoundUnSeq::todo = "Use this one with care as it probably WILL CHANGE."
 
-FuncToList::usage = "FuncToList[f_, opts___] takes a function and samples it. The function is supposed to be a function of time (sec). The opts-argument takes SampleRate, SoundDuration and/or SoundSampleCount and defaults to Options[Zound] if required."
-ListToFunc::usage = "ListToFunc[d_, opts___] takes a list and makes a function out of it. The function returned is a function of time (sec). The opts-argument takes SampleRate, SoundDuration and/or SoundSampleCount and defaults to Options[Zound] if required. The opts-argument can also be PlayRange and InterpolationOrder. InterpolationOrder defaults to 0 (zero) and PlayRange defaults to whatever NormalizeList does."
-SoundChannelCount::usage = "SoundChannelCount is returned by the SoundGetInfo function and is also an opt to various functions."
-SoundDuration::usage = "SoundDuration is returned by the SoundGetInfo function and is also an opt to various functions."
+FuncToList::usage = "FuncToList[f_, opts___] takes a function and samples it. The function is supposed to be a function of time (sec). The opts-argument takes SampleRate, Duration and/or SoundSampleCount and defaults to Options[Zound] if required."
+ListToFunc::usage = "ListToFunc[d_, opts___] takes a list and makes a function out of it. The function returned is a function of time (sec). The opts-argument takes SampleRate, Duration and/or SoundSampleCount and defaults to Options[Zound] if required. The opts-argument can also be PlayRange and InterpolationOrder. InterpolationOrder defaults to 0 (zero) and PlayRange defaults to whatever NormalizeList does."
+SoundChannelCount::usage = "SoundChannelCount is returned by the GetInfo function and is also an opt to various functions."
 SoundExportWav::usage = "SoundExportWav[fn_String, s_Sound] simply calls Export[fn,s,WAV]."
 SoundFuncQ::usage = "SoundFuncQ[expr_] tests if expr is a Sound-object based on a list of function."
 SoundGetChannelCount::usage = "SoundGetChannelCount[s_Sound] returns the number of channels in the Sound-object."
-SoundGetDuration::usage = "SoundGetDuration[s_Sound] returns the duration in sec in the Sound-object."
 SoundGetFunc::usage = "SoundGetFunc[s_Sound, opts___] returns a list of functions. If the Sound-object contains lists of sample-lists ListToFunc is called and opts can be InterpolationOrder. If opts is SoundLoop the returned functions will call Mod on its argument."
-SoundGetInfo::usage = "SoundGetInfo[s_Sound] returns various info about the Sound-object."
 SoundGetList::usage = "SoundGetList[s_Sound] returns a list of sample-lists. If the Sound-object contains a list of functions FuncToList is called."
 SoundGetSampleCount::usage = "SoundGetSampleCount[s_Sound] returns the number of samples per channel in the Sound-object."
 SoundGetSampleRate::usage = "SoundGetSampleRate[s_Sound] returns the sample-rate in the Sound-object."
 SoundImportWav::usage = "SoundImportWav[fn_String] simply calls Import[fn,WAV]."
 SoundListQ::usage = "SoundListQ[expr_] tests if expr is a Sound-object based on a list of sample-lists."
-SoundLoop::usage = "Currently an option to SoundGetFunc and SoundSetDuration."
-SoundMakeFunc::usage = "SoundMakeFunc[p_, opts___] creates a Sound-object based on a list of functions. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a Sound-object. The opts-argument can be SampleRate, SoundDuration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."<>ToDoString<>SoundMakeFunc::todo
-SoundMakeList::usage = "SoundMakeList[p_, opts___] creates a Sound-object based on a list of sample-lists. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a Sound-object. The opts-argument can be SampleRate, SoundDuration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."<>ToDoString<>SoundMakeList::todo
+SoundLoop::usage = "Currently an option to SoundGetFunc and SetDuration."
+SoundMakeFunc::usage = "SoundMakeFunc[p_, opts___] creates a Sound-object based on a list of functions. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a Sound-object. The opts-argument can be SampleRate, Duration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."<>ToDoString<>SoundMakeFunc::todo
+SoundMakeList::usage = "SoundMakeList[p_, opts___] creates a Sound-object based on a list of sample-lists. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a Sound-object. The opts-argument can be SampleRate, Duration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."<>ToDoString<>SoundMakeList::todo
 SoundMix::usage = "SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?FunctionQ ...} ...}, opts___] creates a new Sound-object by using a mix of the s-arguments channels. The mix-argument is a list of lists containing functions of time that determin the amplitude. The mix-argument must have the same length as the s-argument has channels. Each list in the mix-argument-list mus be of the same length and determines the number ocf channels in the resulting Sound-object."
 SoundMixStereo::usage = "SoundMixStereo[s_Sound] calls SoundMix to make a simple stereo-mix."
 SoundOfSilence::usage = "SoundOfSilence[opts___] returns an sound-less Sound-object. The opts-argument may be SoundChannelCount and all the usual opts and defaults to Options[Zound]."
 SoundPar::usage = "SoundPar[sl:SFLP, opts___] takes a list of sound-function-objects and creates a new one with the supplied Sound-objects in parallel."<>ToDoString<>SoundPar::todo
 SoundPitchShift::usage = "SoundPitchShift[s_Sound,r_,opts___] changes the pitch of the s-argument by changing the duration and keeping the sample-rate."<>ToDoString<>SoundPitchShift::todo
-SoundSetDuration::usage = "SoundSetDuration[s_Sound,sd_,opts___] sets the duration by either chopping it or looping it."<>ToDoString<>SoundSetDuration::todo
-SoundSampleCount::usage = "SoundSampleCount is returned by the SoundGetInfo function and is also an opt to various functions."
+SoundSampleCount::usage = "SoundSampleCount is returned by the GetInfo function and is also an opt to various functions."
 SoundSeq::usage = "SoundSeq[sl:SFLP, opts___] takes a list of sound-function-objects and creates a new one with the supplied Sound-objects in sequence."<>ToDoString<>SoundSeq::todo
-SoundType::usage = "SoundSampleCount is returned by the SoundGetInfo function and WILL BE an opt to various functions."
+SoundType::usage = "SoundSampleCount is returned by the GetInfo function and WILL BE an opt to various functions."
 SoundUnPar::usage = "SoundUnPar[s_?SoundFuncQ] splits the Sound-object to a list of Sound-objects, one for each channel. The opposite to SoundPar."
 SoundUnSeq::usage = "SoundUnSeq[s_?SoundFuncQ, c_List] splits the Sound-object to a list of Sound-objects. The c-parameter is a list of points in time where to cut. The opposite to SoundSeq."<>ToDoString<>SoundUnSeq::todo
 Zound::usage = "The holder of default values/options."
@@ -134,16 +133,16 @@ RDCX[rr_,dd_,cc_,opts___] :=
   Module[
     {
       r = SampleRate /. {opts},
-      d = SoundDuration /. {opts},
+      d = Duration /. {opts},
       c = SoundSampleCount /. {opts}
       },
-    If[MatchQ[{r, d, c}, {SampleRate, SoundDuration, SoundSampleCount}],
+    If[MatchQ[{r, d, c}, {SampleRate, Duration, SoundSampleCount}],
       r = rr;
       d = dd;
       c = cc;
       Return[{r,d,c}];
       ];
-    If[MatchQ[{r, d, c}, {_, SoundDuration, SoundSampleCount}],
+    If[MatchQ[{r, d, c}, {_, Duration, SoundSampleCount}],
       d = dd;
       c = IntegerPart[r*d];
       Return[{r,d,c}];
@@ -153,7 +152,7 @@ RDCX[rr_,dd_,cc_,opts___] :=
       c = IntegerPart[r*d];
       Return[{r,d,c}];
       ];
-    If[MatchQ[{r, d, c}, {SampleRate, SoundDuration, _}],
+    If[MatchQ[{r, d, c}, {SampleRate, Duration, _}],
       r = rr;
       d = N[c/r];
       Return[{r,d,c}];
@@ -162,7 +161,7 @@ RDCX[rr_,dd_,cc_,opts___] :=
       r = IntegerPart[c/d];
       Return[{r,d,c}];
       ];
-    If[MatchQ[{r, d, c}, {_, SoundDuration, _}],
+    If[MatchQ[{r, d, c}, {_, Duration, _}],
       d = N[c/r];
       Return[{r,d,c}];
       ];
@@ -179,25 +178,38 @@ RDCX[rr_,dd_,cc_,opts___] :=
 
 RDCZ[opts___] := RDCX[
   SampleRate /. Options[Zound],
-  SoundDuration /. Options[Zound],
-  IntegerPart[(SampleRate /. Options[Zound]) * (SoundDuration /. Options[Zound])],
+  Duration /. Options[Zound],
+  IntegerPart[(SampleRate /. Options[Zound]) * (Duration /. Options[Zound])],
   opts
   ]
 
 RDCS[s_Sound, opts___] := RDCX[
   SoundGetSampleRate[s],
-  SoundGetDuration[s],
+  GetDuration[s],
   SoundGetSampleCount[s],
   opts
   ]
 
-RDC2O[rdc_] := {SampleRate->#1, SoundDuration->#2, SoundSampleCount->#3}& @@ rdc
+RDC2O[rdc_] := {SampleRate->#1, Duration->#2, SoundSampleCount->#3}& @@ rdc
 
 FuncToList[f_, opts___] :=
   Module[
     {sr,sd,sc},
     {sr,sd,sc}=RDCZ[opts];
     Table[N[f[i/sr]], {i, 0, sc - 1}]
+    ]
+
+GetDuration[s_Sound] := N[SoundGetSampleCount[s]/SoundGetSampleRate[s]]
+
+GetInfo[s_Sound] :=
+  Module[
+    {
+      sr,sd,sc,
+      scc = SoundGetChannelCount[s],
+      st = If[SoundFuncQ[s],SampledSoundFunction,SampledSoundList]
+      },
+    {sr,sd,sc}=RDCS[s];
+    {SoundSampleCount->sc, SampleRate->sr, Duration->sd, SoundChannelCount->scc, SoundType->st}
     ]
 
 ListToFunc[d_, opts___] :=
@@ -211,6 +223,15 @@ ListToFunc[d_, opts___] :=
     {sr,sd,sc}=RDCZ[SoundSampleCount->Length[d],opts];
     f = ListInterpolation[Append[p,p[[-1]]],InterpolationOrder->io];
     Function[t,Evaluate[f[1 + Mod[t*sr, sc]]]]
+    ]
+
+SetDuration[s_Sound,sd_,opts___] :=
+  Module[
+    {
+      f = SoundGetFunc[s,SoundLoop->True],
+      sr = SoundGetSampleRate[s]
+      },
+    SoundMakeFunc[f, Duration->sd, SampleRate->sr, opts]
     ]
 
 FP = _?FunctionQ
@@ -232,8 +253,6 @@ SoundFuncQ[expr_] := MatchQ[expr, Sound[SampledSoundFunction[_, _, _]]]
 SoundGetChannelCount[s_?SoundFuncQ] := If[ListQ[s[[1, 1]]],Length[s[[1, 1]]],1]
 
 SoundGetChannelCount[s_?SoundListQ] := If[Depth[s[[1, 1]]] == 3, Length[s[[1, 1]]], 1]
-
-SoundGetDuration[s_Sound] := N[SoundGetSampleCount[s]/SoundGetSampleRate[s]]
 
 SoundGetFunc[s_?SoundFuncQ, opts___] :=
   (Module[
@@ -258,24 +277,13 @@ SoundGetFunc[s_?SoundListQ, opts___] :=
     ListToFunc[#, SampleRate->sr, opts]& /@ fl
     ])
 
-SoundGetInfo[s_Sound] :=
-  Module[
-    {
-      sr,sd,sc,
-      scc = SoundGetChannelCount[s],
-      st = If[SoundFuncQ[s],SampledSoundFunction,SampledSoundList]
-      },
-    {sr,sd,sc}=RDCS[s];
-    {SoundSampleCount->sc, SampleRate->sr, SoundDuration->sd, SoundChannelCount->scc, SoundType->st}
-    ]
-
 SoundGetList[s_?SoundFuncQ, opts___] :=
   Module[{
       sr,sd,sc,
       fl = SoundGetFunc[s]
       },
     {sr,sd,sc}=RDCZ[SampleRate->SoundGetSampleRate[s],SoundSampleCount->SoundGetSampleCount[s],opts];
-    FuncToList[#, SampleRate->sr, SoundDuration->sd, opts]& /@ fl
+    FuncToList[#, SampleRate->sr, Duration->sd, opts]& /@ fl
     ]
 
 SoundGetList[s_?SoundListQ, opts___] := If[Depth[s[[1, 1]]] == 3, s[[1, 1]], {s[[1, 1]]}]
@@ -371,7 +379,7 @@ SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?Functio
           ]
         ]
       ]& /@ fl;
-    SoundMakeFunc[fl, Sequence @@ SoundGetInfo[s], opts]
+    SoundMakeFunc[fl, Sequence @@ GetInfo[s], opts]
     ] /; SoundGetChannelCount[s] == Length[mix] && Module[{x = Union[Length /@ mix]}, Length[x] == 1 && 1 <= x[[1]]]
 
 SoundMixStereo[s_Sound] :=
@@ -392,23 +400,23 @@ SoundOfSilence[opts___] :=
 
 SoundPar[sl:SFLP, opts___] :=
   Module[{
-      sd = Max[SoundGetDuration /@ sl],
+      sd = Max[GetDuration /@ sl],
       r = sl
       },
     (* create a list of sound objects whith the same duration *)
-    r = Module[{csd = SoundGetDuration[#]},
+    r = Module[{csd = GetDuration[#]},
       If[sd == csd, SoundMakeFunc[#, opts],
         SoundSeq[
           {
             SoundMakeFunc[#, opts],
-            SoundOfSilence[SoundChannelCount->SoundGetChannelCount[#], SoundDuration-> sd-csd, opts]
+            SoundOfSilence[SoundChannelCount->SoundGetChannelCount[#], Duration-> sd-csd, opts]
             },
           opts
           ]
         ]
       ] & /@ r;
     r = Flatten[SoundGetFunc[#,opts]& /@ r];
-    SoundMakeFunc[r, SoundDuration->sd, opts]
+    SoundMakeFunc[r, Duration->sd, opts]
     ]
 
 SoundPitchShift[s_Sound,r_,opts___] :=
@@ -420,16 +428,7 @@ SoundPitchShift[s_Sound,r_,opts___] :=
       f = Function[t,Evaluate[#[t*r]]]& /@ SoundGetFunc[s,opts]
       },
     sd = N[sc/(r*sr)];
-    SoundMakeFunc[f, SoundDuration->sd, SampleRate->sr, opts]
-    ]
-
-SoundSetDuration[s_Sound,sd_,opts___] :=
-  Module[
-    {
-      f = SoundGetFunc[s,SoundLoop->True],
-      sr = SoundGetSampleRate[s]
-      },
-    SoundMakeFunc[f, SoundDuration->sd, SampleRate->sr, opts]
+    SoundMakeFunc[f, Duration->sd, SampleRate->sr, opts]
     ]
 
 SSF[fl_, dl_] :=
@@ -443,7 +442,7 @@ SSF[fl_, dl_] :=
 SoundSeq[sl:SFLP, opts___] :=
   Module[
     {
-      sd = Total[SoundGetDuration /@ sl],
+      sd = Total[GetDuration /@ sl],
       scc = Max[SoundGetChannelCount /@ sl],
       r = sl,
       dv, fv
@@ -454,26 +453,26 @@ SoundSeq[sl:SFLP, opts___] :=
         SoundPar[
           {
             SoundMakeFunc[#, opts],
-            SoundOfSilence[SoundChannelCount-> scc-cscc, SoundDuration->SoundGetDuration[#], opts]
+            SoundOfSilence[SoundChannelCount-> scc-cscc, Duration->GetDuration[#], opts]
             },
           opts
           ]
         ]
       ] & /@ r;
     (*the list of deltas*)
-    dv = SoundGetDuration /@ r;
+    dv = GetDuration /@ r;
     (*the list of lists of functions, one per channel*)
     fv = Transpose[SoundGetFunc[#,opts]& /@ r];
-    SoundMakeFunc[SSF[UnCompile /@ #, dv] & /@ fv, SoundDuration->sd, opts]
+    SoundMakeFunc[SSF[UnCompile /@ #, dv] & /@ fv, Duration->sd, opts]
     ]
 
 SoundUnPar[s_?SoundFuncQ,opts___] :=
   Module[
     {
       sr = SoundGetSampleRate[s],
-      sd = SoundGetDuration[s]
+      sd = GetDuration[s]
       },
-    SoundMakeFunc[#, SoundDuration->sd, SampleRate -> sr,opts] & /@ SoundGetFunc[s,opts]
+    SoundMakeFunc[#, Duration->sd, SampleRate -> sr,opts] & /@ SoundGetFunc[s,opts]
     ]
 
 SoundUnSeq[s_?SoundFuncQ, c_List,opts___] :=
@@ -481,7 +480,7 @@ SoundUnSeq[s_?SoundFuncQ, c_List,opts___] :=
     {
       cc,
       sr = SoundGetSampleRate[s],
-      sd = SoundGetDuration[s],
+      sd = GetDuration[s],
       fl = SoundGetFunc[s,opts]
       },
     cc = Cases[c, q$_ /; 0 < q$ < sd -> q$];
@@ -492,7 +491,7 @@ SoundUnSeq[s_?SoundFuncQ, c_List,opts___] :=
             Function[fi,
                 Composition[fi,(# + ci[[1]])&]
                 ] /@ fl,
-            SoundDuration->ci[[2]],
+            Duration->ci[[2]],
             SampleRate -> sr,
             opts
             ]
@@ -504,7 +503,7 @@ Options[Zound] =
   {
     SampleRate -> 2^13,
     SoundChannelCount -> 1,
-    SoundDuration -> 1,
+    Duration -> 1,
     SoundLoop -> False,
     SoundType -> SampledSoundFunction
     }
@@ -512,15 +511,18 @@ Options[Zound] =
 End[]
 
 Protect[
+  GetDuration,
+  SetDuration,
+  GetInfo
+  ];
+
+Protect[
   FuncToList,
   ListToFunc,
   SoundChannelCount,
-  SoundDuration,
   SoundExportWav,
   SoundFuncQ,
-  SoundGetDuration,
   SoundGetFunc,
-  SoundGetInfo,
   SoundGetList,
   SoundGetChannelCount,
   SoundGetSampleCount,
@@ -536,7 +538,6 @@ Protect[
   SoundPar,
   SoundPitchShift,
   SoundSampleCount,
-  SoundSetDuration,
   SoundSeq,
   SoundType,
   SoundUnPar,
