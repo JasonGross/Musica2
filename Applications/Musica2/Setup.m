@@ -51,45 +51,54 @@ Unprotect[
   MakeInitDotEm
   ];
 
-CalcMidiStateRoutes::usage = "MidiStateRoutesCalc[m : Midi[_, _]]"
+CalcMidiStateRoutes::usage = "CalcMidiStateRoutes[m : Midi[_, _]]"
 MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_]";
 
 Begin["`Private`"]
 
-SW[e_, m_] :=
+SW[e_, m$_,pr_] :=
   Module[{r = e, p, q, w, t},
-    p = Position[MidiStatesExpanded, MidiGetState[m]][[1, 1]];
+    p = Position[MidiStatesExpanded, MidiGetState[m$]][[1, 1]];
     w = Position[e, #][[1, 1]] & /@ Cases[e, {{p, _}, \[Infinity]}];
     Scan[If[r[[#, 2]] == \[Infinity],
       q = r[[#, 1, 2]];
-      t = Timing[MidiSetStateLow[m, MidiStatesExpanded[[q]]]];
+      t = Timing[MidiSetStateLow[m$, MidiStatesExpanded[[q]]]];
       r[[#, 2]] = t[[1, 1]];
-      Print[r[[#]]];
-      r = SW[r, t[[2]]];
+      If[pr,Print[r[[#]]]];
+      r = SW[r, t[[2]],pr];
       ] &, w];
     r
     ]
 
-CalcMidiStateRoutes[m : Midi[_, _]] :=
-  Module[{e, g},
+COP[e_, p_] :=
+  Module[{pe = Transpose[{Drop[p, -1], Drop[p, 1]}]},
+    Total[Cases[e, {s$_, c$_} /; MemberQ[pe, s$] -> c$]]
+    ]
+
+CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
+  Module[{e, g,c,p,pr=Verbose/.{opts}/.{Verbose->False}},
     Unprotect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
     MidiStatesExpanded = MidiExpandStates[MidiStates];
     MidiStatePathsExpanded = MidiExpandStatePaths[MidiStatePaths];
     e = {Position[MidiStatesExpanded, #][[1, 1]] & /@ #, \[Infinity]} & /@ MidiStatePathsExpanded;
-    e = SW[e, m];
+    e = SW[e, m, pr];
     If[MemberQ[e, {{_, _}, \[Infinity]}], Print["not connected?"]];
     g = AddEdges[EmptyGraph[Length[MidiStatesExpanded], Type -> Directed], ReplacePart[#, EdgeWeight -> #[[2]], {2}] & /@ e];
-    ShowGraph[g, VertexNumber -> True];
+    If[pr,ShowGraph[g, VertexNumber -> True]];
+    c=0;
     MidiStateRoutes = Table[
-      ShortestPath[g, f, t],
+      p=ShortestPath[g, f, t];
+      If[1<Length[p],c+=COP[e,p]];
+      p,
       {f, Length[MidiStatesExpanded]},
       {t, Length[MidiStatesExpanded]}
       ];
     Protect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
+    c/Length[MidiStatesExpanded]^2
     ]
 
-MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m"] :=
-  Module[{fout = OpenWrite[fn],d=ToString/@Date[]},
+MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m",opts___] :=
+  Module[{fout = OpenWrite[fn],d=ToString/@Date[],pr=True},
     WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
     WriteString[fout, "\n"];
     WriteString[fout, "(* :Summary: This file contains declarations of all the major symbols contained in files in this directory.\nWhen loaded, it sets up the symbols with attribute Stub, so the correct package will be loaded when the symbol is called. *)\n"];
@@ -101,7 +110,7 @@ MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","Setup","Sound","Utils"}
     WriteString[fout, "If[!MemberQ[$Packages,\"" <> pkg <> "`\"],\n  System`Private`p = Unprotect[$Packages];\n  PrependTo[$Packages,\"" <> pkg <> "`\"];\n  Protect @@ System`Private`p  \n];\n"];
     WriteString[fout, "\n"];
     (
-      Print[#];
+      If[pr,Print[#]];
       Get[pkg <> "`" <> # <> "`"];
       n = Names[pkg <> "`" <> # <> "`*"];
       WriteString[fout,"DeclarePackage[\"" <> pkg <> "`" <> # <> "`\",\n"];

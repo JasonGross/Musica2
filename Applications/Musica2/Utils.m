@@ -29,6 +29,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-08-08  bch :  just found out about Composition which has now replaced ReArg1
+                     also removed Func1Normalize, only used by ReArg1 and quite a silly function actually
+                     changed FunctionQ and UnCompile to also handle Composition's
   2004-08-07  bch :  moved MakeInitDotEm[] to Setup.m
   2004-08-06  bch :  added EventList to the list of pkg's
   2004-08-04  bch :  first release
@@ -49,12 +52,10 @@ Unprotect[
   DeltasToValues,
   Func1Q,
   Func1ListQ,
-  Func1Normalize,
   Func1ToList,
   FunctionQ,
   ListToFunc1,
   MakeNestedIfs,
-  ReArg1,
   UnCompile,
   ValuesToDeltas
   ];
@@ -62,12 +63,10 @@ Unprotect[
 DeltasToValues::usage = "DeltasToValues[d_, c_:0]";
 Func1Q::usage = "Func1Q[f_?FunctionQ]"
 Func1ListQ::usage = ""
-Func1Normalize::usage = "Func1Normalize[f_?Func1Q]"
 Func1ToList::usage = "Func1ToList[f_, sr_, duration_]"
 FunctionQ::usage = ""
 ListToFunc1::usage = "ListToFunc1[d_, sr_, smooth_:False]"
 MakeNestedIfs::usage = "MakeNestedIfs[deltas$_, expr$_, default$_]"
-ReArg1::usage = "ReArg1[f_?Func1Q, p_, a_]"
 UnCompile::usage = "UnCompile[f_?FunctionQ]"
 ValuesToDeltas::usage = "ValuesToDeltas[t_]";
 
@@ -81,7 +80,7 @@ DeltasToValues[d_List, c_Integer:0] :=
 SlotQ[expr_] := !AtomQ[expr] && Length[expr]==1 && expr[[0]]===Slot && IntegerQ[expr[[1]]] && 0<expr[[1]]
 GetSlotNrs[f_]:=If[FunctionQ[f]||AtomQ[f],{},If[SlotQ[f],f[[1]],GetSlotNrs/@ReplacePart[f,List,{0}]]]
 
-Func1Q[f_?FunctionQ]:=
+Func1Q[f_?FunctionQ]:= (* is this really working? *)
   Module[{g=UnCompile[f]},
     g[[0]]=List;
     If[Length[g]==2,
@@ -98,7 +97,7 @@ Func1ToList[f_, sr_, sd_] :=
     Table[f[i/sr], {i, 0, sc - 1}]
     ]
 
-FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction]
+FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition]
 
 ListToFunc1[d_, sr_, sm_:False] :=
   Module[{sc = Length[d], sf = (#1 + (#2 - #1)#3) &},
@@ -144,24 +143,9 @@ MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] :=
     Function[Evaluate[c$], Evaluate[i$]]
     ]
 
-Func1Normalize[f_?Func1Q] :=
-  Module[{g = UnCompile[f]},
-    If[Length[g] == 1, Function[x, Evaluate[g[x]]],
-      If[! AtomQ[g[[1]]] && Length[g[[1]]] == 1,
-        ReplacePart[g, g[[1, 1]], 1],
-        g
-        ]
-      ]
-    ]
-
-ReArg1[f_?Func1Q, p_, a_] :=
-  Module[{g = Func1Normalize[f]},
-    g = ReplacePart[g, g[[2]] /. {g[[1]] -> (a)}, 2];
-    ReplacePart[g, p, 1]
-    ]
-
 UnCompile[f_CompiledFunction] := f[[5]]
 UnCompile[f_Function] := f
+UnCompile[f_Composition] := Function[x,Evaluate[f[x]]]
 
 ValuesToDeltas[v_List] := Drop[v, 1] - Drop[v, -1]
 
@@ -171,12 +155,10 @@ Protect[
   DeltasToValues,
   Func1Q,
   Func1ListQ,
-  Func1Normalize,
   Func1ToList,
   FunctionQ,
   ListToFunc1,
   MakeNestedIfs,
-  ReArg1,
   UnCompile,
   ValuesToDeltas
   ];

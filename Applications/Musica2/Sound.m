@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-08-08  bch :  just found out about Composition, which has now replaced ReArg1
   2004-08-04  bch :  first release
   2004-08-02  bch :  created
 *)
@@ -122,8 +123,8 @@ SoundGetFunc[s_?SoundFuncQ, opts___] :=
       cfl = If[ListQ[s[[1, 1]]], s[[1, 1]], {s[[1, 1]]}]
       },
       If[SoundLoop /. {opts} /. Options[Zound],
-        ReArg1[#,t,1 + Mod[t*sr, sc]]& /@ cfl,
-        ReArg1[#,t,1 + t*sr]& /@ cfl
+        Composition[UnCompile[#],(1 + Mod[#*sr, sc])&]& /@ cfl,
+        Composition[UnCompile[#],(1 + #*sr)&]& /@ cfl
         ]
     ]
 
@@ -182,7 +183,7 @@ SoundMakeFunc[fl_?Func1ListQ, opts___] :=
       },
     Sound[
       SampledSoundFunction[
-        Evaluate[Compile[{{n,_Integer}},Evaluate[ReArg1[#,n,(n - 1.0)/sr][n]]]& /@ fl],
+        Evaluate[Compile[{{n,_Integer}},Evaluate[Composition[UnCompile[#],((# - 1.0)/sr)&][n]]]& /@ fl],
         Evaluate[IntegerPart[sr*sd]],
         Evaluate[IntegerPart[sr]]
         ]
@@ -356,7 +357,7 @@ SoundUnSeq[s_?SoundFuncQ, c_List] :=
       Function[ci,
           SoundMakeFunc[
             Function[fi,
-                ReArg1[fi, t, t + ci[[1]]]
+                Composition[fi,(# + ci[[1]])&]
                 ] /@ fl,
             SoundDuration->ci[[2]],
             SampleRate -> sr
