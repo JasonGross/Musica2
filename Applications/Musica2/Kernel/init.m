@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-23 at 12:56 *)
+(* :History: File created 2004-8-27 at 16:8 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -18,10 +18,10 @@ DeclarePackage["Musica2`EventList`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"Midi", "MidiAbsolute", "MidiAddChords", "MidiAddEOT", "MidiAddEvents", 
- "MidiAddNotes", "MidiAddQPM", "MidiAddVoices", "MidiChord", 
- "MidiControlChange", "MidiDataAnyValue", "MidiDataAnyValueQ", 
- "MidiDataNoValue", "MidiDataNoValueQ", "MidiDelta", "MidiEmpty", "MidiEOT", 
+{"Midi", "MidiAbsolute", "MidiAddChords", "MidiAddEvents", "MidiAddNotes", 
+ "MidiAddQPM", "MidiAddVoices", "MidiChord", "MidiControlChange", 
+ "MidiDataAnyValue", "MidiDataAnyValueQ", "MidiDataNoValue", 
+ "MidiDataNoValueQ", "MidiDelta", "MidiEmpty", "MidiEOT", 
  "MidiExpandStatePaths", "MidiExpandStates", "MidiExportSMF", "MidiFile", 
  "MidiFileFormat", "MidiFixEOT", "MidiFixNoteOff", "MidiFixTime", 
  "MidiGetChannels", "MidiGetChords", "MidiGetDuration", "MidiGetDurations", 
@@ -29,21 +29,20 @@ DeclarePackage["Musica2`Midi`",
  "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
  "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
  "MidiGetTPQ", "MidiGetVoices", "MidiImportSMF", "MidiKeySignature", 
- "MidiMeta", "MidiMilliSec", "MidiNormalizeNoteOff", "MidiNoteOff", 
- "MidiNoteOn", "MidiOfSilence", "MidiPar", "MidiPatternChord", 
- "MidiPatternData", "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", 
- "MidiPatternMusic", "MidiPatternTiming", "MidiPatternTrack", 
- "MidiPatternType", "MidiPatternVoice", "MidiPitchChange", "MidiPitchFlip", 
- "MidiPitchShift", "MidiQPM", "MidiRemChords", "MidiRemEvents", 
- "MidiRemNotes", "MidiRemQPM", "MidiRemVoices", "MidiSec", "MidiSeq", 
- "MidiSetChords", "MidiSetNotes", "MidiSetPitch", "MidiSetQPM", 
- "MidiSetState", "MidiSetStateLow", "MidiSetTime", "MidiSetTPQ", 
- "MidiSetVoices", "MidiShape", "MidiStatePaths", "MidiStatePathsExpanded", 
- "MidiStateRoutes", "MidiStates", "MidiStatesExpanded", "MidiSysX0", 
- "MidiSysX7", "MidiTempo", "MidiTick", "MidiTie", "MidiTieQ", "MidiTimeBend", 
- "MidiTimeChange", "MidiTimeFlip", "MidiTimeShift", "MidiTimeSignature", 
- "MidiTimeUnit", "MidiTiming", "MidiTPQ", "MidiUnTie", "MidiVoice", 
- "MidiVoiceReleaseTimeFunction"}
+ "MidiMeta", "MidiMilliSec", "MidiMix", "MidiNoteOff", "MidiNoteOn", 
+ "MidiOfSilence", "MidiPar", "MidiPatternChord", "MidiPatternData", 
+ "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", "MidiPatternMusic", 
+ "MidiPatternTiming", "MidiPatternTrack", "MidiPatternType", 
+ "MidiPatternVoice", "MidiPitchFlip", "MidiPitchShift", "MidiQPM", 
+ "MidiRemChords", "MidiRemEvents", "MidiRemNotes", "MidiRemQPM", 
+ "MidiRemVoices", "MidiSec", "MidiSeq", "MidiSetChords", "MidiSetNotes", 
+ "MidiSetPitch", "MidiSetQPM", "MidiSetState", "MidiSetStateLow", 
+ "MidiSetTime", "MidiSetTPQ", "MidiSetVoices", "MidiShape", "MidiStatePaths", 
+ "MidiStatePathsExpanded", "MidiStateRoutes", "MidiStates", 
+ "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", "MidiTick", 
+ "MidiTie", "MidiTieQ", "MidiTimeBend", "MidiTimeFlip", "MidiTimeShift", 
+ "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", "MidiTPQ", "MidiUnPar", 
+ "MidiUnSeq", "MidiUnTie", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
 ];
 
 DeclarePackage["Musica2`MidiPlay`",
@@ -51,7 +50,7 @@ DeclarePackage["Musica2`MidiPlay`",
 ];
 
 DeclarePackage["Musica2`Setup`",
-{"CalcMidiStateRoutes", "MakeInitDotEm"}
+{"CalcMidiStateRoutes", "MakeInitDotEm", "ToDo"}
 ];
 
 DeclarePackage["Musica2`Sound`",
@@ -66,7 +65,7 @@ DeclarePackage["Musica2`Sound`",
 
 DeclarePackage["Musica2`Utils`",
 {"DeltasToValues", "FunctionQ", "MakeNestedIfs", "NormalizeList", 
- "UnCompile", "ValuesToDeltas"}
+ "ToDoString", "UnCompile", "ValuesToDeltas"}
 ];
 
 Null

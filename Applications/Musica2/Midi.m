@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-08-27  bch :  simplified Format so that ?? wont get messy, need help here...
+                     added message todo
   2004-08-26  bch :  added some help/usage-text
   2004-08-23  bch :  added MidiFixTime, MidiSet(Pitch|Time)
                      bugfix in going from shape file to voice
@@ -111,6 +113,7 @@ Unprotect[
   MidiKeySignature,
   MidiMeta,
   MidiMilliSec,
+  MidiMix,
   MidiNoteOff,
   MidiNoteOn,
   MidiOfSilence,
@@ -158,15 +161,27 @@ Unprotect[
   MidiTimeUnit,
   MidiTiming,
   MidiTPQ,
+  MidiUnPar,
+  MidiUnSeq,
   MidiUnTie,
   MidiVoice,
   MidiVoiceReleaseTimeFunction,
   MidiQPM
   ];
 
-Midi::usage = "Midi[i, d] represents a midi object where i is the info about d, the midi data. Midi is also the holder of some default values/options."
+Midi::todo = "It would be great to have a Format that is informative WHITHOUT messing with ??."
+MidiAddChords::todo = "What about the track- and channel-info when they already exist? Error handling is missing."
+MidiExportSMF::todo = "Check if MidiFileFormat is OK in respect to the number of tracks?"
+MidiFileFormat::todo = "Shall there be checks in Midi(Add|Set)(Notes|Voices|Chords) and other functions that MidiFileFormat is OK in respect to the number of tracks?"
+MidiMix::todo = "Everything."
+MidiPar::todo = "An option for weither the first track is a master-track and should be discarded or not."
+MidiSetStateLow::todo = "Changing shape from MidiFile to MidiVoice and back discards all channel-messages but notes."
+MidiUnPar::todo = "An option for weither the first track is a master-track and should be copied into all Midi-objects or not."
+MidiUnSeq::todo = "Everything."
+
+Midi::usage = "Midi[i, d] represents a midi object where i is the info about d, the midi data. Midi is also the holder of some default values/options."<>ToDoString<>Midi::todo
 MidiAbsolute::usage = "MidiTiming can be either MidiAbsolute or MidiDelta. If MidiTiming is MidiAbsolute, all timing information are absolute values. Observe that when in shape MidiVoice or MidiChord, MidiAbsolute means end-timing"
-MidiAddChords::usage = "MidiAddChords[m_Midi,n:{{{_,_}...},{{_,{{_,_}...}}...}}] adds the chords in n to m. The chords is appended to m, so if m already contains chords, the polyphony in n and m must match. The timing is supposed to be MidiDelta"
+MidiAddChords::usage = "MidiAddChords[m_Midi,n:{{{_,_}...},{{_,{{_,_}...}}...}}] adds the chords in n to m. The chords is appended to m, so if m already contains chords, the polyphony in n and m must match. The timing is supposed to be MidiDelta."<>ToDoString<>MidiAddChords::todo
 MidiAddEvents::usage = "MidiAddEvents[m_Midi,n:{{{_,{_,_}}...}...}] adds the events in e to m. The timing is supposed to be MidiAbsolute."
 MidiAddNotes::usage = "MidiAddNotes[m_Midi,n : {{{{_,_},{_,_,_}}...}...}] adds the notes in n to m. The timing is supposed to be MidiAbsolute. MidiAddNotes calls MidiAddEvents after creating a NoteOn and a NoteOff for each note."
 MidiAddQPM::usage = "MidiAddQPM[m_Midi, q : {{_, _} ...}] adds tempo events in QuartersPerMinute to m. The timing is supposed to be MidiAbsolute. MidiAddQPM calls MidiAddEvents after reformatting each QPM."
@@ -182,20 +197,20 @@ MidiEmpty::usage = "An empty Midi-object."
 MidiEOT::usage = "The constant for event-type EndOfTrack."
 MidiExpandStates::usage = "MidiExpandStates[s_], low-level stuff, needed by CalcMidiStateRoutes."
 MidiExpandStatePaths::usage = "MidiExpandStatePaths[p_], low-level stuff, needed by CalcMidiStateRoutes."
-MidiExportSMF::usage = "MidiExportSMF[fn_String, m_Midi, opts___] writes m to the file named fn in StandardMidiFile-format."
+MidiExportSMF::usage = "MidiExportSMF[fn_String, m_Midi, opts___] writes m to the file named fn in StandardMidiFile-format."<>ToDoString<>MidiExportSMF::todo
 MidiFile::usage = "One possible shape for a Midi-object. Part of a Midi's state."
-MidiFileFormat::usage = "Part of a Midi's info. Either the integer 0 or 1. Will be used more later."
+MidiFileFormat::usage = "Part of a Midi's info. Either the integer 0 or 1. Will be used more later."<>ToDoString<>MidiFileFormat::todo
 MidiFixEOT::usage = "MidiFixEOT[m_Midi, keep_] adds EOT to each track in m, and removes any duplicates or extra EOT's. If keep is true the duration in m will be preserved, if false the duration will be trimmed."
 MidiFixNoteOff::usage = "MidiFixNoteOff[m_Midi, v2z_:False] changes all NoteOn's with velocity 0 (zero) to NoteOff's. If v2z it true all velocity's of NoteOff's will be set to 0 (zero) as well."
 MidiFixTime::usage = "MidiFixTime[m_Midi, q_] quantifies the timing's in m. MidiFixTime calls MidiSetTime with function-parameter (q*Round[#/q])&."
 MidiGetChannels::usage = "MidiGetChannels[m_Midi] returns a nested list with channel-numbers for each track for which there are notes."
 MidiGetChords::usage = "MidiGetChords[m_Midi] returns the chords in m. The timing will be MidiDelta."
-MidiGetDuration::usage = "MidiGetDuration[m_Midi] return the duration for m."
-MidiGetDurations::usage = "MidiGetDurations[m_Midi] returns a list with the duration for each track in m."
+MidiGetDuration::usage = "MidiGetDuration[m_Midi] return the duration for m. See also MidiGetDurations."
+MidiGetDurations::usage = "MidiGetDurations[m_Midi] returns a list with the duration for each track in m. See also MidiGetDuration."
 MidiGetInfo::usage = "MidiGetInfo[m_Midi] returns the info-part of m."
 MidiGetNotes::usage = "MidiGetNotes[m_Midi] returns the notes in m. The timing will be MidiAbsolute."
-MidiGetPitchRange::usage = "MidiGetPitchRange[m_Midi] returns the pitch-range in m."
-MidiGetPitchRanges::usage = "MidiGetPitchRanges[m_Midi] returns a list with the pitch-range's for each track in m."
+MidiGetPitchRange::usage = "MidiGetPitchRange[m_Midi] returns the pitch-range in m. See also MidiGetPitchRanges."
+MidiGetPitchRanges::usage = "MidiGetPitchRanges[m_Midi] returns a list with the pitch-range's for each track in m. See also MidiGetPitchRange."
 MidiGetQPM::usage = "MidiGetQPM[m_Midi] returns the tempo events in m. The timing will be MidiAbsolute."
 MidiGetSecToTickFunction::usage = "MidiGetSecToTickFunction[m_Midi] returns a conversion-function reflecting the tempo-changes in m."
 MidiGetShape::usage = "MidiGetShape[m_Midi] returns the shape m is in."
@@ -209,11 +224,11 @@ MidiImportSMF::usage = "MidiImportSMF[fn_String, opts___] reads a StandardMidiFi
 MidiKeySignature::usage = "The constant for event-type key-signature."
 MidiMeta::usage = "The constant for the first part of event-type's that are meta-events."
 MidiMilliSec::usage = "One possible time-unit for a Midi-object. Part of a Midi's state."
+MidiMix::usage = "Does nothing yet."<>ToDoString<>MidiMix::todo
 MidiNoteOff::usage = "The constant for event-type note-on."
 MidiNoteOn::usage = "The constant for event-type note-off."
 MidiOfSilence::usage = "MidiOfSilence[tracks_,duration_, opts___] creates an almost empty Midi-object. The opts-argument can be MidiTimeUnit, MidiTPQ and MidiQPM, which if omitted will default to Options[Midi]."
-MidiPar::usage = "MidiPar[m:{_Midi,_Midi...}, opts___] concatenates all Midi-objects in m into one. The first track in the resulting Midi-object will be the one from the first Midi-object in the list in m. All the other Midi-objects first track's will be discarded.\[NewLine]
-TODO: an option for weither the first track should be discarded or not."
+MidiPar::usage = "MidiPar[m:{_Midi,_Midi...}, opts___] concatenates all Midi-objects in m into one. The first track in the resulting Midi-object will be the one from the first Midi-object in the list in m. All the other Midi-objects first track's will be discarded."<>ToDoString<>MidiPar::todo
 MidiPatternData::usage = ""
 MidiPatternChord::usage = ""
 MidiPatternFile::usage = ""
@@ -238,7 +253,7 @@ MidiSetNotes::usage = "MidiSetNotes[m_Midi,n : {{{{_,_},{_,_,_}}...}...}] calls 
 MidiSetPitch::usage = "MidiSetPitch[m_Midi, f_] sets all pitch in m to the result from calling the function in f taking the original pitch as parameter."
 MidiSetQPM::usage = "MidiSetQPM[m_Midi, q : {{_, _} ...}] calls MidiRemQPM and MidiAddQPM."
 MidiSetState::usage = "MidiSetState[m_Midi, s_, opts___] sets m to the state in s, which can be incomplete. The s-argument is the list of options/rules MidiShape, MidiTimeUnit and MidiTiming. MidiSetState repeatedly calls MidiSetStateLow according to MidiStateRoutes, calculated by CalcMidiStateRoutes."
-MidiSetStateLow::usage = "MidiSetState[m_Midi, s_, opts___] does the hard work in changing the state in m, called by MidiSetState."
+MidiSetStateLow::usage = "MidiSetState[m_Midi, s_, opts___] does the hard work in changing the state in m, called by MidiSetState."<>ToDoString<>MidiSetStateLow::todo
 MidiSetTime::usage = "MidiSetTime[m_Midi, f_] sets all timing in m to the result from calling the function in f taking the original timing as parameter."
 MidiSetTPQ::usage = "MidiSetTPQ[m_Midi,tpq_] sets the TPQ in m without changing the data whatsoever, only the info-part is affected."
 MidiSetVoices::usage = "MidiSetVoices[m_Midi,n:{{{_,_},{{_,{_,_}}...}}...}] calls MidiRemVoices and MidiAddVoices."
@@ -261,6 +276,8 @@ MidiTimeSignature::usage = "The constant for event-type time-signature."
 MidiTimeUnit::usage = "A part of the state a Midi-object can be in. Possible values are MidiTick, MidiSec and MidiMilliSec."
 MidiTiming::usage = "A part of the state a Midi-object can be in. Possible values are MidiDelta and MidiAbsolute."
 MidiTPQ::usage = "A part of the info of a Midi-object and Options[Midi], indicates the resolution."
+MidiUnPar::usage = "MidiUnPar[m_Midi] creates a list of Midi-objects, one for each track in m but track 1 which is copied into all Midi-objects."<>ToDoString<>MidiUnPar::todo
+MidiUnSeq::usage = "Does nothing yet."<>ToDoString<>MidiUnSeq::todo
 MidiUnTie::usage = "MidiUnTie[d_], the opposite to calling MidiTie."
 MidiVoice::usage = "One possible shape for a Midi-object. Part of a Midi's state."
 MidiVoiceReleaseTimeFunction::usage = "default is Function[{track,note:{{on, off}, {ch, p, v}}},0]"
@@ -270,8 +287,9 @@ Begin["`Private`"]
 
 EOT = {MidiEOT,{}};
 
+(*
 Format[m_Midi] :=
-  If[Length[m]==2,
+  If[Length[m]==2 && OptionQ[m[[1]]],
     If[MidiGetShape[m]===MidiFile,
       StringForm["Midi[`1`,{{{timing, {type, data}}...}...}]",m[[1]]],
       If[MidiGetShape[m]===MidiVoice,
@@ -284,6 +302,9 @@ Format[m_Midi] :=
       ],
     StringForm["Midi[<unknown form>]"]
     ]
+*)
+
+Format[Midi[i_, d_]] := "\[SkeletonIndicator]Midi\[SkeletonIndicator]"
 
 Options[Midi]=
   {
@@ -691,6 +712,8 @@ MidiKeySignature = {MidiMeta,16^^59};
 
 MidiMeta = 16^^FF;
 
+MidiMix[m_Midi] := m
+
 MidiNoteOff = 0;
 
 MidiNoteOn = 1;
@@ -845,7 +868,7 @@ MidiSetState[m_Midi, s_, opts___] :=
     r
     ]
 
-MidiSetStateLow[m_Midi,s_, opts___]:= (* TODO: handle all channel-events *)
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[
     {
       am = MidiFixNoteOff[m],
@@ -956,7 +979,7 @@ MidiSetStateLow[m_Midi,s_, opts___]:= (* TODO: handle all channel-events *)
     ] /; MatchQ[MidiGetState[m],FS[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiVoice,MidiTiming->MidiDelta}
 
-MidiSetStateLow[m_Midi,s_, opts___] := (* TODO: handle all channel-events *)
+MidiSetStateLow[m_Midi,s_, opts___] :=
   Module[{trm, trn, trx, tr, tc},
     (* get all meta and sysx as {{{type, track}, {{end-tick, data}...}}...} *)
     trm = Select[m[[2]], MatchQ[#[[1, 1]], MidiSysX0 | MidiSysX7 | {MidiMeta,_}] &];
@@ -1386,6 +1409,16 @@ MidiTimeShift[m_Midi, s_] := MidiSetTime[m,(#+s)&]
 
 MidiTimeSignature = {MidiMeta,16^^58};
 
+MidiUnPar[mx_Midi] :=
+  Module[{m=MidiSetState[mx,{MidiShape->MidiFile}]},
+    Table[
+      MidiSetState[Midi[m[[1]],{m[[2,1]],m[[2,t]]}],MidiGetState[mx]],
+      {t,2,Length[m[[2]]]}
+      ]
+    ]
+
+MidiUnSeq[m_Midi] := m
+
 MidiUnTie[d_MidiTie] := d[[1]]
 
 MidiUnTie[d_?NumberQ] := If[MidiTieQ[d],-d-1,d]
@@ -1554,6 +1587,7 @@ Protect[
   MidiKeySignature,
   MidiMeta,
   MidiMilliSec,
+  MidiMix,
   MidiNoteOff,
   MidiNoteOn,
   MidiOfSilence,
@@ -1601,6 +1635,8 @@ Protect[
   MidiTimeUnit,
   MidiTiming,
   MidiTPQ,
+  MidiUnPar,
+  MidiUnSeq,
   MidiUnTie,
   MidiVoice,
   MidiVoiceReleaseTimeFunction,

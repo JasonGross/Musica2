@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`EventList` *)
 
 (* :History:
+  2004-08-27  bch :  added message todo
   2004-08-26  bch :  added some help/usage-text
   2004-08-10  bch :  changed MidiToEventList to call MidiSetState
   2004-08-06  bch :  created
@@ -41,6 +42,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`EventList`",
   {
     "Musica2`Midi`",
+    "Musica2`Utils`",
     "Musica`",
     "Musica`EventLists`MIDI`IO`",
     "Musica`EventLists`MIDI`Messages`",
@@ -53,10 +55,11 @@ Unprotect[
   MidiToEventList
   ];
 
-EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object.\[NewLine]
-TODO: currently the only channel-events processed are NoteOn's and NoteOff's."
-MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object.\[NewLine]
-TODO: currently the only channel-events processed are NoteOn's and NoteOff's."
+EventListToMidi::todo = "Currently the only channel-events processed are NoteOn's and NoteOff's."
+MidiToEventList::todo = "Currently the only channel-events processed are NoteOn's and NoteOff's."
+
+EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object."<>ToDoString<>EventListToMidi::todo
+MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object."<>ToDoString<>MidiToEventList::todo
 
 Begin["`Private`"]
 

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-08-27  bch :  added ToDoString
   2004-08-26  bch :  added some help/usage-text
   2004-08-11  bch :  moved FuncToList & ListToFunc from Utils.m to Sound.m
   2004-08-10  bch :  used the ListInterpolation function inside ListToFunc
@@ -57,14 +58,16 @@ Unprotect[
   FunctionQ,
   MakeNestedIfs,
   NormalizeList,
+  ToDoString,
   UnCompile,
   ValuesToDeltas
   ];
 
 DeltasToValues::usage = "DeltasToValues[d_List, c_Integer:0] is the opposite to ValuesToDeltas";
 FunctionQ::usage = "FunctionQ[expr_] tests if expr is a function."
-MakeNestedIfs::usage = "MakeNestedIfs[de$:{{_,_}...}, default$_] creates a function containing nested if's. The de-argument is a list of {delta,expr} which describes the function to return. The default-argument is the expr the function returned will return when called whith a parameter outside the normal range and defaults to 0 (zero)."
+MakeNestedIfs::usage = "MakeNestedIfs[de$:{{_,_}...}, default$_] and MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] creates a function containing nested if's. The de-argument is a list of {delta,expr} which describes the function to return. The default-argument is the expr the function returned will return when called whith a parameter outside the normal range and defaults to 0 (zero)."
 NormalizeList::usage = "NormalizeList[d_,opts___] takes a list of numbers and normalize them to range from -1 to 1. opts can take PlayRange->{lo,hi} as an argument which otherwise will be calculated."
+ToDoString::usage = "ToDoString is the string that separates the actual usage-text from the appended todo-text."
 UnCompile::usage = "UnCompile[f_] returns f in an uncompiled version."
 ValuesToDeltas::usage = "ValuesToDeltas[v_List] is the opposite to DeltasToValues and calculates the deltas between the values in the list.";
 
@@ -74,9 +77,6 @@ DeltasToValues[d_List, c_Integer:0] :=
   Module[{k = 0},
     Prepend[Table[k += d[[i]], {i, Length[d]}], 0] + c
     ]
-
-SlotQ[expr_] := !AtomQ[expr] && Length[expr]==1 && expr[[0]]===Slot && IntegerQ[expr[[1]]] && 0<expr[[1]]
-GetSlotNrs[f_]:=If[FunctionQ[f]||AtomQ[f],{},If[SlotQ[f],f[[1]],GetSlotNrs/@ReplacePart[f,List,{0}]]]
 
 FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition | _InterpolatingFunction]
 
@@ -120,6 +120,8 @@ NormalizeList[d_,opts___] :=
     N[(d-md)/sp]
     ]
 
+ToDoString = "\[NewLine]\[NewLine]ToDo: "
+
 UnCompile[f_CompiledFunction] := f[[5]]
 UnCompile[f_Function] := f
 UnCompile[f_Composition] := Function[x,Evaluate[f[x]]]
@@ -134,6 +136,7 @@ Protect[
   FunctionQ,
   MakeNestedIfs,
   NormalizeList,
+  ToDoString,
   UnCompile,
   ValuesToDeltas
   ];

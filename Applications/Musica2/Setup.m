@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-08-27  bch :  added ToDo function
   2004-08-26  bch :  added some help/usage-text
   2004-08-19  bch :  added MidiPlay to the list of pkg's
   2004-08-08  bch :  added CalcMidiStateRoutes
@@ -50,14 +51,18 @@ BeginPackage["Musica2`Setup`",
 
 Unprotect[
   CalcMidiStateRoutes,
-  MakeInitDotEm
+  MakeInitDotEm,
+  ToDo
   ];
+
+ToDo::todo = "Arguments pkg and pkgs should be shared with MakeInitDotEm."
 
 CalcMidiStateRoutes::usage = "CalcMidiStateRoutes[m_Midi, opts___] takes a Midi-object as an argument and recalculates MidiStateRoutes. The option Verbose->True plots a graph along with some timings. The result returned by CalcMidiStateRoutes is the average time it takes for a change of state for the Midi-object."
 MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m. The default-values for the arguments are:\[NewLine]
 pkg:  Musica2\[NewLine]
 pkgs: {EventList,Midi,MidiPlay,Setup,Sound,Utils}\[NewLine]
 fn:   Musica2/Applications/Musica2/Kernel/init.m";
+ToDo::usage = "ToDo[] prints what todo ;-)"<>ToDoString<>ToDo::todo
 
 Begin["`Private`"]
 
@@ -130,11 +135,29 @@ MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Soun
     Close[fout];
     ]
 
+ToDo[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Sound","Utils"}] :=
+  Drop[
+    Union[
+      Flatten[
+        Module[{e = ToExpression[#], s},
+          If[Head[e] === Symbol,
+            s = MessageName[Evaluate[e], "todo"];
+            If[StringQ[s], {#, s},Null],
+            Null
+            ]
+          ]& /@ Names[pkg <> "`" <> # <> "`*"] & /@ pkgs,
+        1
+        ]
+      ],
+    1
+    ]
+
 End[]
 
 Protect[
   CalcMidiStateRoutes,
-  MakeInitDotEm
+  MakeInitDotEm,
+  ToDo
   ];
 
 EndPackage[]
