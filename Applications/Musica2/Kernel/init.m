@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-9-21 at 18:15 *)
+(* :History: File created 2004-9-23 at 14:27 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -14,25 +14,26 @@ If[!MemberQ[$Packages,"Musica2`"],
 ];
 
 DeclarePackage["Musica2`Common`",
-{"Convert", "Duration", "Mix", "Par", "Seq"}
+{"Convert", "Duration", "Mix", "Par", "Play2", "Seq"}
 ];
 
 DeclarePackage["Musica2`Midi`",
 {"Event", "EventData", "EventQ", "EventTime", "EventType", "EventTypeEOT", 
  "EventTypeMeta", "EventTypeNoteOff", "EventTypeNoteOn", "EventTypeSysX0", 
- "EventTypeSysX7", "EventTypeTempo", "Midi", "MidiQ", "MilliSecond", "QPM", 
- "Tempo", "TempoFunction", "TempoQ", "TempoTime", "TempoTrack", 
- "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
+ "EventTypeSysX7", "EventTypeTempo", "Midi", "MidiChannel", "MidiQ", 
+ "MilliSecond", "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", 
+ "TempoTrack", "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
 ];
 
 DeclarePackage["Musica2`Note`",
 {"Chord", "ChordQ", "Counterpoint", "CounterpointQ", "Melody", "MelodyQ", 
- "Note", "NoteDuration", "NoteFunction", "NoteQ", "PcV", "PitchCode", 
- "Progression", "ProgressionQ", "Velocity"}
+ "Note", "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "PcV", 
+ "PitchCode", "PitchCodeClassCount", "Progression", "ProgressionQ", "Scale", 
+ "ScaleFunction", "ScaleQ", "Velocity"}
 ];
 
 DeclarePackage["Musica2`Setup`",
-{"ClearInitDotEm", "MakeInitDotEm", "ToDo"}
+{"ClearInitDotEm", "MakeInitDotEm"}
 ];
 
 DeclarePackage["Musica2`Sound`",
@@ -46,10 +47,10 @@ DeclarePackage["Musica2`Type`",
 ];
 
 DeclarePackage["Musica2`Utils`",
-{"DataAnyValue", "DataAnyValueQ", "DataNoValue", "DataNoValueQ", "DataTie", 
- "DataTieQ", "DataUnTie", "DeltasToValues", "FunctionQ", "MakeNestedIfs", 
- "NormalizeList", "ParOfSeqToSeqOfPar", "SeqOfParToParOfSeq", "ToDoString", 
- "UnCompile", "ValuesToDeltas"}
+{"AddOpts", "DataAnyValue", "DataAnyValueQ", "DataApply", "DataNoValue", 
+ "DataNoValueQ", "DataTie", "DataTieQ", "DataUnTie", "DeltasToValues", 
+ "FunctionQ", "MakeNestedIfs", "NormalizeList", "ParOfSeqToSeqOfPar", 
+ "SeqOfParToParOfSeq", "UnCompile", "ValuesToDeltas"}
 ];
 
 Null

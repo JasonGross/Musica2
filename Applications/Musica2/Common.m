@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Common` *)
 
 (* :History:
+  2004-09-22  bch :  added Play2
   2004-09-19  bch :  moved DefineSu(b|p) to Type.m
   2004-09-18  bch :  renamed Info to Opts
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
@@ -52,6 +53,7 @@ Convert::usage = ""
 Duration::usage = ""
 Mix::usage = ""
 Par::usage = ""
+Play2::usage = ""
 Seq::usage = ""
 
 Begin["`Private`"]

@@ -30,7 +30,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 (* :History:
   2004-09-13  bch :  Musica and Musica2 dont seem to get along very well.
-  2004-08-27  bch :  added message todo
+  2004-08-27  bch :  added message ToDo
   2004-08-26  bch :  added some help/usage-text
   2004-08-10  bch :  changed MidiToEventList to call MidiSetState
   2004-08-06  bch :  created
@@ -56,17 +56,13 @@ Unprotect[
   MidiToEventList
   ];
 
-EventList::todo = "Having Note, Track and Event in both Musica and Musica2 seems to cause problems."
-EventListToMidi::todo = "Currently the only channel-events processed are NoteOn's and NoteOff's."
-MidiToEventList::todo = "Currently the only channel-events processed are NoteOn's and NoteOff's."
-
-EventList::usage = ""<>ToDoString<>EventList::todo
-EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object."<>ToDoString<>EventListToMidi::todo
-MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object."<>ToDoString<>MidiToEventList::todo
+EventList::usage = ""
+EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object."
+MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object."
 
 Begin["`Private`"]
 
-EventListToMidi[e_] :=
+EventListToMidi[e_] := (* todo: handle all channel events, not just notes *)
   Module[{x = ConvertEventList[e, EventList[MIDI, Tick, {}, Null]]},
     Midi[{MidiFileFormat -> (MIDIFileFormat /. x[[0, 4]]), MidiTPQ -> (TPQ /. x[[0, 4]]), MidiShape -> MidiFile, MidiTimeUnit -> MidiTick, MidiTiming -> MidiAbsolute},
       ReplacePart[{#[[1]],
@@ -83,7 +79,7 @@ EventListToMidi[e_] :=
       ]
     ]
 
-MidiToEventList[m_Midi] :=
+MidiToEventList[m_Midi] := (* todo: handle all channel events, not just notes *)
   Module[{},
     EventList[MIDI, Tick, {},Evaluate[{MIDIFileFormat -> (MidiFileFormat /. m[[1]] /. Options[Midi]), TPQ -> (MidiTPQ /. m[[1]] /. Options[Midi])}]] @@ (
       (Musica`Track @@ (Musica`Event[#[[1]],

@@ -129,10 +129,11 @@ DefineElement[T_Symbol, P_] :=
     Members[T] = M[T,P];
 
     (* get the index for all members *)
-    i = Drop[#, -1] & /@ Cases[Position[P /. {Pattern -> Function[{s, p}, s[Sequence @@ p]]}, _?(! MatchQ[#, List | Blank] &)], {__, 0}];
+    i = Drop[#, -1] & /@ Cases[Position[P /. {Pattern -> Function[{s, p}, s[Sequence @@ p]]}, _?(! MatchQ[#, List | Blank | BlankSequence] &)], {__, 0}];
     MapThread[(Pos[T,#1] = #2)&,{Members[T],i}];
 
     T /: Part[x_T, s_Symbol] := Data[x][[Sequence @@ Pos[T,s]]];
+    T /: Part[x_T, s_Symbol, n__Integer] := Part[x,s][[n]];
     T /: ReplacePart[x_T, d_, s_Symbol] := T[ReplacePart[Data[x], d, Pos[T,s]],Sequence @@ Opts[x]];
 
     Scan[(
@@ -170,7 +171,7 @@ DefineContainer[T_Symbol, ET_Symbol] :=
       ];
 
     (* get member data *)
-    (T /: #[x_T] := # /@ x;)& /@ Members[T];
+    Scan[(T /: #[x_T] := # /@ x)&,Members[T]];
 
     (* handy list-manipulation-functions *)
     T /: Append[x_T, y_?(TypeQ[ET])] := T[Append[Data[x],UnPack[T][y,Opts[x]]], Sequence @@ Opts[x]];
@@ -193,14 +194,14 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]];
     T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]];
 
+    If[ContainerQ[ET],
+      T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x],
+      T /: Map[f_, x_T, s_Symbol] := Map[ReplacePart[#,f[#[[s]]],s]&,x]
+      ];
     (* extended list-manipulation-functions *)
     If[ContainerQ[ET],
       T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[Function[{y,i},MapIndexed[f[#,Join[i,#2]]&,y,s]],x],
       T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[ReplacePart[#,f[#[[s]],#2],s]&,x]
-      ];
-    If[ContainerQ[ET],
-      T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x],
-      T /: Map[f_, x_T, s_Symbol] := Map[ReplacePart[#,f[#[[s]]],s]&,x]
       ];
     T /: Part[x_T, s_Symbol] := #[[s]]&/@ x;
     T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0;

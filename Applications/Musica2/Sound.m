@@ -29,11 +29,12 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-09-22  bch :  changed Show to Play2
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
   2004-09-12  bch :  using Common.m, Sound(G|S)etDuration is now (G|S)etDuration, SoundGetInfo is now GetInfo
   2004-08-28  bch :  added SoundMixStereo
   2004-08-27  bch :  removed " from some help/usage-text
-                     added message todo
+                     added message ToDo
   2004-08-26  bch :  added some help/usage-text
   2004-08-23  bch :  added SoundExportWav
   2004-08-11  bch :  added SoundSetDuration and some SoundMake*[*]
@@ -61,10 +62,18 @@ BeginPackage["Musica2`Sound`",
   ]
 
 Unprotect[
+  Mix,
+  Par,
+  Seq,
   Sound
   ];
 
 Unprotect[
+  SampleCount,
+  Snippet,
+  SnippetQ,
+  SoundQ,
+  SoundType
   ];
 
 CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), SnippetData_, SampleRate_Integer, SampleCount_Integer}];
@@ -76,12 +85,6 @@ SoundType::usage = ""
 Begin["`Private`"]
 
 (*****************)
-
-Options[Snippet] = {
-  SoundType:>(SoundType/.Options[Sound]),
-  SampleRate:>(SampleRate/.Options[Sound]),
-  SampleCount:>(SampleCount/.Options[Sound])
-  }
 
 Options[Sound] = {
   SoundType->SampledSoundFunction,
@@ -147,17 +150,17 @@ UnPackOpts[Sound] = Function[{subs,opts},
 
 (*****************)
 
-Convert[f_, SampledSoundFunction, scin_Integer, SampledSoundFunction, scout_Integer] :=
+Convert[f_, SampledSoundFunction, scin_Integer, SampledSoundFunction, scout_Integer] := (* todo: preserve pitch and duration? *)
   Module[{},
     f
     ]
 
-Convert[f_, SampledSoundFunction, scin_Integer, SampledSoundList, scout_Integer] :=
+Convert[f_, SampledSoundFunction, scin_Integer, SampledSoundList, scout_Integer] := (* todo: preserve pitch and duration? *)
   Module[{},
     Convert[Table[f[i],{i,Max[scin,scout]}],SampledSoundList, Max[scin,scout],SampledSoundList, scout]
     ]
 
-Convert[d_List, SampledSoundList, scin_Integer, SampledSoundFunction, scout_Integer] :=
+Convert[d_List, SampledSoundList, scin_Integer, SampledSoundFunction, scout_Integer] := (* todo: preserve pitch and duration? *)
   Module[{},
     ListInterpolation[
       Convert[d, SampledSoundList, scin, SampledSoundList, scout],
@@ -165,7 +168,7 @@ Convert[d_List, SampledSoundList, scin_Integer, SampledSoundFunction, scout_Inte
       ]
     ]
 
-Convert[d_List, SampledSoundList, scin_Integer, SampledSoundList, scout_Integer] :=
+Convert[d_List, SampledSoundList, scin_Integer, SampledSoundList, scout_Integer] := (* todo: preserve pitch and duration? *)
   Module[{},
     If[scout == scin, d,
       If[scout < scin,
@@ -176,9 +179,10 @@ Convert[d_List, SampledSoundList, scin_Integer, SampledSoundList, scout_Integer]
     ]
 
 Snippet /: Duration[x_Snippet] := SampleCount[x]/SampleRate[x]
-Sound /: Duration[x_Sound] := SampleCount[x]/SampleRate[x]
+Sound   /: Duration[x_Sound] := SampleCount[x]/SampleRate[x]
 
-Sound /: Mix[x_Sound, mix : {{__}...}] :=
+Mix[x:{__Snippet}] := "todo" (* todo: write the code! *)
+Mix[x_Sound, mix : {{__}...}] :=
   Module[
     {
       fl = Table[
@@ -198,7 +202,7 @@ Sound /: Mix[x_Sound, mix : {{__}...}] :=
     Sound[fl,Sequence @@ Opts[x]]
     ] /; (SoundType[x]===SampledSoundFunction) && (Length[x] == Length[mix]) && Module[{o = Union[Length /@ mix]}, (Length[o] == 1) && (1 <= o[[1]])]
 
-Sound /: Mix[s_Sound,2] :=
+Mix[s_Sound,2] :=
   Module[{c = Length[s],mix},
     If[c == 2, s,
       mix = If[c == 1, {{1 &, 1 &}},Table[N[{Evaluate[2(c - i)/(c^2 - c)] &, Evaluate[2(i - 1)/(c^2 - c)] &}], {i, c}]];
@@ -206,21 +210,36 @@ Sound /: Mix[s_Sound,2] :=
       ]
     ]
 
+Par[x:{__Snippet},opts___?OptionQ] := Sound[x,opts]
+Par[x:{__Sound},  opts___?OptionQ] := Sound[Flatten[Snippet /@ x],opts] (* todo: handle opts *)
+
+Snippet /: Play2[x_Snippet] := Play2[Sound[x]]
+Sound   /: Play2[x_Sound]   := Show[Mix[x,2]]
+
 Sound /: SampleCount[x_Sound] := SampleCount /. Opts[x]
 
 Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
-Snippet /: Show[x_Snippet] := Show[Sound[x]]
+Seq[x:{__Snippet},opts___?OptionQ] := "todo" (* todo: write the code! *)
+Seq[x:{__Sound},  opts___?OptionQ] := "todo" (* todo: write the code! *)
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 
 End[]
 
 Protect[
+  Mix,
+  Par,
+  Seq,
   Sound
   ];
 
 Protect[
+  SampleCount,
+  Snippet,
+  SnippetQ,
+  SoundQ,
+  SoundType
   ];
 
 EndPackage[]

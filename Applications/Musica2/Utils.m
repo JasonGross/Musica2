@@ -29,6 +29,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-09-23  bch :  removed ToDoString
+                     added AddOpts
+                     added DataApply
   2004-08-27  bch :  added ToDoString
   2004-08-26  bch :  added some help/usage-text
   2004-08-11  bch :  moved FuncToList & ListToFunc from Utils.m to Sound.m
@@ -54,8 +57,10 @@ BeginPackage["Musica2`Utils`",
   ]
 
 Unprotect[
+  AddOpts,
   DataAnyValue,
   DataAnyValueQ,
+  DataApply,
   DataNoValue,
   DataNoValueQ,
   DataTie,
@@ -67,21 +72,17 @@ Unprotect[
   NormalizeList,
   ParOfSeqToSeqOfPar,
   SeqOfParToParOfSeq,
-  ToDoString,
   UnCompile,
   ValuesToDeltas
   ];
 
-ToDoString::usage = "ToDoString is the string that separates the actual usage-text from the appended todo-text."
-Begin["`Private`"]
-ToDoString = "\[NewLine]\[NewLine]ToDo: "
-End[]
-
+AddOpts::usage = "AddOpts[x:{___?OptionQ},opts__?OptionQ] adds opts to x, no duplicate lhs returned."
 DataAnyValue::usage = "The symbol indicating non-empty data. Will be handy..."
 DataAnyValueQ::usage = "DataAnyValueQ[expr_] tests if expr is/contains the symbol DataAnyValue, tied or not."
+DataApply::usage = "DataApply[f_,d_] return d if d is DataAnyValueQ or DataNoValueQ, and f[d] after removing DataTie and adding it again if it was there."
 DataNoValue::usage = "The symbol indicating no-data, like a rest."
 DataNoValueQ::usage = "DataNoValueQ[expr_] tests if expr is/contains the symbol DataNoValue, tied or not."
-DataTie::usage = "A symbol that indicates a tie when in shape MidiChord. Well, its actually also a function, the opposite to calling DataUnTie."
+DataTie::usage = "A symbol that indicates a tie (in Chord in Progression for example). Well, its actually also a function, the opposite to calling DataUnTie."
 DataTieQ::usage = "DataTieQ[expr_] tests if expr is/contains a tie or not."
 DataUnTie::usage = "DataUnTie[d_], the opposite to calling DataTie."
 DeltasToValues::usage = "DeltasToValues[d_List, c_Integer:0] is the opposite to ValuesToDeltas";
@@ -95,7 +96,18 @@ ValuesToDeltas::usage = "ValuesToDeltas[v_List] is the opposite to DeltasToValue
 
 Begin["`Private`"]
 
+AddOpts[x:{___?OptionQ},opts__?OptionQ] :=
+  Module[{o=x},
+    Scan[
+      If[(#[[1]]/.o)===#[[1]],o=AppendTo[o,#],o=o/.(#[[1]]->_)->#]&,
+      {opts}
+      ];
+    o
+    ]
+
 DataAnyValueQ[expr_] := If[AtomQ[expr],expr===DataAnyValue||expr===DataTie[DataAnyValue],Or@@(DataAnyValueQ/@expr)]
+
+DataApply[f_,d_] := If[DataAnyValueQ[d] || DataNoValueQ[d],d,If[DataTieQ[d],DataTie[#],#]&[f[DataUnTie[d]]]]
 
 DataNoValueQ[expr_] := If[AtomQ[expr],expr===DataNoValue||expr===DataTie[DataNoValue],Or@@(DataNoValueQ/@expr)]
 
@@ -233,8 +245,10 @@ ValuesToDeltas[v_List] := Drop[v, 1] - Drop[v, -1]
 End[]
 
 Protect[
+  AddOpts,
   DataAnyValue,
   DataAnyValueQ,
+  DataApply,
   DataNoValue,
   DataNoValueQ,
   DataTie,
@@ -246,7 +260,6 @@ Protect[
   NormalizeList,
   ParOfSeqToSeqOfPar,
   SeqOfParToParOfSeq,
-  ToDoString,
   UnCompile,
   ValuesToDeltas
   ];

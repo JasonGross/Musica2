@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-09-23  bch :  removed ToDo, I never have the time to use it anyway
   2004-09-19  bch :  added Type to the list of pkg's
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
                      removed MidiPlay from the list of pkg's
@@ -56,13 +57,11 @@ BeginPackage["Musica2`Setup`",
 
 Unprotect[
   ClearInitDotEm,
-  MakeInitDotEm,
-  ToDo
+  MakeInitDotEm
   ];
 
 ClearInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
 MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
-ToDo::usage = "ToDo[] prints what todo ;-)"
 
 Begin["`Private`"]
 
@@ -99,30 +98,11 @@ MakeInitDotEm[pkg_, pkgs_, fn_] :=
     Close[fout];
     ]
 
-ToDo[] := ToDo[pkg, pkgs]
-ToDo[pkg_, pkgs_] :=
-  Drop[
-    Union[
-      Flatten[
-        Module[{e = ToExpression[#], s},
-          If[Head[e] === Symbol,
-            s = MessageName[Evaluate[e], "todo"];
-            If[StringQ[s], {#, s},Null],
-            Null
-            ]
-          ]& /@ Names[pkg <> "`" <> # <> "`*"] & /@ pkgs,
-        1
-        ]
-      ],
-    1
-    ]
-
 End[]
 
 Protect[
   ClearInitDotEm,
-  MakeInitDotEm,
-  ToDo
+  MakeInitDotEm
   ];
 
 EndPackage[]
