@@ -1,0 +1,837 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[     19144,        634]*)
+(*NotebookOutlinePosition[     19842,        658]*)
+(*  CellTagsIndexPosition[     19798,        654]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Musica2", "Title"],
+
+Cell["Documentation on the Musica2 package.", "Text"],
+
+Cell[CellGroupData[{
+
+Cell["Licence", "Subtitle"],
+
+Cell["\<\
+Copyright (C) 2004 Bo C. Herlin
+
+This program is free software;you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation;either version 2
+of the License,or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY;without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program;if not,write to the Free Software Foundation,
+Inc.,59 Temple Place-Suite 330,Boston,MA 02111-1307,USA.\
+\>", "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["History", "Subtitle"],
+
+Cell["\<\
+2004-08-04 Bo C. Herlin : first release
+2004-07-28 Bo C. Herlin : created\
+\>", "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Init", "Subtitle"],
+
+Cell["\<\
+Load Musica2 which in turn will load each package when \
+needed.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(<< Musica2`\)], "Input",
+  InitializationCell->True],
+
+Cell["\<\
+A small example below uses a tiny part of the Audio package when \
+creating a triangle sound.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(<< Miscellaneous`Audio`\)], "Input",
+  InitializationCell->True],
+
+Cell["Set DataFolder to the folder containing the testfiles.", "Text"],
+
+Cell[BoxData[
+    \(\(DataFolder = "\<Musica2/Documentation/Data/\>";\)\)], "Input",
+  InitializationCell->True],
+
+Cell[BoxData[
+    \(\(\(\(cor := DataFolder <> "\<cor.mid\>"\) \)\(;\)\( (*\ 2.9  kb, \ 
+      J . S . Bach, \ bwv\ 323, \ choral, \ Holy, \ 
+      holy, \ \(\(holy\)\(.\)\)\ *) \)\(\[IndentingNewLine]\)\(\(fug := 
+        DataFolder <> "\<fug.mid\>"\) \)\(;\)\( (*\ 6.1  kb, \ 
+      J . S . Bach, \ bwv\ 846  b, \ fugue\ 1\ in\ C\ major, \ 
+      wtc1\ *) \)\(\[IndentingNewLine]\)\(\(cun := 
+        DataFolder <> "\<cun.mid\>"\) \)\(;\)\( (*\ 6.4  kb, \ 
+      J . S . Bach, \ bwv\ 1080  a, \ contrapunctus\ 1, \ 
+      cunst\ die\ fugue\ *) \)\(\[IndentingNewLine]\)\(\(pre := 
+        DataFolder <> "\<pre.mid\>"\) \)\(;\)\( (*\ 8.9  kb, \ 
+      J . S . Bach, \ bwv\ 847  a, \ preludium\ 2\ in\ C\ minor, \ 
+      wtc1\ *) \)\)\)], "Input",
+  InitializationCell->True],
+
+Cell["Set MidiTestFile to the file to apply the tests to.", "Text"],
+
+Cell[BoxData[{
+    \(\(MidiTestFile := cor;\)\), "\[IndentingNewLine]", 
+    \(\(MidiTestFileList := {cor, fug, cun, pre};\)\)}], "Input",
+  InitializationCell->True]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Tour of Musica2", "Subtitle"],
+
+Cell["Ok", "Text"],
+
+Cell[CellGroupData[{
+
+Cell["Midi", "Subsubtitle"],
+
+Cell["Read from a SMF (StandardMidiFile).", "Text"],
+
+Cell[BoxData[
+    \(m = 
+      MidiImportSMF[MidiTestFile, MidiPrintHeader \[Rule] True]\)], "Input"],
+
+Cell["\<\
+Midi contain two parts: info and music. Info is a list of rules \
+with values for different attributes and music is the midi-data whos \
+structure depends on info.\
+\>", "Text"],
+
+Cell["\<\
+Info contain rules for each attribute:
+\tMidiFileFormat (0 or 1),if omitted defaults to Options[Midi]
+\tMidiShape (MidiFile,MidiVoice or MidiChord)
+\tMidiTimeUnit (MidiTick or MidiSec)
+\tMidiTiming (MidiDelta or MidiAbsolute)
+\tMidiTPQ (TickPerQuarter),if omitted defaults to Options[Midi]
+\tMidiQPM (QuarterPerMinute),if omitted defaults to Options[Midi], used as \
+default tempo\
+\>", "Text"],
+
+Cell[BoxData[
+    \(Options[Midi]\)], "Input"],
+
+Cell["Write to a SMF.", "Text"],
+
+Cell[BoxData[
+    \(MidiExportSMF["\<tmp.mid\>", m]\)], "Input"],
+
+Cell["Create a list of Midi's to test on.", "Text"],
+
+Cell[BoxData[
+    \(ml = MidiImportSMF /@ MidiTestFileList\)], "Input"],
+
+Cell["Do the files contain EOT (EndOfTrack)?", "Text"],
+
+Cell[BoxData[
+    \(\(# === MidiAddEOT[#] &\) /@ ml\)], "Input"],
+
+Cell["What are the lengths of the tracks?", "Text"],
+
+Cell[BoxData[
+    \(MidiGetDurations /@ ml // ColumnForm\)], "Input"],
+
+Cell["Equalize them.", "Text"],
+
+Cell[BoxData[
+    \(\(MidiGetDurations[MidiEqualizeEOT[#]] &\) /@ ml // 
+      ColumnForm\)], "Input"],
+
+Cell["What are the lengths of the files?", "Text"],
+
+Cell[BoxData[
+    \(MidiGetDuration /@ ml\)], "Input"],
+
+Cell["On which channels per track are there notes?", "Text"],
+
+Cell[BoxData[
+    \(\(MidiGetChannels[#] &\) /@ ml // ColumnForm\)], "Input"],
+
+Cell["\<\
+Do the files use NoteOff's instead of NoteOn's with velocity \
+zero?\
+\>", "Text"],
+
+Cell[BoxData[
+    \(\(# === MidiNormalizeNoteOff[#] &\) /@ ml\)], "Input"],
+
+Cell["\<\
+If a second parameter is supplied you can turn all \
+NoteOff-velocitys to zero.\
+\>", "Text"],
+
+Cell["\<\
+Since changing to shape MidiVoice is neglecting velocity for \
+NoteOff's I'll set them all to zero so that I can check for any loss \
+easier.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(m = MidiNormalizeNoteOff[m, True]\)], "Input"],
+
+Cell["\<\
+When MidiShape is MidiFile the music-part is a list of tracks \
+containing events as {timing, {type, data}}.\
+\>", "Text"],
+
+Cell["\<\
+Type is always an integer except if the event is a meta-event, then \
+its a list as {255,integer}.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(m[\([2]\)] // ColumnForm\)], "Input"],
+
+Cell["Change shape to MidiVoice.", "Text"],
+
+Cell[BoxData[
+    \(mv = MidiSetShape[m, MidiVoice]\)], "Input"],
+
+Cell["\<\
+When MidiShape is MidiVoice the music-part is a list of voices \
+containing data as {{type, track},{{timing, data}...}}.\
+\>", "Text"],
+
+Cell["\<\
+If the voice contains notes, track is not just a number but a list \
+as {track,channel,voice}.\
+\>", "Text"],
+
+Cell["\<\
+If the voice contains notes, the data is {timing,{pitch,velocity}} \
+since channel is added to the track-info, se above.\
+\>", "Text"],
+
+Cell["\<\
+A negative velocity means a rest. The data for a rest is discarded \
+when changing back to shape file.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(mv[\([2]\)] // ColumnForm\)], "Input"],
+
+Cell["Change shape back to MidiFile again.", "Text"],
+
+Cell[BoxData[
+    \(mf = MidiSetShape[mv, MidiFile]\)], "Input"],
+
+Cell["\<\
+What did we miss? (TODO: All channel messages except notes are \
+currently discarded).\
+\>", "Text"],
+
+Cell[BoxData[
+    \(MapThread[Complement, {m[\([2]\)], mf[\([2]\)]}] // 
+      ColumnForm\)], "Input"],
+
+Cell["What did we add? This should at least be all empty.", "Text"],
+
+Cell[BoxData[
+    \(MapThread[Complement, {mf[\([2]\)], m[\([2]\)]}] // 
+      ColumnForm\)], "Input"],
+
+Cell["Next shape is MidiChord.", "Text"],
+
+Cell[BoxData[
+    \(mc = MidiSetShape[mv, MidiChord]\)], "Input"],
+
+Cell["\<\
+When MidiShape is MidiChord the music-part is a list containing \
+data as {{type, {track...}},{{timing, {data...}}...}} for each type.\
+\>", \
+"Text"],
+
+Cell["There is no type MidiNoteOff in shape chord.", "Text"],
+
+Cell["The data is negative if there is a tie.", "Text"],
+
+Cell[BoxData[
+    \(mc[\([2]\)] // ColumnForm\)], "Input"],
+
+Cell["\<\
+Get the list of all chords. Negative pitch means tie. Rest's dont \
+show up here, they are indicated by the velocity-part.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(\(\(Transpose[#]\)[\([1]\)] &\) /@ \(Transpose[
+          mc[\([2, 1, 2]\)]]\)[\([2]\)]\)], "Input"],
+
+Cell["\<\
+We can use supplied patterns to check the data. Not much of a test \
+yet really, but the sourcecode of the patterns may help a confused \
+programmer.\
+\>", "Text"],
+
+Cell["We can check the info part.", "Text"],
+
+Cell[BoxData[
+    \(\(MatchQ[#[\([1]\)], MidiPatternInfo] &\) /@ {mf, mv, mc}\)], "Input"],
+
+Cell["We can check the music part.", "Text"],
+
+Cell[BoxData[
+    \(\(MatchQ[#[\([2]\)], MidiPatternFile] &\) /@ {mf, mv, mc}\)], "Input"],
+
+Cell[BoxData[
+    \(\(MatchQ[#[\([2]\)], MidiPatternVoice] &\) /@ {mf, mv, mc}\)], "Input"],
+
+Cell[BoxData[
+    \(\(MatchQ[#[\([2]\)], MidiPatternChord] &\) /@ {mf, mv, mc}\)], "Input"],
+
+Cell["Or we can check the whole package so to speak.", "Text"],
+
+Cell[BoxData[
+    \(\(MatchQ[#, MidiPatternMidi] &\) /@ {mf, mv, mc}\)], "Input"],
+
+Cell["Change TimeUnit to MidiSec and then get the duration in sec.", "Text"],
+
+Cell[BoxData[
+    \(\(MidiGetDuration[MidiSetTimeUnit[#, MidiSec]] &\) /@ ml\)], "Input"],
+
+Cell["Get all tempo-changes and their starting time.", "Text"],
+
+Cell[BoxData[
+    \(Round[N[MidiGetQPM /@ ml]] // ColumnForm\)], "Input"],
+
+Cell["\<\
+Three simple ways of creating Midi-objects with random notes \
+getting slightly different results.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(\(\(\(\(NRT = 4\) \);\)\( (*\ nr\ of\ tracks\ *) \)\)\)], "Input"],
+
+Cell[BoxData[
+    \(\(\(\(\(NRN = 100\) \);\)\( (*\ 
+      nr\ of\ notes\ per\ track\ *) \)\)\)], "Input"],
+
+Cell["Create a Midi object in shape file.", "Text"],
+
+Cell[BoxData[
+    \(m1 = 
+      Midi[\[IndentingNewLine]{MidiShape \[Rule] MidiFile, 
+          MidiTimeUnit \[Rule] MidiTick, 
+          MidiTiming \[Rule] 
+            MidiAbsolute}, \[IndentingNewLine]Join[\[IndentingNewLine]{{}},  \
+(*\ empty\ master\ track\ *) \[IndentingNewLine]\(Flatten[#, 1] &\) /@ 
+            Table[\[IndentingNewLine]Module[{s = Random[Integer, {0, 10000}], 
+                  c = Random[Integer, {0, 15}], 
+                  n = Random[Integer, {0, 127}], 
+                  v = Random[Integer, {1, 127}], 
+                  d = Random[
+                      Integer, {1, 
+                        100}]}, \[IndentingNewLine]{{s, {MidiNoteOn, {c, n, 
+                        v}}}, {s + 
+                      d, {MidiNoteOff, {c, n, 
+                        0}}}}\[IndentingNewLine]], \[IndentingNewLine]{t, 
+                NRT}, {i, 
+                NRN}\[IndentingNewLine]]\[IndentingNewLine]]\
+\[IndentingNewLine]]\)], "Input"],
+
+Cell[BoxData[
+    \(MatchQ[m1[\([2]\)], MidiPatternFile]\)], "Input"],
+
+Cell["Create a Midi object in shape voice.", "Text"],
+
+Cell[BoxData[
+    \(m2 = 
+      Midi[\[IndentingNewLine]{MidiShape \[Rule] MidiVoice, 
+          MidiTimeUnit \[Rule] MidiTick, 
+          MidiTiming \[Rule] 
+            MidiAbsolute}, \
+\[IndentingNewLine]Table[\[IndentingNewLine]Module[{c = 
+                Random[Integer, {0, 
+                    15}]}, \[IndentingNewLine]{{MidiNoteOn, {t, c, 
+                  1}}, \[IndentingNewLine]Flatten[
+                Table[\[IndentingNewLine]Module[{s = 
+                        Random[Integer, {0, 10000}], 
+                      n = Random[Integer, {0, 127}], 
+                      v = Random[Integer, {1, 127}], 
+                      d = Random[
+                          Integer, {1, 100}]}, \[IndentingNewLine]{{d, {n, 
+                          v}}, {d + 
+                          s, {n, \(-v\)}}}\[IndentingNewLine]], \
+\[IndentingNewLine]{i, NRN}\[IndentingNewLine]], 
+                1]\[IndentingNewLine]}\[IndentingNewLine]], \
+\[IndentingNewLine]{t, 
+            NRT}\[IndentingNewLine]]\[IndentingNewLine]]\)], "Input"],
+
+Cell[BoxData[
+    \(MatchQ[m2[\([2]\)], MidiPatternVoice]\)], "Input"],
+
+Cell["Create a Midi object in shape chord.", "Text"],
+
+Cell[BoxData[
+    \(m3 = 
+      Midi[\[IndentingNewLine]{MidiShape \[Rule] MidiChord, 
+          MidiTimeUnit \[Rule] MidiTick, 
+          MidiTiming \[Rule] 
+            MidiDelta}, \[IndentingNewLine]{{{MidiNoteOn, 
+              Table[Module[{c = Random[Integer, {0, 15}]}, {t, c, 1}], {t, 
+                  NRT}]}, \
+\[IndentingNewLine]Table[\[IndentingNewLine]Module[{d = 
+                    Random[Integer, {1, 
+                        100}]}, \[IndentingNewLine]{\[IndentingNewLine]d, \
+\[IndentingNewLine]Table[\[IndentingNewLine]Module[{n = 
+                          Random[Integer, {0, 127}], 
+                        v = Random[
+                            Integer, {1, 127}]}, \[IndentingNewLine]{n, 
+                        v}\[IndentingNewLine]], \[IndentingNewLine]{t, 
+                      NRT}\[IndentingNewLine]]\[IndentingNewLine]}\
+\[IndentingNewLine]], \[IndentingNewLine]{i, 
+                NRN}\[IndentingNewLine]]\[IndentingNewLine]}}\
+\[IndentingNewLine]]\)], "Input"],
+
+Cell[BoxData[
+    \(MatchQ[m3[\([2]\)], MidiPatternChord]\)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Sound", "Subsubtitle"],
+
+Cell["Start with a function taking sec as parameter.", "Text"],
+
+Cell[BoxData[
+    \(f = Sin[2  Pi\ 220\ #] &\)], "Input"],
+
+Cell[BoxData[
+    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
+
+Cell["Make a 1 sec sound-function-object.", "Text"],
+
+Cell[BoxData[
+    \(s = SoundMakeFunc[f, SoundDuration \[Rule] 1]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[s]\)], "Input"],
+
+Cell["Make a sound using the Audio-package.", "Text"],
+
+Cell[BoxData[
+    \(s = Waveform[Triangle, 220, 0.5]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[s]\)], "Input"],
+
+Cell["Get the function.", "Text"],
+
+Cell[BoxData[
+    \(f = \(SoundGetFunc[s]\)[\([1]\)]\)], "Input"],
+
+Cell[BoxData[
+    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
+
+Cell["Convert sample-rate.", "Text"],
+
+Cell[BoxData[
+    \(s = SoundMakeFunc[s, SampleRate \[Rule] 2^12]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[s]\)], "Input"],
+
+Cell["Make it into a sound-sample-list.", "Text"],
+
+Cell[BoxData[
+    \(s = SoundMakeList[s]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[s]\)], "Input"],
+
+Cell["Get the function (which is really a list now).", "Text"],
+
+Cell[BoxData[
+    \(\(f = \(SoundGetFunc[s]\)[\([1]\)];\)\)], "Input"],
+
+Cell[BoxData[
+    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
+
+Cell["Do it again, but smothen the curve.", "Text"],
+
+Cell[BoxData[
+    \(\(f = \(SoundGetFunc[s, 
+            SoundSmooth \[Rule] True]\)[\([1]\)];\)\)], "Input"],
+
+Cell[BoxData[
+    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
+
+Cell["Start with two sounds.", "Text"],
+
+Cell[BoxData[
+    \(sa = SoundMakeFunc[Sin[2  Pi\ 220\ #] &, SoundDuration \[Rule] 1]; 
+    sb = SoundMakeFunc[Sin[2  Pi\ 220\ 3/2\ #] &, 
+        SoundDuration \[Rule] 1];\)], "Input"],
+
+Cell["Make a sound by combining them in paralell.", "Text"],
+
+Cell[BoxData[
+    \(sp = SoundPar[{sa, sb}]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[sp]\)], "Input"],
+
+Cell["Make a sound by combining them in sequence.", "Text"],
+
+Cell[BoxData[
+    \(ss = SoundSeq[{sa, sb}]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[ss]\)], "Input"],
+
+Cell["Make a sound by combining sound in paralell and in sequence.", "Text"],
+
+Cell[BoxData[
+    \(ssp = SoundSeq[{SoundPar[{sa, sb}], SoundPar[{sb, sa}]}]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[ssp]\)], "Input"],
+
+Cell["Slice it up...", "Text"],
+
+Cell[BoxData[
+    \(ssl = SoundUnSeq[ssp, {0.7, 1.1}]\)], "Input"],
+
+Cell["...and take a portion from the middle.", "Text"],
+
+Cell[BoxData[
+    \(sm = ssl[\([2]\)]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[sm]\)], "Input"],
+
+Cell[BoxData[
+    \(sd = SoundImportWav[DataFolder <> "\<lin8.wav\>"]\)], "Input"],
+
+Cell[BoxData[
+    \(SoundGetInfo[sd]\)], "Input"],
+
+Cell[BoxData[
+    \(Show[sd]\)], "Input"],
+
+Cell["Now, lets make a simple Midi to Sound converter.", "Text"],
+
+Cell[BoxData[
+    \(MidiToSound[m : Midi[_, _], 
+        opts___] := \[IndentingNewLine]Module[\[IndentingNewLine]{\
+\[IndentingNewLine]p2f = 
+            Function[p, 
+              440*2^\((\((p - 57)\)/12)\)], \[IndentingNewLine]v2a = 
+            Function[v, v/127], \[IndentingNewLine]osc = 
+            Function[{f, a}, N[a\ Sin[2  Pi\ f  #]] &], \[IndentingNewLine]r, 
+          c, mix\[IndentingNewLine]}, \[IndentingNewLine] (*\ 
+          get\ the\ music\ as\ {{{timing, {p, 
+                        v}} ... } ... }\ *) \[IndentingNewLine]r = 
+          Cases[\(MidiSetTiming[
+                MidiSetShape[MidiSetTimeUnit[m, MidiSec], MidiVoice], 
+                MidiDelta]\)[\([2]\)], {{MidiNoteOn, _}, d$_} \[Rule] 
+              d$]; \[IndentingNewLine] (*\ 
+          make\ them\ into\ lists\ of\ sound - 
+            objects\ *) \[IndentingNewLine]r = \(\((\[IndentingNewLine]\(If[
+                      0 < #[\([2, 2]\)], \[IndentingNewLine]SoundMakeFunc[
+                        osc[p2f[#[\([2, 1]\)]], v2a[#[\([2, 2]\)]]], 
+                        SoundDuration \[Rule] #[\([1]\)], 
+                        opts], \[IndentingNewLine]SoundOfSilence[
+                        SoundChannelCount -> 1, 
+                        SoundDuration \[Rule] #[\([1]\)], 
+                        opts]\[IndentingNewLine]] &\) /@ \
+#\[IndentingNewLine])\) &\) /@ r; \[IndentingNewLine] (*\ 
+          then\ use\ SoundSeq\ *) \[IndentingNewLine]r = 
+          SoundSeq /@ r; \[IndentingNewLine] (*\ 
+          then\ use\ SoundPar\ *) \[IndentingNewLine]r = 
+          SoundPar[r]; \[IndentingNewLine] (*\ 
+          create\ a\ simple\ mix\ for\ two\ output - 
+            channels\ *) \[IndentingNewLine]c = 
+          SoundGetChannelCount[r]; \[IndentingNewLine]mix = 
+          Table[N[{Evaluate[\((c - i)\)/\((2 \((c - 1)\))\)] &, 
+                Evaluate[\((i - 1)\)/\((2 \((c - 1)\))\)] &}], {i, 
+              c}]; \[IndentingNewLine] (*\ 
+          make\ the\ mixdown\ *) \[IndentingNewLine]SoundMix[r, 
+          mix]\[IndentingNewLine]]\)], "Input"],
+
+Cell[BoxData[
+    \(m2s = MidiToSound[m]\)], "Input"],
+
+Cell[BoxData[
+    \(SoundGetInfo[m2s]\)], "Input"],
+
+Cell["\<\
+This takes a while to render, partly because a Sound of type \
+SampledSoundFunction with two channels must have a list of two functions \
+returning one value each instead of a single function returning a list of two \
+values.\
+\>", "Text"],
+
+Cell[BoxData[
+    \(Show[m2s]\)], "Input"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for X",
+ScreenRectangle->{{0, 1600}, {0, 1200}},
+AutoGeneratedPackage->Automatic,
+WindowSize->{1153, 1095},
+WindowMargins->{{0, Automatic}, {Automatic, 16}},
+StyleDefinitions -> "Default.nb"
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[1776, 53, 24, 0, 96, "Title"],
+Cell[1803, 55, 53, 0, 32, "Text"],
+
+Cell[CellGroupData[{
+Cell[1881, 59, 27, 0, 51, "Subtitle"],
+Cell[1911, 61, 720, 16, 284, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2668, 82, 27, 0, 51, "Subtitle"],
+Cell[2698, 84, 97, 3, 50, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2832, 92, 24, 0, 51, "Subtitle"],
+Cell[2859, 94, 88, 3, 32, "Text"],
+Cell[2950, 99, 72, 2, 27, "Input",
+  InitializationCell->True],
+Cell[3025, 103, 117, 3, 32, "Text"],
+Cell[3145, 108, 84, 2, 27, "Input",
+  InitializationCell->True],
+Cell[3232, 112, 70, 0, 32, "Text"],
+Cell[3305, 114, 112, 2, 27, "Input",
+  InitializationCell->True],
+Cell[3420, 118, 775, 13, 75, "Input",
+  InitializationCell->True],
+Cell[4198, 133, 67, 0, 32, "Text"],
+Cell[4268, 135, 166, 3, 43, "Input",
+  InitializationCell->True]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4471, 143, 35, 0, 51, "Subtitle"],
+Cell[4509, 145, 18, 0, 32, "Text"],
+
+Cell[CellGroupData[{
+Cell[4552, 149, 27, 0, 31, "Subsubtitle"],
+Cell[4582, 151, 51, 0, 32, "Text"],
+Cell[4636, 153, 101, 2, 27, "Input"],
+Cell[4740, 157, 187, 4, 32, "Text"],
+Cell[4930, 163, 404, 9, 140, "Text"],
+Cell[5337, 174, 46, 1, 27, "Input"],
+Cell[5386, 177, 31, 0, 32, "Text"],
+Cell[5420, 179, 64, 1, 27, "Input"],
+Cell[5487, 182, 51, 0, 32, "Text"],
+Cell[5541, 184, 71, 1, 27, "Input"],
+Cell[5615, 187, 54, 0, 32, "Text"],
+Cell[5672, 189, 64, 1, 27, "Input"],
+Cell[5739, 192, 51, 0, 32, "Text"],
+Cell[5793, 194, 69, 1, 27, "Input"],
+Cell[5865, 197, 30, 0, 32, "Text"],
+Cell[5898, 199, 102, 2, 27, "Input"],
+Cell[6003, 203, 50, 0, 32, "Text"],
+Cell[6056, 205, 54, 1, 27, "Input"],
+Cell[6113, 208, 60, 0, 32, "Text"],
+Cell[6176, 210, 77, 1, 27, "Input"],
+Cell[6256, 213, 92, 3, 32, "Text"],
+Cell[6351, 218, 74, 1, 27, "Input"],
+Cell[6428, 221, 103, 3, 32, "Text"],
+Cell[6534, 226, 165, 4, 32, "Text"],
+Cell[6702, 232, 66, 1, 27, "Input"],
+Cell[6771, 235, 132, 3, 32, "Text"],
+Cell[6906, 240, 122, 3, 32, "Text"],
+Cell[7031, 245, 57, 1, 27, "Input"],
+Cell[7091, 248, 42, 0, 32, "Text"],
+Cell[7136, 250, 64, 1, 27, "Input"],
+Cell[7203, 253, 144, 3, 32, "Text"],
+Cell[7350, 258, 118, 3, 32, "Text"],
+Cell[7471, 263, 144, 3, 32, "Text"],
+Cell[7618, 268, 126, 3, 32, "Text"],
+Cell[7747, 273, 58, 1, 27, "Input"],
+Cell[7808, 276, 52, 0, 32, "Text"],
+Cell[7863, 278, 64, 1, 27, "Input"],
+Cell[7930, 281, 110, 3, 32, "Text"],
+Cell[8043, 286, 102, 2, 27, "Input"],
+Cell[8148, 290, 67, 0, 32, "Text"],
+Cell[8218, 292, 102, 2, 27, "Input"],
+Cell[8323, 296, 40, 0, 32, "Text"],
+Cell[8366, 298, 65, 1, 27, "Input"],
+Cell[8434, 301, 160, 4, 32, "Text"],
+Cell[8597, 307, 60, 0, 32, "Text"],
+Cell[8660, 309, 55, 0, 32, "Text"],
+Cell[8718, 311, 58, 1, 27, "Input"],
+Cell[8779, 314, 146, 3, 32, "Text"],
+Cell[8928, 319, 120, 2, 27, "Input"],
+Cell[9051, 323, 173, 4, 32, "Text"],
+Cell[9227, 329, 43, 0, 32, "Text"],
+Cell[9273, 331, 90, 1, 27, "Input"],
+Cell[9366, 334, 44, 0, 32, "Text"],
+Cell[9413, 336, 90, 1, 27, "Input"],
+Cell[9506, 339, 91, 1, 27, "Input"],
+Cell[9600, 342, 91, 1, 27, "Input"],
+Cell[9694, 345, 62, 0, 32, "Text"],
+Cell[9759, 347, 81, 1, 27, "Input"],
+Cell[9843, 350, 76, 0, 32, "Text"],
+Cell[9922, 352, 89, 1, 27, "Input"],
+Cell[10014, 355, 62, 0, 32, "Text"],
+Cell[10079, 357, 73, 1, 27, "Input"],
+Cell[10155, 360, 122, 3, 32, "Text"],
+Cell[10280, 365, 86, 1, 27, "Input"],
+Cell[10369, 368, 106, 2, 27, "Input"],
+Cell[10478, 372, 51, 0, 32, "Text"],
+Cell[10532, 374, 960, 19, 219, "Input"],
+Cell[11495, 395, 69, 1, 27, "Input"],
+Cell[11567, 398, 52, 0, 32, "Text"],
+Cell[11622, 400, 1035, 21, 267, "Input"],
+Cell[12660, 423, 70, 1, 27, "Input"],
+Cell[12733, 426, 52, 0, 32, "Text"],
+Cell[12788, 428, 998, 19, 315, "Input"],
+Cell[13789, 449, 70, 1, 27, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[13896, 455, 28, 0, 31, "Subsubtitle"],
+Cell[13927, 457, 62, 0, 32, "Text"],
+Cell[13992, 459, 57, 1, 27, "Input"],
+Cell[14052, 462, 57, 1, 27, "Input"],
+Cell[14112, 465, 51, 0, 32, "Text"],
+Cell[14166, 467, 78, 1, 27, "Input"],
+Cell[14247, 470, 40, 1, 27, "Input"],
+Cell[14290, 473, 53, 0, 32, "Text"],
+Cell[14346, 475, 65, 1, 27, "Input"],
+Cell[14414, 478, 40, 1, 27, "Input"],
+Cell[14457, 481, 33, 0, 32, "Text"],
+Cell[14493, 483, 65, 1, 27, "Input"],
+Cell[14561, 486, 57, 1, 27, "Input"],
+Cell[14621, 489, 36, 0, 32, "Text"],
+Cell[14660, 491, 78, 1, 27, "Input"],
+Cell[14741, 494, 40, 1, 27, "Input"],
+Cell[14784, 497, 49, 0, 32, "Text"],
+Cell[14836, 499, 53, 1, 27, "Input"],
+Cell[14892, 502, 40, 1, 27, "Input"],
+Cell[14935, 505, 62, 0, 32, "Text"],
+Cell[15000, 507, 70, 1, 27, "Input"],
+Cell[15073, 510, 57, 1, 27, "Input"],
+Cell[15133, 513, 51, 0, 32, "Text"],
+Cell[15187, 515, 109, 2, 27, "Input"],
+Cell[15299, 519, 57, 1, 27, "Input"],
+Cell[15359, 522, 38, 0, 32, "Text"],
+Cell[15400, 524, 185, 3, 27, "Input"],
+Cell[15588, 529, 59, 0, 32, "Text"],
+Cell[15650, 531, 56, 1, 27, "Input"],
+Cell[15709, 534, 41, 1, 27, "Input"],
+Cell[15753, 537, 59, 0, 32, "Text"],
+Cell[15815, 539, 56, 1, 27, "Input"],
+Cell[15874, 542, 41, 1, 27, "Input"],
+Cell[15918, 545, 76, 0, 32, "Text"],
+Cell[15997, 547, 89, 1, 27, "Input"],
+Cell[16089, 550, 42, 1, 27, "Input"],
+Cell[16134, 553, 30, 0, 32, "Text"],
+Cell[16167, 555, 66, 1, 27, "Input"],
+Cell[16236, 558, 54, 0, 32, "Text"],
+Cell[16293, 560, 50, 1, 27, "Input"],
+Cell[16346, 563, 41, 1, 27, "Input"],
+Cell[16390, 566, 82, 1, 27, "Input"],
+Cell[16475, 569, 49, 1, 27, "Input"],
+Cell[16527, 572, 41, 1, 27, "Input"],
+Cell[16571, 575, 64, 0, 32, "Text"],
+Cell[16638, 577, 2060, 36, 443, "Input"],
+Cell[18701, 615, 53, 1, 27, "Input"],
+Cell[18757, 618, 50, 1, 27, "Input"],
+Cell[18810, 621, 249, 5, 50, "Text"],
+Cell[19062, 628, 42, 1, 27, "Input"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+
