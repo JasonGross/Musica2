@@ -29,7 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
-  2004-09-23  bch :  DataTie of numbers dont get negative anymore
+  2004-10-04  bch :  not much, lost track... sorry
+  2004-09-27  bch :  DataTie of numbers dont get negative anymore
   2004-09-23  bch :  removed ToDoString
                      added AddOpts
                      added DataApply
@@ -59,6 +60,7 @@ BeginPackage["Musica2`Utils`",
 
 Unprotect[
   AddOpts,
+  Circular,
   DataAnyValue,
   DataAnyValueQ,
   DataApply,
@@ -80,6 +82,7 @@ Unprotect[
   ];
 
 AddOpts::usage = "AddOpts[x:{___?OptionQ},opts__?OptionQ] adds opts to x, no duplicate lhs returned."
+Circular::usage = "todo"
 DataAnyValue::usage = "The symbol indicating non-empty data. Will be handy..."
 DataAnyValueQ::usage = "DataAnyValueQ[expr_] tests if expr is/contains the symbol DataAnyValue, tied or not."
 DataApply::usage = "DataApply[f_,d_] return d if d is DataAnyValueQ or DataNoValueQ, and f[d] after removing DataTie and adding it again if it was there."
@@ -107,6 +110,8 @@ AddOpts[x:{___?OptionQ},opts__?OptionQ] :=
       ];
     o
     ]
+
+Circular[x_List,n_Integer] := x[[Mod[n, Length[x], 1]]]
 
 DataAnyValueQ[expr_] := If[AtomQ[expr],expr===DataAnyValue||expr===DataTie[DataAnyValue],Or@@(DataAnyValueQ/@expr)]
 
@@ -253,6 +258,7 @@ End[]
 
 Protect[
   AddOpts,
+  Circular,
   DataAnyValue,
   DataAnyValueQ,
   DataApply,

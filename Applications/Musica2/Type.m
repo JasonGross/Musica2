@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Type` *)
 
 (* :History:
+  2004-10-04  bch :  not much, lost track... sorry
+  2004-09-xx  bch :  changed default test in Pack
   2004-09-18  bch :  renamed *Sup* to *Container* and *Sub* to *Element*
   2004-09-18  bch :  created
 *)

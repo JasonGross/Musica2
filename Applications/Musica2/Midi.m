@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-10-04  bch :  not much, lost track... sorry
   2004-09-22  bch :  changed Show to Play2
   2004-09-18  bch :  added Tempo,TempoTrack and TempoFunction, removed SecondToTickFunction and TickToSecondFunction
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.

@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2004-10-04  bch :  not much, lost track... sorry
   2004-09-27  bch :  added some Scale constructors and the church-modes (plus locrian)
                      renamed PitchCode in Scale to Content
   2004-09-22  bch :  changed Show to Play2
@@ -171,9 +172,11 @@ Scale /: Inverse[x_Scale] :=
     Scale[{o,c},Sequence @@ Opts[x]]
     ]
 
+Scale /: Length[x_Scale] := Length[Content[x]]
+
 Melody[x_Chord]                       := Melody /@ x
 Melody[x_Progression]                 := Melody[Counterpoint[x]]
-Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[Note[#,opts]& /@ p,opts]
+Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[Note[#,opts]& /@ p,Sequence@@RemOpts[{opts},NoteDuration]]
 
 ModeAeolian = 5
 ModeDorian = 1
@@ -214,10 +217,15 @@ f712[x_] := Round[12/7(x-1)+2]
 f712[x_,k_,m_] := Module[{r=f712[x+m]+7k,z=f712[0+m]+7k},r-(z-Mod[z,12])]
 Scale[k_Integer,m_Integer, opts___?OptionQ] := Scale[{12,Table[f712[i,k,m],{i,0,6}]},opts]
 Scale[k_Integer, opts___?OptionQ] := Scale[{12,Table[f712[i,k,3k],{i,0,6}]+12Quotient[k + 5,7*12]},opts]
-Scale[] := Scale[0]
+Scale[] := Scale[0,ModeMajor]
+
+Scale[x:{__Integer}, opts___?OptionQ] := Scale[{Max[x]-Min[x],Drop[x,-1]},opts] (* todo: what about strange, unsorted scales? *)
+
+PitchCode[x_Scale] := Append[Content[x],Content[x][[1]]+Octave[x]] (* todo: what about strange, unsorted scales? *)
 
 Scale[o_,d_][x_Chord]        := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
 Scale[o_,d_][x_Counterpoint] := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
+Scale[o_,d_][x_Integer]      := ScaleFunction[Scale[d,Sequence @@ o]][x]
 Scale[o_,d_][x_Melody]       := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
 Scale[o_,d_][x_Note]         := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
 Scale[o_,d_][x_Progression]  := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
