@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2005-01-21  bch :  converting from func to list now does //N as well
   2005-01-20  bch :  quite a lot actually, better handling of opts and conversions a,d seq and par and...
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-24  bch :  changed SnippetData to Content
@@ -91,6 +92,9 @@ CreateContainer[Sound,Snippet,"todo"];
 
 SampleCount::usage = "todo"
 SoundType::usage = "todo"
+
+TestOne::usage=""
+TestTwo::usage=""
 
 Begin["`Private`"]
 
@@ -169,7 +173,7 @@ Snippet /: Data[x_Snippet, y_, SoundType, pos_] :=
   Module[{s = x,f,d,i},
     If[SoundType[x] === SampledSoundFunction && y === SampledSoundList,
       f = Content[s];
-      d = Table[f[i],{i,SampleCount[s]}];
+      d = Table[f[i],{i,SampleCount[s]}] // N;
       s = ReplacePart[s,d,Content];
       s = Data[s,SampledSoundList,pos];
       ];
@@ -202,8 +206,8 @@ Snippet /: Data[x_Snippet, y_, SampleCount, pos_] :=
     s
     ]
     
-Snippet /: Duration[x_Snippet] := SampleCount[x]/SampleRate[x]
-Sound   /: Duration[x_Sound] := SampleCount[x]/SampleRate[x]
+Snippet /: TotalDuration[x_Snippet] := SampleCount[x]/SampleRate[x]
+Sound   /: TotalDuration[x_Sound] := SampleCount[x]/SampleRate[x]
 
 Mix[x:{__Snippet}] := Snippet[Mix[Par[x],1]][[1]]
 
@@ -324,6 +328,46 @@ Snippet[SampledSoundFunction] := Snippet[{SampledSoundFunction,0#,2,2}]
 Snippet[SampledSoundList] := Snippet[{SampledSoundList,{0,0},2,2}]
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
+
+TestOne[at_,bt_,r_,t_] :=
+  Module[{a, b, s},
+    Export["tmp.wav", "almost empty", "Text"];
+    a = Snippet[{SampledSoundFunction, Sin[#1]& , 2, 7}];
+    b = Snippet[{SampledSoundFunction, Sin[#1]& , 3, 5}];
+    a = Snippet[a, SoundType -> at];
+    b = Snippet[b, SoundType -> bt];
+    s = If[t,
+      If[r,
+        Par[{Seq[{b, a}], Seq[{a, b}]}],
+        Par[{Seq[{a, b}], Seq[{b, a}]}]
+        ],
+      If[r,
+        Seq[{Par[{b, a}], Par[{a, b}]}],
+        Seq[{Par[{a, b}], Par[{b, a}]}]
+        ]
+      ];
+    Export["tmp.wav", s];
+    Total[Flatten[Content[Import["tmp.wav"]]]]
+    ]
+
+Snippet /: TestSuite[Snippet] = Join[TestSuite[Snippet],{
+  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,False,False],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,True,False],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundList,False,False],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundList,True,False],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundFunction,False,False],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundFunction,True,False],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundList,False,False],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundList,True,False],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,False,True],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,True,True],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundList,False,True],1.40625],
+  TestCase[TestOne[SampledSoundFunction,SampledSoundList,True,True],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundFunction,False,True],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundFunction,True,True],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundList,False,True],1.40625],
+  TestCase[TestOne[SampledSoundList,SampledSoundList,True,True],1.40625]
+  }]
 
 End[]
 

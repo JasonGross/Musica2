@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-1-21 at 8:25 *)
+(* :History: File created 2005-1-24 at 15:52 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -15,11 +15,17 @@ If[!MemberQ[$Packages,"Musica2`"],
 
 DeclarePackage["Musica2`Common`",
 {"Content", "Convert", "Duration", "Frequency", "Mix", "Octave", "Overtone", 
- "Par", "PitchCode", "Play2", "Seq", "Time"}
+ "Par", "PitchCode", "Play2", "Seq", "Time", "TotalDuration"}
+];
+
+DeclarePackage["Musica2`DurVal`",
+{"DurVal", "DurValList", "DurValListQ", "DurValQ", "DurValType", 
+ "DurValTypeQ", "ValueList", "ValueType"}
 ];
 
 DeclarePackage["Musica2`Instrument`",
-{"BasicInstrument", "BasicInstrumentQ", "Instrument", "P2F", "T2S", "V2A"}
+{"BasicInstrument", "BasicInstrumentQ", "Instrument", "PitchCodeToFrequency", 
+ "TimeToSample", "VelocityToAmplitude"}
 ];
 
 DeclarePackage["Musica2`Midi`",
@@ -44,7 +50,7 @@ DeclarePackage["Musica2`Note`",
  "FigBass", "FigBassQ", "Intervals", "IntervalsQ", "Melody", "MelodyQ", 
  "ModeAeolian", "ModeDorian", "ModeIonian", "ModeLocrian", "ModeLydian", 
  "ModeMajor", "ModeMinor", "ModeMixolydian", "ModePhrygian", "Note", 
- "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "NoteRestQ", 
+ "NoteFunction", "NotePlot", "NoteQ", "NoteRest", "NoteRestQ", "NoteTie", 
  "NoteTieQ", "Progression", "ProgressionQ", "Scale", "ScaleFunction", 
  "ScaleQ", "ScaleStep", "Steps", "ThirdStack", "ThirdStackQ", "Tonic", 
  "Velocity"}
@@ -59,7 +65,8 @@ DeclarePackage["Musica2`Setup`",
 ];
 
 DeclarePackage["Musica2`Sound`",
-{"SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
+{"SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType", "TestOne", 
+ "TestTwo"}
 ];
 
 DeclarePackage["Musica2`Spectrum`",

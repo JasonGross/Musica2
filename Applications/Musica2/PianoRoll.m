@@ -77,7 +77,7 @@ PianoRoll[x_Progression,  opts___] := PianoRoll[Midi[x,opts],opts]
 
 PianoRoll[mx_Midi, opts___] :=
   Module[{m = Midi[mx, TimeUnit->Tick],duration},
-    duration = Duration[m];
+    duration = TotalDuration[m];
     Module[{
         n = Note[m],
         p,

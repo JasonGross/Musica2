@@ -95,6 +95,7 @@ DataAnyValueQ::usage = "DataAnyValueQ[expr_] tests if expr is/contains the symbo
 DataApply::usage = "DataApply[f_,d_] return d if d is DataAnyValueQ or DataNoValueQ, and f[d] after removing DataTie and adding it again if it was there."
 DataNoValue::usage = "The symbol indicating no-data, like a rest."
 DataNoValueQ::usage = "DataNoValueQ[expr_] tests if expr is/contains the symbol DataNoValue, tied or not."
+DataPlainValueQ::usage = "todo"
 DataTie::usage = "A symbol that indicates a tie (in Chord in Progression for example). Well, its actually also a function, the opposite to calling DataUnTie."
 DataTieQ::usage = "DataTieQ[expr_] tests if expr is/contains a tie or not."
 DataUnTie::usage = "DataUnTie[d_], the opposite to calling DataTie."

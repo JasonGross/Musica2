@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2005-01-23  bch :  changed how channel-events are stored as Event's
   2005-01-12  bch :  bugfix in Tidy[Track]
   2004-12-21  bch :  Tidy[Track] now much slower, but handles opts, i think...
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
@@ -86,6 +87,7 @@ BeginPackage["Musica2`Midi`",
   {
     "Utilities`BinaryFiles`",
     "Musica2`Common`",
+    "Musica2`DurVal`",
     "Musica2`Note`",
     "Musica2`Sound`",
     "Musica2`Test`",
@@ -170,7 +172,7 @@ Begin["`Private`"]
 
 Options[Midi] = {QPM -> 120,FileFormat -> 1,TimeUnit -> Tick,TPQ -> 960};
 
-Tidy[Midi] = Module[{r = #,eot = Duration[#]},
+Tidy[Midi] = Module[{r = #,eot = TotalDuration[#]},
   r = Append[#,Event[{eot,EOT}]]& /@ r;
   r = Tidy /@ r;
   r
@@ -182,7 +184,8 @@ Tidy[Track] = Module[{r = #,eot},
   eot = EventTime[r[[-1]]];
   r = Select[r,(EventType[#]=!=EventTypeEOT)&];
   r = Append[r,Event[{eot,EOT}]];
-  r = (If[EventType[#]===EventTypeNoteOn && EventData[#][[3]]===0,ReplacePart[#,EventTypeNoteOff,EventType],#])& /@ r;
+  (* todo rewrite next line *)
+  r = (If[MatchQ[EventType[#],{EventTypeNoteOn,_}] && EventData[#][[2]]===0,ReplacePart[#,{EventTypeNoteOff,EventType[x][[2]]},EventType],#])& /@ r;
   r = Track[r, Sequence @@ Opts[#]];
   r
   ]&
@@ -210,9 +213,9 @@ Midi  /: Counterpoint[x_Midi,rtf_:(0&)] := Counterpoint[Select[Flatten[Melody[Co
 Track /: Counterpoint[x_Track,rtf_:(0&)] := (* todo: parameters of rtf are not set yet *)
   Module[{t=Tidy[x],on,off,n},
     (* get all note-on's as {{ch,p,time,v}...} *)
-    on = {EventData[#][[1]],EventData[#][[2]],EventTime[#],EventData[#][[3]]}& /@ Event[Select[t,MatchQ[Data[#],{_,{EventTypeNoteOn,{_,_,_}}}]&]];
+    on = {EventType[#][[2]],EventData[#][[1]],EventTime[#],EventData[#][[2]]}& /@ Event[Select[t,MatchQ[Data[#],{_,{{EventTypeNoteOn,_},{_,_}}}]&]];
     (* get all note-on's as {{ch,p,time,v}...} *)
-    off = {EventData[#][[1]],EventData[#][[2]],EventTime[#],EventData[#][[3]]}& /@ Event[Select[t,MatchQ[Data[#],{_,{EventTypeNoteOff,{_,_,_}}}]&]];
+    off = {EventType[#][[2]],EventData[#][[1]],EventTime[#],EventData[#][[2]]}& /@ Event[Select[t,MatchQ[Data[#],{_,{{EventTypeNoteOff,_},{_,_}}}]&]];
     (* sort them *)
     on = Sort[on];
     off = Sort[off];
@@ -271,8 +274,8 @@ Track /: Counterpoint[x_Track,rtf_:(0&)] := (* todo: parameters of rtf are not s
     Counterpoint[Melody[#[[2]],MidiChannel->#[[1]]]& /@ n]
     ]
 
-Midi  /: Duration[x_Midi]  := Max[Duration /@ x]
-Track /: Duration[x_Track] := Max[EventTime /@ x]
+Midi  /: TotalDuration[x_Midi]  := Max[TotalDuration /@ x]
+Track /: TotalDuration[x_Track] := Max[EventTime /@ x]
 
 Event[x_Chord]                  := Event[Midi[x]]
 Event[x_Counterpoint]           := Event[Midi[x]]
@@ -459,7 +462,7 @@ Seq[x:{__Midi}, opts___?OptionQ] :=
     ]
 Seq[x:{__Track}] :=
   Module[{t=0,s},
-    Tidy[Track[Flatten[Data[s=t;t+=Duration[#];Map[#+s&,#,EventTime]]& /@ x,1]]]
+    Tidy[Track[Flatten[Data[s=t;t+=TotalDuration[#];Map[#+s&,#,EventTime]]& /@ x,1]]]
     ]
 
 Midi  /: Snippet[x_Midi,  opts___?OptionQ] := Snippet[Counterpoint[Midi[x,TimeUnit->Second]],opts]
@@ -526,12 +529,12 @@ Track[x_Melody, opts___?OptionQ]       :=
         [
           Reap[
             Scan[(
-              d = NoteDuration[#];
+              d = Duration[#];
               p = PitchCode[#];
               v = Velocity[#];
               If[!(DataNoValueQ[p] || DataNoValueQ[v]),
-                Sow[Event[{t  ,{EventTypeNoteOn, {c,p,v}}}]];
-                Sow[Event[{t+d,{EventTypeNoteOff,{c,p,v}}}]];
+                Sow[Event[{t  ,{{EventTypeNoteOn,c}, {p,v}}}]];
+                Sow[Event[{t+d,{{EventTypeNoteOff,c},{p,v}}}]];
                 ];
               t += d;
               )&,
@@ -597,7 +600,7 @@ ReadChannel[f_,r_] :=
     channel=BitAnd[r[[1]],16^^F];
     s={3,3,3,3,2,2,3}[[type+1]]-Length[r];
     If[s!=0,x=ReadList[f,Byte,s]];
-    {type,Join[{channel},Drop[r,1],x]}
+    {{type,channel},Join[Drop[r,1],x]}
     ]
 
 ReadEvent[f_,rt_]:=
@@ -636,7 +639,7 @@ ListSysX[{type_,data_}]:=
 ListMeta[{type:{_,sybtype_},data_}]:=
   {type,Length[data],data}
 
-ListChannel[{type_,{channel_,data__}}]:=
+ListChannel[{{type_,channel_},{data__}}]:=
   {16^^80+2^4type+channel,data}
 
 ListEvent[e_]:=

@@ -11,10 +11,10 @@
 Important todo's:
 
 * Handle the passing of opts in a natural fashion when converting between types. Common strategy!
-* Code Par, Seq and Mix for Snippet and Sound.
 * Tidy up and test PianoRoll
 * Write ::usage texts other than "todo"
 * Create some serious TestSuite's
+* TimeUnit handling
 
 ------------------------------------------------------------
 

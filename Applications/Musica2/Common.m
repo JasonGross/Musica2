@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Common` *)
 
 (* :History:
+  2005-01-23  bch :  added TotalDuration
   2004-11-29  bch :  added Time and Overtone
   2004-11-28  bch :  moved PitchCode from Note.m
   2004-10-04  bch :  not much, lost track... sorry
@@ -61,7 +62,8 @@ Unprotect[
   PitchCode,
   Play2,
   Seq,
-  Time
+  Time,
+  TotalDuration
   ];
 
 Content::usage = "todo"
@@ -75,6 +77,7 @@ PitchCode::usage = "todo"
 Play2::usage = "todo"
 Seq::usage = "todo"
 Time::usage = "todo"
+TotalDuration::usage = "todo"
 
 Begin["`Private`"]
 
@@ -92,7 +95,8 @@ Protect[
   PitchCode,
   Play2,
   Seq,
-  Time
+  Time,
+  TotalDuration
   ];
 
 EndPackage[]

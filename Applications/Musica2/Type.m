@@ -338,6 +338,8 @@ DefineContainer[T_Symbol, ET_Symbol] :=
         MapIndexed[ReplacePart[#,y[[#2[[1]]]],s]&,x],
         Map[ReplacePart[#,y,s]&,x]
         ];
+    T /: ReplacePart[x_T, y_, n__Integer, s_Symbol] :=
+      ReplacePart[x,ReplacePart[x[[{n}[[1]]]],y,Sequence@@Drop[{n},1],s],{n}[[1]]];
     
     T /: Part[x_T, s_Symbol] := #[[s]]&/@ x;
     T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0;

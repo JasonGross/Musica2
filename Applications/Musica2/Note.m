@@ -32,6 +32,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2005-01-24  bch :  added use of DurVal
+  2005-01-22  bch :  added NoteRest and NoteTie
+  2005-01-21  bch :  changed Duration to TotalDuration and NoteDuration to Duration
   2005-01-19  bch :  major change in Scale
   2005-01-07  bch :  made Melody[c_Chord] return a list of melodies
   2004-12-13  bch :  removed PcV from Note
@@ -63,6 +66,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Note`",
   {
     "Musica2`Common`",
+    "Musica2`DurVal`",
     "Musica2`Instrument`",
     "Musica2`Sound`",
     "Musica2`Test`",
@@ -102,10 +106,12 @@ Unprotect[
   ModeMixolydian,
   ModePhrygian,
   Note,
-  NoteDuration,
+  Duration,
   NoteFunction, (* to be removed *)
   NotePlot,
+  NoteRest,
   NoteRestQ,
+  NoteTie,
   NoteTieQ,
   NoteQ,
   Octave,
@@ -120,7 +126,7 @@ Unprotect[
   Velocity
   ];
 
-CreateElement[Note, {NoteDuration_, {PitchCode_,Velocity_}},{1,{60,64}},"todo"];
+CreateElement[Note, {Duration_, {PitchCode_,Velocity_}},{1,{60,64}},"todo"];
 CreateContainer[Chord,Note,"todo"];
 CreateContainer[Melody,Note,"todo"];
 CreateContainer[Progression,Chord,"todo"];
@@ -142,7 +148,9 @@ ModeMixolydian::usage = "todo"
 ModePhrygian::usage = "todo"
 NoteFunction::usage = "todo" (* to be removed *)
 NotePlot::usage = "todo"
+NoteRest::usage = "todo"
 NoteRestQ::usage = "todo"
+NoteTie::usage = "todo"
 NoteTieQ::usage = "todo"
 ScaleStep::usage = "todo"
 
@@ -151,13 +159,13 @@ Begin["`Private`"]
 (*****************)
 
 DataQ[Chord] = MatchQ[#, {({_,_}|{_?OptionQ,{_,_}})...}]&
-Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{{__?OptionQ},{_,_}}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]],Note[{NoteDuration/.Opts[sup],sub}]]];
+Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{{__?OptionQ},{_,_}}],Note[{Duration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]],Note[{Duration/.Opts[sup],sub}]]];
 UnPack[Chord] = Function[{sub,opts},If[Opts[sub]=={},Data[sub][[2]],{Opts[sub],{PitchCode[sub],Velocity[sub]}}]];
-UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,NoteDuration->NoteDuration[subs[[1]]]]];
+UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,Duration->Duration[subs[[1]]]]];
 
 Tidy[Melody] = Module[{n = Note[#],i},
   For[i = 1, i < Length[n], i++,
-    If[NoteDuration[n[[i]]]===0,
+    If[Duration[n[[i]]]===0,
       n = Delete[n,i];
       i -= 1,
       If[i == 1 && NoteTieQ[n[[1]]],
@@ -165,7 +173,7 @@ Tidy[Melody] = Module[{n = Note[#],i},
         n[[1]] = ReplacePart[n[[1]],DataNoValue,Velocity]
         ];
       If[(NoteRestQ[n[[i]]] && NoteRestQ[n[[i+1]]]) || NoteTieQ[n[[i+1]]],
-        n[[i]] = ReplacePart[n[[i]],NoteDuration[n[[i]]]+NoteDuration[n[[i+1]]],NoteDuration];
+        n[[i]] = ReplacePart[n[[i]],Duration[n[[i]]]+Duration[n[[i+1]]],Duration];
         n = Delete[n,i+1];
         i -= 1;
         ]
@@ -174,6 +182,34 @@ Tidy[Melody] = Module[{n = Note[#],i},
   Melody[n,Sequence @@ Opts[#]]
   ]&
 
+(*****************)
+
+Chord /: DurVal[x_Chord] := DurVal[{TotalDuration[x],Data[x]},Sequence@@RemOpts[Opts[x],Duration]]
+Note  /: DurVal[x_Note]  := ReplacePart[x,DurVal,0]
+
+Chord[x_DurVal] := Chord[Value[x],Sequence@@AddOpts[Opts[x],Duration\[Rule]Duration[x]]]
+Note[ x_DurVal] := ReplacePart[x,Note,0]
+
+(**)
+
+Counterpoint /: DurValList[x_Counterpoint] := DurValList[Par[DurValList /@ Melody[x]], Sequence @@ Opts[x]]
+Melody       /: DurValList[x_Melody]       := ReplacePart[x,DurValList,0]
+Progression  /: DurValList[x_Progression]  := DurValList[Seq[DurVal /@ Chord[x]], Sequence @@ Opts[x]]
+
+Counterpoint[x_DurValList] := Counterpoint[Melody /@ UnPar[x], Sequence @@ Opts[x]]
+Melody[      x_DurValList] := Melody[Note /@ x, Sequence @@ Opts[x]]
+Progression[ x_DurValList] := Progression[Chord /@ x, Sequence @@ Opts[x]]
+
+(**)
+(*
+Counterpoint /: DurValType[x_Counterpoint] := DurValType[{{1, MidiChannel /. Opts[x] /. {MidiChannel -> 0}}, DurValList[x]}, Sequence @@ Opts[x]]
+Melody       /: DurValType[x_Melody]       := DurValType[{{1, MidiChannel /. Opts[x] /. {MidiChannel -> 0}}, DurValList[x]}, Sequence @@ Opts[x]]
+Progression  /: DurValType[x_Progression]  := DurValType[{{1, MidiChannel /. Opts[x] /. {MidiChannel -> 0}}, DurValList[x]}, Sequence @@ Opts[x]]
+
+Counterpoint[x_DurValType] := Counterpoint[Melody[#,MidiChannel->ValueType[x][[2]]]& /@ UnPar[x], Sequence @@ Opts[x]]
+Melody[      x_DurValType] := Melody[Note /@ x, Sequence @@ AddOpts[Opts[x],MidiChannel->ValueType[x][[2]]]]
+Progression[ x_DurValType] := Progression[Chord /@ x, Sequence @@ Opts[x]]
+*)
 (*****************)
 
 Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
@@ -185,13 +221,13 @@ Chord[p:{__?AtomQ},    opts___?OptionQ] := Chord[Note[#,opts]& /@ p,opts]
 Chord[x_ThirdStack,    opts___?OptionQ] := Chord[PitchCode[x],opts]
 
 Counterpoint[x_Chord]                        := Counterpoint[Melody[x]]
-Counterpoint[x_Progression, opts___?OptionQ] := Counterpoint[Melody[#]& /@ SeqOfParToParOfSeq[{Duration[#],Data[#]}& /@ x]]
+Counterpoint[x_Progression, opts___?OptionQ] := Counterpoint[Melody[#]& /@ SeqOfParToParOfSeq[{TotalDuration[#],Data[#]}& /@ x]]
 
-Chord        /: Duration[x_Chord]        := NoteDuration /. Opts[x]
-Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x]
-Melody       /: Duration[x_Melody]       := Total[NoteDuration /@ x]
-Note         /: Duration[x_Note]         := NoteDuration[x]
-Progression  /: Duration[x_Progression]  := Total[Duration /@ x]
+Chord        /: TotalDuration[x_Chord]        := Duration /. Opts[x]
+Counterpoint /: TotalDuration[x_Counterpoint] := Max[TotalDuration /@ x]
+Melody       /: TotalDuration[x_Melody]       := Total[Duration /@ x]
+Note         /: TotalDuration[x_Note]         := Duration[x]
+Progression  /: TotalDuration[x_Progression]  := Total[TotalDuration /@ x]
 
 Convert[Time,PitchCode,x_Melody] := NoteFunction[x, PitchCode]
 Convert[Time,Velocity,x_Melody] := NoteFunction[x, Velocity]
@@ -227,6 +263,8 @@ Convert[PitchCode,ScaleStep,x_Scale] :=
 
 Convert[ScaleStep,PitchCode] := Convert[ScaleStep,PitchCode,Scale[]]
 Convert[PitchCode,ScaleStep] := Convert[PitchCode,ScaleStep,Scale[]]
+
+Note /: DataNoValue[x_Note]:=Note[{Duration[x],{DataNoValue,DataNoValue}},Sequence@@Opts[x]]
 
 FigBass[x_Chord,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_Intervals,  opts___?OptionQ] := FigBass[PitchCode[x],opts]
@@ -287,7 +325,7 @@ Melody[x_Chord,opts___?OptionQ]       := Melody[#,opts]& /@ Note[x]
 Melody[x_Intervals,opts___?OptionQ]   := Melody[PitchCode[x],opts]
 Melody[x_FigBass,opts___?OptionQ]     := Melody[PitchCode[x],opts]
 Melody[x_Progression]                 := Melody[Counterpoint[x]]
-Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[Note[#,opts]& /@ p,Sequence@@RemOpts[{opts},NoteDuration]]
+Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[Note[#,opts]& /@ p,Sequence@@RemOpts[{opts},Duration,Velocity]]
 Melody[x_ThirdStack,opts___?OptionQ]  := Melody[PitchCode[x],opts]
 
 ModeAeolian = 5
@@ -300,18 +338,20 @@ ModeMinor = ModeAeolian
 ModeMixolydian = 4
 ModePhrygian = 2
 
-Note[p_?AtomQ, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},Sequence@@RemOpts[{opts},NoteDuration,Velocity]]
+Note[p_?AtomQ, opts___?OptionQ] := Note[{Duration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},Sequence@@RemOpts[{opts},Duration,Velocity]]
 
-NoteFunction[x_Melody, s:(PitchCode|Velocity)] := MakeNestedIfs[Transpose[{NoteDuration /@ x,s /@ x /. {DataNoValue -> 0}}]]
+NoteFunction[x_Melody, s:(PitchCode|Velocity)] := MakeNestedIfs[Transpose[{Duration /@ x,s /@ x /. {DataNoValue -> 0}}]]
 
 NotePlot[x_Chord,        s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
-NotePlot[x_Counterpoint, s:(PitchCode|Velocity), opts___?OptionQ] := Plot[Evaluate[#[t] & /@ (NoteFunction[#,s]& /@ x)], {t,0,Duration[x]},opts]
+NotePlot[x_Counterpoint, s:(PitchCode|Velocity), opts___?OptionQ] := Plot[Evaluate[#[t] & /@ (NoteFunction[#,s]& /@ x)], {t,0,TotalDuration[x]},opts]
 NotePlot[x_Melody,       s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 NotePlot[x_Note,         s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 NotePlot[x_Progression,  s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
+NoteRest[x_Note] := Note[{Duration[x],{DataNoValue,DataNoValue}},Sequence@@Opts[x]]
 NoteRestQ[x_Note] := DataNoValueQ[PitchCode[x]] || DataNoValueQ[Velocity[x]] || (Velocity[x] === 0)
 
+NoteTie[x_Note] := Note[{Duration[x],{DataTie[PitchCode[x]],DataTie[Velocity[x]]}},Sequence@@Opts[x]]
 NoteTieQ[x_Note] := DataTieQ[PitchCode[x]] || DataTieQ[Velocity[x]]
 
 Scale /: Octave[x_Scale] := Total[Steps[x]]
@@ -419,6 +459,22 @@ Scale /: TestSuite[Scale] = Join[TestSuite[Scale],{
   TestCase[Data[Scale[PitchCode[Scale[]]]],{0, {2, 2, 1, 2, 2, 2, 1}}]
   }]
   
+Note /: TestSuite[Note] = Join[TestSuite[Note],{
+  TestCase[
+    Module[{m = {60, 64, 67}, m1, m2, m3, cp, du = 100/(SampleRate /. Options[Sound])},
+      Export["tmp.wav", "almost empty", "Text"]; 
+      m1 = Melody[m + 1, Duration -> du];
+      m2 = Melody[m + 2, Duration -> du];
+      m3 = Melody[m + 3, Duration -> du];
+      cp = Counterpoint[{m1, m2, m3}];
+      s = Sound[cp];
+      Export["tmp.wav", Mix[s, 2]];
+      Total[Flatten[Content[Import["tmp.wav"]]]]
+      ],
+    2.2421875
+    ]
+  }]
+  
 End[]
 
 Protect[
@@ -451,10 +507,12 @@ Protect[
   ModeMixolydian,
   ModePhrygian,
   Note,
-  NoteDuration,
+  Duration,
   NoteFunction,
   NotePlot,
+  NoteRest,
   NoteRestQ,
+  NoteTie,
   NoteTieQ,
   NoteQ,
   Octave,

@@ -58,7 +58,7 @@ Unprotect[
 Unprotect[
   ];
 
-CreateElement[BasicInstrument, {P2F_,V2A_,T2S_},Null,"todo"];
+CreateElement[BasicInstrument, {PitchCodeToFrequency_,VelocityToAmplitude_,TimeToSample_},Null,"todo"];
   
 Instrument::usage = "todo"
 
@@ -68,18 +68,18 @@ Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ] :=
   Module[
     {
       sr = SampleRate/.{opts}/.Options[Sound],
-      p2f = P2F[x],
-      v2a = V2A[x],
-      t2s = T2S[x]
+      p2f = PitchCodeToFrequency[x],
+      v2a = VelocityToAmplitude[x],
+      t2s = TimeToSample[x]
       },
     Function[m,
       Module[{d,p,v,f,a},
         (* todo: use NoteFunction here *)
-        d = NoteDuration[m] * sr;
+        d = Duration[m] * sr;
         {p,v}=Transpose[MapThread[If[DataPlainValueQ[{#1,#2}],{#1,#2},{0,0}]&,{PitchCode[m],Velocity[m]}]];
         f = MakeNestedIfs[Transpose[{d,p2f /@ p}]];
         a = MakeNestedIfs[Transpose[{d,v2a /@ v}]];
-        Snippet[{SampledSoundFunction,Function[t, t2s[f[t],a[t],sr][t]],Round[sr],Round[Duration[m]sr]},Sequence @@ RemOpts[{opts},SampleRate]]
+        Snippet[{SampledSoundFunction,Function[t, t2s[f[t],a[t],sr][t]],Round[sr],Round[TotalDuration[m]sr]},Sequence @@ RemOpts[{opts},SampleRate]]
         ]
       ]
     ]

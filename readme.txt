@@ -53,7 +53,8 @@ http://cvs.sourceforge.net/viewcvs.py/musica/Musica2/
 
 Installation:
 
-Copy the Musica2 folder from /Musica2.yyymmdd/Applications into your "Applications" folder. If you don't know where it is located, evaluate in Mathematica the variable $BaseDirectory or $UserBaseDirectory, which contains the compelte path of the Application Folder.
+Copy the Musica2 folder from /Musica2.yyymmdd/Applications into your "Applications" folder.
+If you don't know in what folder it is located, evaluate in Mathematica the variable $BaseDirectory or $UserBaseDirectory, which contains the compelte path of the Application Folder.
 The first one is available to all users of the computer, the second is only for the logged user.
 
 Then You just have to do <<Musica2` inside Mathematica as expected.

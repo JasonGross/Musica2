@@ -9,6 +9,9 @@
 
 ------------------------------------------------------------
 
+  2005-01-23  bch :  Changed the content of Event's for channel-events from {type,{channel,data..}} to {{type,channel},{data..}}
+                     Changed keyword Duration to be TotalDuration and NoteDuration to Duration
+
   2004-09-16  bch :  This is a major rewrite. Started using up-values and a kind
                      of template for types. Not every feature from the previous
                      version is present, but this is so much better and will
