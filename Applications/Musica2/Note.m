@@ -425,11 +425,11 @@ Tidy[Melody] = Module[{n = Note[#],i},
     If[Duration[n[[i]]]===0,
       n = Delete[n,i];
       i -= 1,
-      If[i == 1 && NoteTieQ[n[[1]]],
+      If[i == 1 && DataTieQ[n[[1]]],
         n[[1]] = ReplacePart[n[[1]],DataNoValue,PitchCode];
         n[[1]] = ReplacePart[n[[1]],DataNoValue,Velocity]
         ];
-      If[(NoteRestQ[n[[i]]] && NoteRestQ[n[[i+1]]]) || NoteTieQ[n[[i+1]]],
+      If[(DataNoValueQ[n[[i]]] && DataNoValueQ[n[[i+1]]]) || DataTieQ[n[[i+1]]],
         n[[i]] = ReplacePart[n[[i]],Duration[n[[i]]]+Duration[n[[i+1]]],Duration];
         n = Delete[n,i+1];
         i -= 1;

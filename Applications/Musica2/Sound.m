@@ -98,9 +98,6 @@ CreateContainer[Musica2,Sound,Snippet,
 SampleCount::usage = "todo"
 SoundType::usage = "todo"
 
-TestOne::usage=""
-TestTwo::usage=""
-
 Begin["`Private`"]
 
 (* Snippet ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
@@ -231,7 +228,7 @@ Snippet /: TotalDuration[x_Snippet] := SampleCount[x]/SampleRate[x]
 
 (* Snippet tests *)
 
-TestOne[at_,bt_,r_,t_] :=
+tf[at_,bt_,r_,t_] :=
   Module[{a, b, s},
     Export["tmp.wav", "almost empty", "Text"];
     a = Snippet[{SampledSoundFunction, Sin[#1]& , 2, 7}];
@@ -253,22 +250,22 @@ TestOne[at_,bt_,r_,t_] :=
     ]
 
 Snippet /: TestSuite[Snippet] = Join[TestSuite[Snippet],{
-  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,False,False],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,True,False],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundList,False,False],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundList,True,False],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundFunction,False,False],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundFunction,True,False],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundList,False,False],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundList,True,False],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,False,True],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundFunction,True,True],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundList,False,True],1.40625],
-  TestCase[TestOne[SampledSoundFunction,SampledSoundList,True,True],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundFunction,False,True],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundFunction,True,True],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundList,False,True],1.40625],
-  TestCase[TestOne[SampledSoundList,SampledSoundList,True,True],1.40625]
+  TestCase[tf[SampledSoundFunction,SampledSoundFunction,False,False],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundFunction,True,False],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundList,False,False],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundList,True,False],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundFunction,False,False],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundFunction,True,False],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundList,False,False],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundList,True,False],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundFunction,False,True],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundFunction,True,True],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundList,False,True],1.40625],
+  TestCase[tf[SampledSoundFunction,SampledSoundList,True,True],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundFunction,False,True],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundFunction,True,True],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundList,False,True],1.40625],
+  TestCase[tf[SampledSoundList,SampledSoundList,True,True],1.40625]
   }]
 
 (* Snippet --------------------------------------------------------------------------*)
