@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-09-03  bch :  added Note and Common to the list of pkg's
   2004-08-27  bch :  added ToDo function
   2004-08-26  bch :  added some help/usage-text
   2004-08-19  bch :  added MidiPlay to the list of pkg's
@@ -51,18 +52,15 @@ BeginPackage["Musica2`Setup`",
 
 Unprotect[
   CalcMidiStateRoutes,
+  ClearInitDotEm,
   MakeInitDotEm,
   ToDo
   ];
 
-ToDo::todo = "Arguments pkg and pkgs should be shared with MakeInitDotEm."
-
 CalcMidiStateRoutes::usage = "CalcMidiStateRoutes[m_Midi, opts___] takes a Midi-object as an argument and recalculates MidiStateRoutes. The option Verbose->True plots a graph along with some timings. The result returned by CalcMidiStateRoutes is the average time it takes for a change of state for the Midi-object."
-MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m. The default-values for the arguments are:\[NewLine]
-pkg:  Musica2\[NewLine]
-pkgs: {EventList,Midi,MidiPlay,Setup,Sound,Utils}\[NewLine]
-fn:   Musica2/Applications/Musica2/Kernel/init.m";
-ToDo::usage = "ToDo[] prints what todo ;-)"<>ToDoString<>ToDo::todo
+ClearInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
+MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
+ToDo::usage = "ToDo[] prints what todo ;-)"
 
 Begin["`Private`"]
 
@@ -87,9 +85,7 @@ COP[e_, p_] :=
 
 CalcMidiStateRoutes[m_Midi, opts___] :=
   Module[{e, g,c,p,sc,pr=Verbose/.{opts}/.{Verbose->False}},
-    Unprotect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
-    MidiStatesExpanded = MidiExpandStates[MidiStates];
-    MidiStatePathsExpanded = MidiExpandStatePaths[MidiStatePaths];
+    Unprotect[MidiStateRoutes];
     e = {Position[MidiStatesExpanded, #][[1, 1]] & /@ #, \[Infinity]} & /@ MidiStatePathsExpanded;
     e = SW[e, m, pr];
     If[MemberQ[e, {{_, _}, \[Infinity]}],
@@ -106,11 +102,19 @@ CalcMidiStateRoutes[m_Midi, opts___] :=
       p,
       {f, sc},{t, sc}
       ];
-    Protect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
+    Protect[MidiStateRoutes];
     c/(#^2-#)&[sc]
     ]
 
-MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m"] :=
+fn="Musica2/Applications/Musica2/Kernel/init.m";
+pkg="Musica2";
+pkgs={"Common","EventList","Midi","MidiPlay","Note","Setup","Sound","Utils"};
+
+ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
+ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]
+
+MakeInitDotEm[] := MakeInitDotEm[pkg, pkgs, fn]
+MakeInitDotEm[pkg_, pkgs_, fn_] :=
   Module[{fout = OpenWrite[fn],d=ToString/@Date[],pr=True},
     WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
     WriteString[fout, "\n"];
@@ -135,7 +139,8 @@ MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Soun
     Close[fout];
     ]
 
-ToDo[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Sound","Utils"}] :=
+ToDo[] := ToDo[pkg, pkgs]
+ToDo[pkg_, pkgs_] :=
   Drop[
     Union[
       Flatten[
@@ -156,6 +161,7 @@ End[]
 
 Protect[
   CalcMidiStateRoutes,
+  ClearInitDotEm,
   MakeInitDotEm,
   ToDo
   ];

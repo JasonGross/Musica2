@@ -31,11 +31,15 @@ overwritten.
 
 
 
-<<Musica2`
+<<Graphics`Colors`
 
 
 
 <<Miscellaneous`Audio`
+
+
+
+<<Musica2`
 
 
 
@@ -56,6 +60,12 @@ pre:=DataFolder<>"pre.mid";(* 8.9kb, J.S.Bach, bwv 847a,
 
 MidiTestFile:=cor;
 MidiTestFileList:={cor,fug,cun,pre};
+
+
+
+
+
+
 
 
 

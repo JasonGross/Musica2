@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-08-28  bch :  added SoundMixStereo
   2004-08-27  bch :  removed " from some help/usage-text
                      added message todo
   2004-08-26  bch :  added some help/usage-text
@@ -75,6 +76,7 @@ Unprotect[
   SoundMakeFunc,
   SoundMakeList,
   SoundMix,
+  SoundMixStereo,
   SoundOfSilence,
   SoundPar,
   SoundPitchShift,
@@ -114,6 +116,7 @@ SoundLoop::usage = "Currently an option to SoundGetFunc and SoundSetDuration."
 SoundMakeFunc::usage = "SoundMakeFunc[p_, opts___] creates a Sound-object based on a list of functions. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a Sound-object. The opts-argument can be SampleRate, SoundDuration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."<>ToDoString<>SoundMakeFunc::todo
 SoundMakeList::usage = "SoundMakeList[p_, opts___] creates a Sound-object based on a list of sample-lists. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a Sound-object. The opts-argument can be SampleRate, SoundDuration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."<>ToDoString<>SoundMakeList::todo
 SoundMix::usage = "SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?FunctionQ ...} ...}, opts___] creates a new Sound-object by using a mix of the s-arguments channels. The mix-argument is a list of lists containing functions of time that determin the amplitude. The mix-argument must have the same length as the s-argument has channels. Each list in the mix-argument-list mus be of the same length and determines the number ocf channels in the resulting Sound-object."
+SoundMixStereo::usage = "SoundMixStereo[s_Sound] calls SoundMix to make a simple stereo-mix."
 SoundOfSilence::usage = "SoundOfSilence[opts___] returns an sound-less Sound-object. The opts-argument may be SoundChannelCount and all the usual opts and defaults to Options[Zound]."
 SoundPar::usage = "SoundPar[sl:SFLP, opts___] takes a list of sound-function-objects and creates a new one with the supplied Sound-objects in parallel."<>ToDoString<>SoundPar::todo
 SoundPitchShift::usage = "SoundPitchShift[s_Sound,r_,opts___] changes the pitch of the s-argument by changing the duration and keeping the sample-rate."<>ToDoString<>SoundPitchShift::todo
@@ -371,6 +374,14 @@ SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?Functio
     SoundMakeFunc[fl, Sequence @@ SoundGetInfo[s], opts]
     ] /; SoundGetChannelCount[s] == Length[mix] && Module[{x = Union[Length /@ mix]}, Length[x] == 1 && 1 <= x[[1]]]
 
+SoundMixStereo[s_Sound] :=
+  Module[{c = SoundGetChannelCount[s],mix},
+    If[c == 2, s,
+      mix = If[c == 1, {{1 &, 1 &}},Table[N[{Evaluate[2(c - i)/(c^2 - c)] &, Evaluate[2(i - 1)/(c^2 - c)] &}], {i, c}]];
+      SoundMix[s, mix]
+      ]
+    ]
+
 SoundOfSilence[opts___] :=
   Module[
     {
@@ -520,6 +531,7 @@ Protect[
   SoundMakeFunc,
   SoundMakeList,
   SoundMix,
+  SoundMixStereo,
   SoundOfSilence,
   SoundPar,
   SoundPitchShift,
