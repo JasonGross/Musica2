@@ -71,6 +71,7 @@ BeginPackage["Musica2`Setup`",
 Unprotect[
   ClearInitDotEm,
   MakeInitDotEm,
+  Musica2,
   Setup
   ];
 
@@ -147,6 +148,7 @@ End[]
 Protect[
   ClearInitDotEm,
   MakeInitDotEm,
+  Musica2,
   Setup
   ];
 

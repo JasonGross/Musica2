@@ -146,7 +146,7 @@ Snippet /: Data[x_Snippet, y_, SampleCount, pos_] :=
     
 (* Snippet constructors *)
 
-Usage[Musica2,Snippet,{{DataNoValue, _},___?OptionQ},_Snippet,"todo"]
+Usage[Append,Musica2,Snippet,{{DataNoValue, _},___?OptionQ},_Snippet,"todo"]
 Snippet[{DataNoValue, d_},opts___?OptionQ] := Snippet[{
   SampledSoundFunction,
   0&,
@@ -154,7 +154,7 @@ Snippet[{DataNoValue, d_},opts___?OptionQ] := Snippet[{
   d * (SampleRate /. Options[Snippet])
   },opts]
 
-Usage[Musica2,Snippet,{_?NumberQ,___?OptionQ},_Snippet,"todo"]
+Usage[Append,Musica2,Snippet,{_?NumberQ,___?OptionQ},_Snippet,"todo"]
 Snippet[x_?NumberQ,opts___?OptionQ] := Snippet[{DataNoValue, x},opts]
 
 Snippet[SampledSoundFunction] := Snippet[{SampledSoundFunction,0#,2,2}]
@@ -164,19 +164,19 @@ Snippet[SampledSoundList] := Snippet[{SampledSoundList,{0,0},2,2}]
 
 (* Snippet common functions *)
 
-Usage[Musica2,Duration,{_Snippet},_,"todo"]
+Usage[Append,Musica2,Duration,{_Snippet},_,"todo"]
 Snippet /: Duration[x_Snippet] := SampleCount[x]/SampleRate[x]
 
-Usage[Musica2,Mix,{_Snippet},_Snippet,"todo"]
+Usage[Append,Musica2,Mix,{_Snippet},_Snippet,"todo"]
 Mix[x_Snippet] := x
 
-Usage[Musica2,Mix,{{__Snippet}},_Snippet,"todo"]
+Usage[Append,Musica2,Mix,{{__Snippet}},_Snippet,"todo"]
 Mix[x:{__Snippet}] := Snippet[Mix[Par[x],1]][[1]]
 
-Usage[Musica2,Par,{{__Snippet}},_Sound,"todo"]
+Usage[Append,Musica2,Par,{{__Snippet}},_Sound,"todo"]
 Par[x:{__Snippet},opts___?OptionQ] := Sound[x,opts]
 
-Usage[Musica2,Play2,{_Snippet},_Sound,"todo"]
+Usage[Append,Musica2,Play2,{_Snippet},_Sound,"todo"]
 Snippet /: Play2[x_Snippet] := Play2[Sound[x]]
 
 SSF[fl_, vl_,dl_] :=
@@ -187,7 +187,7 @@ SSF[fl_, vl_,dl_] :=
     Function[Evaluate[c], Evaluate[it]]
     ]
 
-Usage[Musica2,Seq,{{__Snippet}},_Snippet,"todo"]
+Usage[Append,Musica2,Seq,{{__Snippet}},_Snippet,"todo"]
 Seq[x:{__Snippet},opts___?OptionQ] :=
   Module[
     {
@@ -213,7 +213,7 @@ Seq[x:{__Snippet},opts___?OptionQ] :=
     s
     ]
     
-Usage[Musica2,Tidy,{Snippet},_,"todo"]
+Usage[Append,Musica2,Tidy,{Snippet},_Function,"todo"]
 Tidy[Snippet] = Function[s,
   Module[{r = s},
     If[SoundType[r] === SampledSoundFunction,
@@ -224,7 +224,7 @@ Tidy[Snippet] = Function[s,
     ]
   ]
   
-Usage[Musica2,TotalDuration,{_Snippet},_,"todo"]
+Usage[Append,Musica2,TotalDuration,{_Snippet},_,"todo"]
 Snippet /: TotalDuration[x_Snippet] := SampleCount[x]/SampleRate[x]
 
 (* Snippet unique functions *)
@@ -325,7 +325,7 @@ UnPackOpts[Sound] = Function[{subs,opts},{
 
 (* Sound constructors *)
 
-Usage[Musica2,Sound,{_?(DataQ[Sound]),___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Sound,{_?(DataQ[Sound]),___?OptionQ},_Sound,"todo"]
 Sound[d_?(DataQ[Sound]),opts___?OptionQ] :=
   Module[{st = SoundType /. {opts}, sr = SampleRate /. {opts}, sc = SampleCount /. {opts}},
   If[st === SampledSoundFunction,
@@ -349,7 +349,7 @@ Sound[d_?(DataQ[Sound]),opts___?OptionQ] :=
 
 (* Sound common functions *)
 
-Usage[Musica2,Mix,{_Sound,  {{__}...}},_Sound,"todo"]
+Usage[Append,Musica2,Mix,{_Sound,  {{__}...}},_Sound,"todo"]
 Mix[x_Sound, mix : {{__}...}] :=
   Module[
     {
@@ -382,7 +382,7 @@ Mix[x_Sound, mix : {{__}...}] :=
     Sound[sl,Sequence @@ Opts[x]]
     ] /; (SoundType[x]===SampledSoundList) && (Length[x] == Length[mix]) && Module[{o = Union[Length /@ mix]}, (Length[o] == 1) && (1 <= o[[1]])]
 
-Usage[Musica2,Mix,{_Sound,1},_Sound,"todo"]
+Usage[Append,Musica2,Mix,{_Sound,1},_Sound,"todo"]
 Mix[s_Sound,1] :=
   Module[{c = Length[s],mix},
     If[c == 1, s,
@@ -391,7 +391,7 @@ Mix[s_Sound,1] :=
       ]
     ]
 
-Usage[Musica2,Mix,{_Sound,2},_Sound,"todo"]
+Usage[Append,Musica2,Mix,{_Sound,2},_Sound,"todo"]
 Mix[s_Sound,2] :=
   Module[{c = Length[s],mix},
     If[c == 2, s,
@@ -400,19 +400,19 @@ Mix[s_Sound,2] :=
       ]
     ]
 
-Usage[Musica2,Par,{{__Sound},___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Par,{{__Sound},___?OptionQ},_Sound,"todo"]
 Par[x:{__Sound},  opts___?OptionQ] := Sound[Flatten[Snippet /@ x],opts]
 
-Usage[Musica2,Play2,{_Sound},_Sound,"todo"]
+Usage[Append,Musica2,Play2,{_Sound},_Sound,"todo"]
 Sound   /: Play2[x_Sound]   := Show[Mix[x,2]]
 
-Usage[Musica2,SampleCount,{_Sound},_Integer,"todo"]
+Usage[Append,Musica2,SampleCount,{_Sound},_Integer,"todo"]
 Sound /: SampleCount[x_Sound] := SampleCount /. Opts[x]
 
-Usage[Musica2,SampleRate,{_Sound},_Integer,"todo"]
+Usage[Append,Musica2,SampleRate,{_Sound},_Integer,"todo"]
 Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
-Usage[Musica2,Seq,{{__Sound},___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Seq,{{__Sound},___?OptionQ},_Sound,"todo"]
 Seq[x:{__Sound},opts___?OptionQ] :=
   Module[
     {
@@ -435,10 +435,10 @@ Seq[x:{__Sound},opts___?OptionQ] :=
     Sound[s]
     ]
 
-Usage[Musica2,SoundType,{_Sound},(SampledSoundFunction|SampledSoundList),"todo"]
+Usage[Append,Musica2,SoundType,{_Sound},(SampledSoundFunction|SampledSoundList),"todo"]
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 
-Usage[Musica2,TotalDuration,{_Sound},_Integer,"todo"]
+Usage[Append,Musica2,TotalDuration,{_Sound},_Integer,"todo"]
 Sound /: TotalDuration[x_Sound] := SampleCount[x]/SampleRate[x]
 
 (* Sound unique functions *)

@@ -182,19 +182,19 @@ ScaleStep::usage = "todo"
 
 Begin["`Private`"]
 
-Usage[Musica2,NotePlot,{_Chord, _Symbol, ___?OptionQ},_Graphics,"todo"];
+Usage[Append,Musica2,NotePlot,{_Chord, _Symbol, ___?OptionQ},_Graphics,"todo"];
 NotePlot[x_Chord, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
-Usage[Musica2,NotePlot,{_Counterpoint, _Symbol, ___?OptionQ},_Graphics,"todo"];
+Usage[Append,Musica2,NotePlot,{_Counterpoint, _Symbol, ___?OptionQ},_Graphics,"todo"];
 NotePlot[x_Counterpoint, s:(PitchCode|Velocity), opts___?OptionQ] := Plot[Evaluate[#[t] & /@ (NoteFunction[#,s]& /@ x)], {t,0,TotalDuration[x]},opts]
 
-Usage[Musica2,NotePlot,{_Melody, _Symbol, ___?OptionQ},_Graphics,"todo"];
+Usage[Append,Musica2,NotePlot,{_Melody, _Symbol, ___?OptionQ},_Graphics,"todo"];
 NotePlot[x_Melody, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
-Usage[Musica2,NotePlot,{_Note, _Symbol, ___?OptionQ},_Graphics,"todo"];
+Usage[Append,Musica2,NotePlot,{_Note, _Symbol, ___?OptionQ},_Graphics,"todo"];
 NotePlot[x_Note, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
-Usage[Musica2,NotePlot,{_Progression, _Symbol, ___?OptionQ},_Graphics,"todo"];
+Usage[Append,Musica2,NotePlot,{_Progression, _Symbol, ___?OptionQ},_Graphics,"todo"];
 NotePlot[x_Progression, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
 (* Note ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
@@ -203,22 +203,22 @@ NotePlot[x_Progression, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s
 
 (* Note constructors ************************************************************************)
 
-Usage[Musica2,Note,{{DataNoValue,_Note}, ___?OptionQ},_Note,"turn a Note into a rest"]
+Usage[Append,Musica2,Note,{{DataNoValue,_Note}, ___?OptionQ},_Note,"turn a Note into a rest"]
 Note[{DataNoValue,x_Note}, opts___?OptionQ] := Note[{DataNoValue,Duration[x]},Sequence@@AddOpts[Opts[x],opts]]
 
-Usage[Musica2,Note,{{DataNoValue,_}, ___?OptionQ},_Note,"create a rest"]
+Usage[Append,Musica2,Note,{{DataNoValue,_}, ___?OptionQ},_Note,"create a rest"]
 Note[{DataNoValue,x_}, opts___?OptionQ] := Note[{x,{DataNoValue,DataNoValue}},opts]
 
-Usage[Musica2,Note,{{DataTie,_Note}, ___?OptionQ},_Note,"turn a Note into a tie"]
+Usage[Append,Musica2,Note,{{DataTie,_Note}, ___?OptionQ},_Note,"turn a Note into a tie"]
 Note[{DataTie,x_Note}, opts___?OptionQ] := Note[{Duration[x],{DataTie[PitchCode[x]],DataTie[Velocity[x]]}},Sequence@@AddOpts[Opts[x],opts]]
 
-Usage[Musica2,Note,{{DataUnTie,_Note}, ___?OptionQ},_Note,"turn a tie into a Note"]
+Usage[Append,Musica2,Note,{{DataUnTie,_Note}, ___?OptionQ},_Note,"turn a tie into a Note"]
 Note[{DataUnTie,x_Note}, opts___?OptionQ] := Note[{Duration[x],{DataUnTie[PitchCode[x]],DataUnTie[Velocity[x]]}},Sequence@@AddOpts[Opts[x],opts]]
 
-Usage[Musica2,Note,{{_,_}, ___?OptionQ},_Note,"create a Note from {Duration,PitchCode}"]
+Usage[Append,Musica2,Note,{{_,_}, ___?OptionQ},_Note,"create a Note from {Duration,PitchCode}"]
 Note[{d_,p_}, opts___?OptionQ] := Note[{d,{p,Velocity/.{opts}/.Options[Note]}},Sequence@@RemOpts[{opts},Velocity]]
 
-Usage[Musica2,Note,{_?AtomQ, ___?OptionQ},_Note,"create a Note from PitchCode"]
+Usage[Append,Musica2,Note,{_?AtomQ, ___?OptionQ},_Note,"create a Note from PitchCode"]
 Note[p_?AtomQ, opts___?OptionQ] := Note[{Duration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},Sequence@@RemOpts[{opts},Duration,Velocity]]
 
 (* todo, depricated *)
@@ -241,33 +241,33 @@ NoteTie[x_Note] := (
 
 (* Note reverse constructors ****************************************************************)
 
-Usage[Musica2,Snippet,{_Note, ___?OptionQ},_Snippet,"create a Snippet from a Note"]
+Usage[Append,Musica2,Snippet,{_Note, ___?OptionQ},_Snippet,"create a Snippet from a Note"]
 Note /: Snippet[x_Note, opts___?OptionQ] := Snippet[Melody[x],opts]
 
-Usage[Musica2,Sound,{_Note, ___?OptionQ},_Sound,"create a Sound from a Note"]
+Usage[Append,Musica2,Sound,{_Note, ___?OptionQ},_Sound,"create a Sound from a Note"]
 Note /: Sound[x_Note, opts___?OptionQ] := Sound[Snippet[x,opts]]
 
 (* Note common functions ********************************************************************)
 
-Usage[Musica2,DataAnyValueQ,{_Note},(True|False),"returns True if the Note contains a DataNoValue"]
+Usage[Append,Musica2,DataAnyValueQ,{_Note},(True|False),"returns True if the Note contains a DataNoValue"]
 Note /: DataAnyValueQ[x_Note] := DataNoValueQ[Data[x]]
 
-Usage[Musica2,DataNoValueQ,{_Note},(True|False),"returns True if the Note is a rest"]
+Usage[Append,Musica2,DataNoValueQ,{_Note},(True|False),"returns True if the Note is a rest"]
 Note /: DataNoValueQ[x_Note] := DataNoValueQ[PitchCode[x]] || DataNoValueQ[Velocity[x]] || (Velocity[x] === 0)
 
-Usage[Musica2,DataTieQ,{_Note},(True|False),"returns True if the Note is a tie"]
+Usage[Append,Musica2,DataTieQ,{_Note},(True|False),"returns True if the Note is a tie"]
 Note /: DataTieQ[x_Note] := DataTieQ[PitchCode[x]] || DataTieQ[Velocity[x]]
 
-Usage[Musica2,Par,{{__Note}},_Chord,"creates a Chord"]
+Usage[Append,Musica2,Par,{{__Note}},_Chord,"creates a Chord"]
 Par[x:{__Note}] := Chord[x]
 
-Usage[Musica2,Play2,{_Note},_Sound,"playes the Note in stereo"]
+Usage[Append,Musica2,Play2,{_Note},_Sound,"playes the Note in stereo"]
 Note /: Play2[x_Note] := Play2[Sound[x]]
 
-Usage[Musica2,Seq,{{__Note}},_Melody,"creates a Melody"]
+Usage[Append,Musica2,Seq,{{__Note}},_Melody,"creates a Melody"]
 Seq[x:{__Note}] := Melody[x]
 
-Usage[Musica2,TotalDuration,{_Note},_,"returns the Duration"]
+Usage[Append,Musica2,TotalDuration,{_Note},_,"returns the Duration"]
 Note /: TotalDuration[x_Note] := Duration[x]
 
 (* Note unique functions ********************************************************************)
@@ -313,47 +313,47 @@ UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,Duration->Duration[subs[[1
 
 (* Chord constructors ***********************************************************************)
 
-Usage[Musica2,Chord,{{_,{{_,_}...}},___?OptionQ},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{{_,{{_,_}...}},___?OptionQ},_Chord,"todo"]
 Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
 
-Usage[Musica2,Chord,{_Counterpoint},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{_Counterpoint},_Chord,"todo"]
 Chord[x_Counterpoint] := Chord[Progression[x]]
 
-Usage[Musica2,Chord,{_FigBass,___?OptionQ},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{_FigBass,___?OptionQ},_Chord,"todo"]
 Chord[x_FigBass, opts___?OptionQ] := Chord[PitchCode[x],opts]
 
-Usage[Musica2,Chord,{_Intervals, ___?OptionQ},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{_Intervals, ___?OptionQ},_Chord,"todo"]
 Chord[x_Intervals, opts___?OptionQ] := Chord[PitchCode[x],opts]
 
-Usage[Musica2,Chord,{_Melody, ___?OptionQ},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{_Melody, ___?OptionQ},_Chord,"todo"]
 Chord[x_Melody, opts___?OptionQ] := Chord[#,opts]& /@ Note[x]
 
-Usage[Musica2,Chord,{{__?AtomQ}, ___?OptionQ},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{{__?AtomQ}, ___?OptionQ},_Chord,"todo"]
 Chord[p:{__?AtomQ}, opts___?OptionQ] := Chord[Note[#,opts]& /@ p,opts]
 
-Usage[Musica2,Chord,{_ThirdStack, ___?OptionQ},_Chord,"todo"]
+Usage[Append,Musica2,Chord,{_ThirdStack, ___?OptionQ},_Chord,"todo"]
 Chord[x_ThirdStack, opts___?OptionQ] := Chord[PitchCode[x],opts]
 
 (* Chord reverse constructors ***************************************************************)
 
-Usage[Musica2,Snippet,{_Chord, ___?OptionQ},{___Snippet},"todo"]
+Usage[Append,Musica2,Snippet,{_Chord, ___?OptionQ},{___Snippet},"todo"]
 Chord /: Snippet[x_Chord, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
 
-Usage[Musica2,Sound,{_Chord, ___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Sound,{_Chord, ___?OptionQ},_Sound,"todo"]
 Chord /: Sound[x_Chord, opts___?OptionQ] := Sound[Snippet[x,opts]]
 
 (* Chord common functions *******************************************************************)
 
-Usage[Musica2,Par,{{__Chord}},_Chord,"todo"]
+Usage[Append,Musica2,Par,{{__Chord}},_Chord,"todo"]
 Par[x:{__Chord}] := Chord[Flatten[Note /@ x]]
 
-Usage[Musica2,Play2,{_Chord},_Sound,"todo"]
+Usage[Append,Musica2,Play2,{_Chord},_Sound,"todo"]
 Chord /: Play2[x_Chord] := Play2[Sound[x]]
 
-Usage[Musica2,Par,{{__Chord}},_Progression,"todo"]
+Usage[Append,Musica2,Par,{{__Chord}},_Progression,"todo"]
 Seq[x:{__Chord}] := Progression[x]
 
-Usage[Musica2,TotalDuration,{_Chord},_,"todo"]
+Usage[Append,Musica2,TotalDuration,{_Chord},_,"todo"]
 Chord /: TotalDuration[x_Chord] := Duration /. Opts[x]
 
 (* Chord unique functions *******************************************************************)
@@ -371,55 +371,55 @@ Chord /: TestSuite[Chord] = Join[TestSuite[Chord],{
 
 (* Melody constructors **********************************************************************)
 
-Usage[Musica2,Melody,{_Chord,___?OptionQ},_Melody,"todo"]
+Usage[Append,Musica2,Melody,{_Chord,___?OptionQ},_Melody,"todo"]
 Melody[x_Chord,opts___?OptionQ] := Melody[#,opts]& /@ Note[x]
 
-Usage[Musica2,Melody,{_Intervals,___?OptionQ},_Melody,"todo"]
+Usage[Append,Musica2,Melody,{_Intervals,___?OptionQ},_Melody,"todo"]
 Melody[x_Intervals,opts___?OptionQ] := Melody[PitchCode[x],opts]
 
-Usage[Musica2,Melody,{_FigBass,___?OptionQ},_Melody,"todo"]
+Usage[Append,Musica2,Melody,{_FigBass,___?OptionQ},_Melody,"todo"]
 Melody[x_FigBass,opts___?OptionQ] := Melody[PitchCode[x],opts]
 
-Usage[Musica2,Melody,{_Progression,___?OptionQ},{___Melody},"todo"]
+Usage[Append,Musica2,Melody,{_Progression,___?OptionQ},{___Melody},"todo"]
 Melody[x_Progression] := Melody[Counterpoint[x]]
 
-Usage[Musica2,Melody,{{__?AtomQ},___?OptionQ},_Melody,"todo"]
+Usage[Append,Musica2,Melody,{{__?AtomQ},___?OptionQ},_Melody,"todo"]
 Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[Note[#,opts]& /@ p,Sequence@@RemOpts[{opts},Duration,Velocity]]
 
-Usage[Musica2,Melody,{{{_?AtomQ,_?AtomQ}..},___?OptionQ},_Melody,"todo"]
+Usage[Append,Musica2,Melody,{{{_?AtomQ,_?AtomQ}..},___?OptionQ},_Melody,"todo"]
 Melody[dp:{{_?AtomQ,_?AtomQ}..}, opts___?OptionQ] := Melody[Note[#,opts]& /@ dp,Sequence@@RemOpts[{opts},Duration,Velocity]]
 
-Usage[Musica2,Melody,{_ThirdStack,___?OptionQ},_Melody,"todo"]
+Usage[Append,Musica2,Melody,{_ThirdStack,___?OptionQ},_Melody,"todo"]
 Melody[x_ThirdStack,opts___?OptionQ] := Melody[PitchCode[x],opts]
 
 (* Melody reverse constructors **************************************************************)
 
-Usage[Musica2,Snippet,{_Melody,___?OptionQ},_Snippet,"todo"]
+Usage[Append,Musica2,Snippet,{_Melody,___?OptionQ},_Snippet,"todo"]
 Melody /: Snippet[x_Melody, opts___?OptionQ] := Convert[Melody,Snippet,Instrument,opts][x]
 
-Usage[Musica2,Sound,{_Melody,___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Sound,{_Melody,___?OptionQ},_Sound,"todo"]
 Melody /: Sound[x_Melody, opts___?OptionQ] := Sound[Snippet[x,opts]]
 
 (* Melody common functions ******************************************************************)
 
-Usage[Musica2,Convert,{Time,PitchCode,_Melody},_,"todo"]
+Usage[Append,Musica2,Convert,{Time,PitchCode,_Melody},_Function,"todo"]
 Convert[Time,PitchCode,x_Melody] := NoteFunction[x, PitchCode]
 
-Usage[Musica2,Convert,{Time,Velocity,_Melody},_,"todo"]
+Usage[Append,Musica2,Convert,{Time,Velocity,_Melody},_Function,"todo"]
 Convert[Time,Velocity,x_Melody] := NoteFunction[x, Velocity]
 
 NoteFunction[x_Melody, s:(PitchCode|Velocity)] := MakeNestedIfs[Transpose[{Duration /@ x,s /@ x /. {DataNoValue -> 0}}]]
 
-Usage[Musica2,Par,{{__Melody}},_Counterpoint,"todo"]
+Usage[Append,Musica2,Par,{{__Melody}},_Counterpoint,"todo"]
 Par[x:{__Melody}] := Counterpoint[x]
 
-Usage[Musica2,Play2,{_Melody},_Sound,"todo"]
+Usage[Append,Musica2,Play2,{_Melody},_Sound,"todo"]
 Melody /: Play2[x_Melody] := Play2[Sound[x]]
 
-Usage[Musica2,Seq,{{__Melody}},_Melody,"todo"]
+Usage[Append,Musica2,Seq,{{__Melody}},_Melody,"todo"]
 Seq[x:{__Melody}] := Melody[Flatten[Note /@ x]]
 
-Usage[Musica2,Tidy,{Melody},_,"todo"]
+Usage[Append,Musica2,Tidy,{Melody},_Function,"todo"]
 Tidy[Melody] = Module[{n = Note[#],i},
   For[i = 1, i < Length[n], i++,
     If[Duration[n[[i]]]===0,
@@ -439,7 +439,7 @@ Tidy[Melody] = Module[{n = Note[#],i},
   Melody[n,Sequence @@ Opts[#]]
   ]&
 
-Usage[Musica2,TotalDuration,{_Melody},_,"todo"]
+Usage[Append,Musica2,TotalDuration,{_Melody},_,"todo"]
 Melody /: TotalDuration[x_Melody] := Total[Duration /@ x]
 
 (* Melody unique functions ******************************************************************)
@@ -479,32 +479,32 @@ Melody /: TestSuite[Melody] = Join[TestSuite[Melody],{
 
 (* Progression constructors *****************************************************************)
 
-Usage[Musica2,Progression,{_Counterpoint, ___?OptionQ},_Progression,"todo"]
+Usage[Append,Musica2,Progression,{_Counterpoint, ___?OptionQ},_Progression,"todo"]
 Progression[x_Counterpoint, opts___?OptionQ] := Progression[Chord[#]& /@ ParOfSeqToSeqOfPar[Data /@ x]]
 
-Usage[Musica2,Progression,{_Melody},_Progression,"todo"]
+Usage[Append,Musica2,Progression,{_Melody},_Progression,"todo"]
 Progression[x_Melody] := Progression[Chord[x]]
 
 (* Progression reverse constructors *********************************************************)
 
-Usage[Musica2,Snippet,{_Progression, ___?OptionQ},{___Snippet},"todo"]
+Usage[Append,Musica2,Snippet,{_Progression, ___?OptionQ},{___Snippet},"todo"]
 Progression /: Snippet[x_Progression, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
 
-Usage[Musica2,Sound,{_Progression, ___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Sound,{_Progression, ___?OptionQ},_Sound,"todo"]
 Progression /: Sound[x_Progression,  opts___?OptionQ] := Sound[Snippet[x,opts]]
 
 (* Progression common functions *************************************************************)
 
-Usage[Musica2,Par,{{__Progression}},_Progression,"todo"]
+Usage[Append,Musica2,Par,{{__Progression}},_Progression,"todo"]
 Par[x:{__Progression}]  := Progression[Par[Counterpoint /@ x]]
 
-Usage[Musica2,Play2,{_Progression},_Sound,"todo"]
+Usage[Append,Musica2,Play2,{_Progression},_Sound,"todo"]
 Progression /: Play2[x_Progression] := Play2[Sound[x]]
 
-Usage[Musica2,Seq,{{__Progression}},_Progression,"todo"]
+Usage[Append,Musica2,Seq,{{__Progression}},_Progression,"todo"]
 Seq[x:{__Progression}] := Progression[Flatten[Chord /@ x]]
 
-Usage[Musica2,TotalDuration,{_Progression},_,"todo"]
+Usage[Append,Musica2,TotalDuration,{_Progression},_,"todo"]
 Progression /: TotalDuration[x_Progression] := Total[TotalDuration /@ x]
 
 (* Progression unique functions *************************************************************)
@@ -522,32 +522,32 @@ Progression /: TestSuite[Progression] = Join[TestSuite[Progression],{
 
 (* Counterpoint constructors ****************************************************************)
 
-Usage[Musica2,Counterpoint,{_Chord},_Counterpoint,"todo"]
+Usage[Append,Musica2,Counterpoint,{_Chord},_Counterpoint,"todo"]
 Counterpoint[x_Chord] := Counterpoint[Melody[x]]
 
-Usage[Musica2,Counterpoint,{_Progression, ___?OptionQ},_Counterpoint,"todo"]
+Usage[Append,Musica2,Counterpoint,{_Progression, ___?OptionQ},_Counterpoint,"todo"]
 Counterpoint[x_Progression, opts___?OptionQ] := Counterpoint[Melody[#]& /@ SeqOfParToParOfSeq[{TotalDuration[#],Data[#]}& /@ x]]
 
 (* Counterpoint reverse constructors ********************************************************)
 
-Usage[Musica2,Snippet,{_Counterpoint, ___?OptionQ},{___Snippet},"todo"]
+Usage[Append,Musica2,Snippet,{_Counterpoint, ___?OptionQ},{___Snippet},"todo"]
 Counterpoint /: Snippet[x_Counterpoint, opts___?OptionQ] := Snippet[#,opts]& /@ x
 
-Usage[Musica2,Sound,{_Counterpoint, ___?OptionQ},_Sound,"todo"]
+Usage[Append,Musica2,Sound,{_Counterpoint, ___?OptionQ},_Sound,"todo"]
 Counterpoint /: Sound[x_Counterpoint, opts___?OptionQ] := Sound[Snippet[x,opts]]
 
 (* Counterpoint common functions ************************************************************)
 
-Usage[Musica2,Par,{{__Counterpoint}},_Progression,"todo"]
+Usage[Append,Musica2,Par,{{__Counterpoint}},_Progression,"todo"]
 Par[x:{__Counterpoint}] := Counterpoint[Flatten[Melody /@ x]]
 
-Usage[Musica2,Play2,{_Counterpoint},_Sound,"todo"]
+Usage[Append,Musica2,Play2,{_Counterpoint},_Sound,"todo"]
 Counterpoint /: Play2[x_Counterpoint] := Play2[Sound[x]]
 
-Usage[Musica2,Seq,{{__Counterpoint}},_Progression,"todo"]
+Usage[Append,Musica2,Seq,{{__Counterpoint}},_Progression,"todo"]
 Seq[x:{__Counterpoint}] := Counterpoint[Seq[Progression /@ x]]
 
-Usage[Musica2,TotalDuration,{_Counterpoint},_,"todo"]
+Usage[Append,Musica2,TotalDuration,{_Counterpoint},_,"todo"]
 Counterpoint /: TotalDuration[x_Counterpoint] := Max[TotalDuration /@ x]
 
 (* Counterpoint unique functions ************************************************************)
@@ -565,25 +565,25 @@ Counterpoint /: TestSuite[Counterpoint] = Join[TestSuite[Counterpoint],{
 
 (* FigBass constructors *********************************************************************)
 
-Usage[Musica2,FigBass,{_Chord, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{_Chord, ___?OptionQ},_FigBass,"todo"]
 FigBass[x_Chord, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
-Usage[Musica2,FigBass,{_Intervals, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{_Intervals, ___?OptionQ},_FigBass,"todo"]
 FigBass[x_Intervals, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
-Usage[Musica2,FigBass,{_Melody, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{_Melody, ___?OptionQ},_FigBass,"todo"]
 FigBass[x_Melody, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
-Usage[Musica2,FigBass,{_KeyMode, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{_KeyMode, ___?OptionQ},_FigBass,"todo"]
 FigBass[x_KeyMode, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
-Usage[Musica2,FigBass,{_ThirdStack, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{_ThirdStack, ___?OptionQ},_FigBass,"todo"]
 FigBass[x_ThirdStack, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
-Usage[Musica2,FigBass,{_Integer, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{_Integer, ___?OptionQ},_FigBass,"todo"]
 FigBass[x_Integer, opts___?OptionQ] := FigBass[{Octave/.{opts}/.{Octave->Infinity},{{0},x}}, Sequence @@ RemOpts[{opts},Octave]]
 
-Usage[Musica2,FigBass,{{__Integer}, ___?OptionQ},_FigBass,"todo"]
+Usage[Append,Musica2,FigBass,{{__Integer}, ___?OptionQ},_FigBass,"todo"]
 FigBass[x:{__Integer}, opts___?OptionQ] :=
   Module[{o=Octave/.{opts}/.{Octave->Infinity},p=Select[x,DataPlainValueQ],r,c,s,t},
     If[o =!= Infinity, p = Mod[p,o]];
@@ -608,7 +608,7 @@ FigBass[x:{__Integer}, opts___?OptionQ] :=
 
 (* FigBass common functions *****************************************************************)
 
-Usage[Musica2,PitchCode,{_FigBass},{___Integer},"todo"]
+Usage[Append,Musica2,PitchCode,{_FigBass},{___Integer},"todo"]
 PitchCode[x_FigBass] :=
   If[Octave[x]=!=Infinity,Mod[#,Octave[x]],#]&[
     ((#[[1]]-1)&/@Position[Reverse[IntegerDigits[Code[x],2]],1])
@@ -629,22 +629,22 @@ FigBass /: TestSuite[FigBass] = Join[TestSuite[FigBass],{
 
 (* Intervals constructors *******************************************************************)
 
-Usage[Musica2,Intervals,{_Chord, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{_Chord, ___?OptionQ},_Intervals,"todo"]
 Intervals[x_Chord, opts___?OptionQ] := Intervals[PitchCode[x],opts]
 
-Usage[Musica2,Intervals,{_FigBass, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{_FigBass, ___?OptionQ},_Intervals,"todo"]
 Intervals[x_FigBass, opts___?OptionQ] := Intervals[PitchCode[x],opts]
 
-Usage[Musica2,Intervals,{_Melody, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{_Melody, ___?OptionQ},_Intervals,"todo"]
 Intervals[x_Melody, opts___?OptionQ] := Intervals[PitchCode[x],opts]
 
-Usage[Musica2,Intervals,{_KeyMode, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{_KeyMode, ___?OptionQ},_Intervals,"todo"]
 Intervals[x_KeyMode, opts___?OptionQ] := Intervals[PitchCode[x],opts]
 
-Usage[Musica2,Intervals,{_ThistStack, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{_ThistStack, ___?OptionQ},_Intervals,"todo"]
 Intervals[x_ThirdStack, opts___?OptionQ] := Intervals[PitchCode[x],opts]
 
-Usage[Musica2,Intervals,{{__Integer}, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{{__Integer}, ___?OptionQ},_Intervals,"todo"]
 Intervals[x:{__Integer}, opts___?OptionQ] :=
   ReplacePart[
     #,
@@ -652,7 +652,7 @@ Intervals[x:{__Integer}, opts___?OptionQ] :=
     Content
     ]&[Intervals[x,x,opts]]
 
-Usage[Musica2,Intervals,{{__Integer},{__Integer}, ___?OptionQ},_Intervals,"todo"]
+Usage[Append,Musica2,Intervals,{{__Integer},{__Integer}, ___?OptionQ},_Intervals,"todo"]
 Intervals[x:{__Integer},y:{__Integer}, opts___?OptionQ] :=
   Module[{o=Octave/.{opts}/.{Octave->Infinity},px=Select[x,DataPlainValueQ],py=Select[y,DataPlainValueQ],c,h,i,j,m},
     c = Flatten[Table[Abs[px[[i]]-py[[j]]],{i,Length[px]},{j,Length[py]}]];
@@ -669,7 +669,7 @@ Intervals[x:{__Integer},y:{__Integer}, opts___?OptionQ] :=
 
 (* Intervals common functions ***************************************************************)
 
-Usage[Musica2,PitchCode,{_Intervals},{___Integer},"todo"]
+Usage[Append,Musica2,PitchCode,{_Intervals},{___Integer},"todo"]
 PitchCode[x_Intervals] :=
   Module[{n = (1 + Sqrt[1 + 8*Total[Content[x]]])/2,t},
     (* a good number of notes? *)
@@ -702,23 +702,23 @@ Intervals /: TestSuite[Intervals] = Join[TestSuite[Intervals],{
 f712[x_] := Round[12/7(x-1)+2]
 f712[x_,k_,m_] := Module[{r=f712[x+m]+7k,z=f712[0+m]+7k},r-(z-Mod[z,12])]
 
-Usage[Musica2,KeyMode,{_Integer,_Integer, ___?OptionQ},_KeyMode,"todo"]
+Usage[Append,Musica2,KeyMode,{_Integer,_Integer, ___?OptionQ},_KeyMode,"todo"]
 KeyMode[k_Integer,m_Integer, opts___?OptionQ] := KeyMode[Table[f712[i,k,m],{i,0,7}],opts]
 
-Usage[Musica2,KeyMode,{_Integer, ___?OptionQ},_KeyMode,"todo"]
+Usage[Append,Musica2,KeyMode,{_Integer, ___?OptionQ},_KeyMode,"todo"]
 KeyMode[k_Integer, opts___?OptionQ] := KeyMode[Table[f712[i,k,3k],{i,0,7}]+12Quotient[k + 5,7*12],opts]
 
-Usage[Musica2,KeyMode,{_Intervals, ___?OptionQ},_KeyMode,"todo"]
+Usage[Append,Musica2,KeyMode,{_Intervals, ___?OptionQ},_KeyMode,"todo"]
 KeyMode[x_Intervals,   opts___?OptionQ] := KeyMode[PitchCode[x],opts]
 
-Usage[Musica2,KeyMode,{{__Integer}, ___?OptionQ},_KeyMode,"todo"]
+Usage[Append,Musica2,KeyMode,{{__Integer}, ___?OptionQ},_KeyMode,"todo"]
 KeyMode[x:{__Integer}, opts___?OptionQ] := KeyMode[{Min[x],ValuesToDeltas[x]},opts] (* todo: what about strange, unsorted scales? *)
 
 (* KeyMode reverse constructors *************************************************************)
 
 (* KeyMode common functions *****************************************************************)
 
-Usage[Musica2,Convert,{ScaleStep,PitchCode,_KeyMode},_,"todo"]
+Usage[Append,Musica2,Convert,{ScaleStep,PitchCode,_KeyMode},_Function,"todo"]
 Convert[ScaleStep,PitchCode,x_KeyMode] :=
   Module[
     {
@@ -731,7 +731,7 @@ Convert[ScaleStep,PitchCode,x_KeyMode] :=
     Function[ss,DataApply[f,ss]]
     ]
 
-Usage[Musica2,Convert,{PitchCode,ScaleStep,_KeyMode},_,"todo"]
+Usage[Append,Musica2,Convert,{PitchCode,ScaleStep,_KeyMode},_Function,"todo"]
 Convert[PitchCode,ScaleStep,x_KeyMode] :=
   Module[
     {
@@ -759,10 +759,10 @@ KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Melody]       := Module[{f=Convert[Sc
 KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Note]         := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
 KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Progression]  := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},Map[f,x,PitchCode]]
 
-Usage[Musica2,Length,{_KeyMode},_Integer,"todo"]
+Usage[Append,Musica2,Length,{_KeyMode},_Integer,"todo"]
 KeyMode /: Length[x_KeyMode] := Length[Steps[x]]
 
-Usage[Musica2,PitchCode,{_KeyMode},{__Integer},"todo"]
+Usage[Append,Musica2,PitchCode,{_KeyMode},{__Integer},"todo"]
 PitchCode[x_KeyMode] := DeltasToValues[Steps[x],Tonic[x]]
 
 (* KeyMode unique functions *****************************************************************)
@@ -777,7 +777,7 @@ ModeMinor = ModeAeolian
 ModeMixolydian = 4
 ModePhrygian = 2
 
-Usage[Musica2,Octave,{_KeyMode},_Integer,"todo"]
+Usage[Append,Musica2,Octave,{_KeyMode},_Integer,"todo"]
 KeyMode /: Octave[x_KeyMode] := Total[Steps[x]]
 
 (* KeyMode tests ****************************************************************************)
@@ -796,25 +796,25 @@ KeyMode /: TestSuite[KeyMode] = Join[TestSuite[KeyMode],{
 
 (* ThirdStack constructors ******************************************************************)
 
-Usage[Musica2,ThirdStack,{_Chord, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{_Chord, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x_Chord, opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 
-Usage[Musica2,ThirdStack,{_FigBass, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{_FigBass, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x_FigBass, opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 
-Usage[Musica2,ThirdStack,{_Intervals, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{_Intervals, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x_Intervals, opts___?OptionQ] := ThirdStack[#,opts]& /@ PitchCode[x]
 
-Usage[Musica2,ThirdStack,{_Melody, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{_Melody, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x_Melody, opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 
-Usage[Musica2,ThirdStack,{_KeyMode, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{_KeyMode, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x_KeyMode, opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 
-Usage[Musica2,ThirdStack,{_Integer, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{_Integer, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x_Integer, opts___?OptionQ] := ThirdStack[{{3,4},{0,x}},opts]
 
-Usage[Musica2,ThirdStack,{{{__Integer},{__Integer}}, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{{{__Integer},{__Integer}}, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[{base:{__Integer},pc:{__Integer}}, opts___?OptionQ] := (* todo: this is too simple, should be the last try really *)
   Module[{p,b,r},
     p = Union[pc];
@@ -827,14 +827,14 @@ ThirdStack[{base:{__Integer},pc:{__Integer}}, opts___?OptionQ] := (* todo: this 
     ThirdStack[{b,{r,FromDigits[p,Length[b]]}},opts]
     ]
 
-Usage[Musica2,ThirdStack,{{__Integer}, ___?OptionQ},_ThirdStack,"todo"]
+Usage[Append,Musica2,ThirdStack,{{__Integer}, ___?OptionQ},_ThirdStack,"todo"]
 ThirdStack[x:{__Integer}, opts___?OptionQ] :=  ThirdStack[{Union[ValuesToDeltas[Union[x]]],x},opts] (* todo: this is too simple, should be the last try really *)
 
 (* ThirdStack reverse constructors **********************************************************)
 
 (* ThirdStack common functions **************************************************************)
 
-Usage[Musica2,PitchCode,{_ThirdStack},{___Integer},"todo"]
+Usage[Append,Musica2,PitchCode,{_ThirdStack},{___Integer},"todo"]
 PitchCode[x_ThirdStack] :=
   Module[{b=Base[x]},
     If[Code[x]==0,{},

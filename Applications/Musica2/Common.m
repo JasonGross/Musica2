@@ -47,8 +47,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Common`",
   {
-    "Musica2`Usage`",
-    "Musica2`Utils`"
+    "Musica2`Usage`"
     }
   ]
 
@@ -60,6 +59,7 @@ Unprotect[
   Frequency,
   MidiChannel,
   Mix,
+  Musica2,
   Octave,
   Overtone,
   Par,
@@ -92,12 +92,10 @@ UnSeq::usage = "todo"
 
 Begin["`Private`"]
 
-If[!MatchQ[Usage[Musica2],_List],Usage[Musica2]={}];
-
-Usage[Musica2,Duration,{_?NumberQ},_,"todo"];
+Usage[Append,Musica2,Duration,{_?NumberQ},_,"todo"];
 Duration[x_?NumberQ] := x
 
-Usage[Musica2,TotalDuration,{_?NumberQ},_,"todo"];
+Usage[Append,Musica2,TotalDuration,{_?NumberQ},_,"todo"];
 TotalDuration[x_?NumberQ] := x
 
 End[]
@@ -110,6 +108,7 @@ Protect[
   Frequency,
   MidiChannel,
   Mix,
+  Musica2,
   Octave,
   Overtone,
   Par,

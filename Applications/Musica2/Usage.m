@@ -41,46 +41,76 @@ BeginPackage["Musica2`Usage`"]
 Unprotect[
   ];
 
-Usage::usage = "Evaluate Usage[App_Symbol,s__Symbol] for more info on usage of s."
+Usage::usage = "Evaluate Usage[Usage,Usage] for more info on usage of Usage."
 
 Begin["`Private`"]
 
-Usage[app_Symbol,s_String] := "Evaluate Usage["<>SymbolName[app]<>","<>s<>"] for more info on usage of "<>s<>"."
+Usage[List] = {};
 
-Usage /: ToString[Usage,u_] :=
+Usage[Append,app_Symbol, n_Symbol, p_, r_, u_String] :=
+  Module[{dup},
+    (* initialize *)
+    If[!MatchQ[Usage[List,app],_List],
+      Usage[List,app] = {};
+      Usage[List] = Append[Usage[List],app];
+      ];
+    (* delete duplicates *)
+    dup = Position[Usage[List,app],{n,Verbatim[p],_,_}];
+    If[dup =!= {},
+      Usage[List,app] = Delete[Usage[List,app],dup[[1,1]]];
+      ];
+    (* append the usage-text *)
+    Usage[List,app] = Append[Usage[List,app],{n, p, r, u}];
+    ]
+
+Usage[Append,Usage,Usage,{List},{___Symbol},"The list of Usage-text-domains."]
+Usage[Append,Usage,Usage,{Append,_Symbol, _Symbol, _, _, _String},Null,"Append a new function-description to the Usage-text (and delete any old)."]
+
+Usage[Append,Usage,Usage,{Default,_Symbol,_String},Null,"Get the default ::usage-text."]
+Usage[Default,app_Symbol,s_String] := "Evaluate Usage["<>ToString[app]<>","<>s<>"] for more info on usage of "<>s<>"."
+
+ts[u_] :=
   (ToString[u[[1]]] <>
-    "[" <>
-    StringTake[ToString[u[[2]]], {2, -2}] <>
-    "] -> " <>
+    If[!ListQ[u[[2]]],"",(*will this ever happen?*)
+      "[" <>
+      StringTake[ToString[u[[2]]], {2, -2}] <>
+      "]"
+      ] <>
+    " -> " <>
     ToString[u[[3]]] <>
     " , " <>
     u[[4]]
     )
 
-Usage[app_Symbol,s__Symbol] :=
-  Module[{p = ((Symbol[#] -> List)& /@ Join[Names["Blank*"], Names["Pattern*"]]), t},
+Usage[Append,Usage,Usage,{_Symbol,__},_String,"Search a Usage-text-domain."]
+Usage[app_Symbol,s__] :=
+  Module[{t},
     t=Select[
-      Usage[app],
+      Usage[List,app],
       (
-        t = #;
-        t = Drop[t,-1] /. p;
-        t = Flatten[t];
-        And @@ (MemberQ[t, #]& /@ {s})
+        t=#;
+        And @@ (MemberQ[t, #, Infinity]& /@ {s})
         )&
       ];
+    t=ReplacePart[t,List,0];
     If[t=!={},
-      t = ToString[Usage,#]& /@ t;
+      t = Sort[t];
+      t = ts /@ t;
       StringJoin[(# <> "\n") & /@ Drop[t, -1]] <> t[[-1]],
-      "Sorry, no Usage-text found for symbols "<>ToString[{s}]<>"."
+      "Sorry, no Usage-text found for "<>ToString[{s}]<>"."
       ]
-    ]
+    ]/;(
+      app =!= Default &&
+      app =!= Append &&
+      app =!= List &&
+      app =!= All
+      )
 
-Usage[app_Symbol, n_, p_, r_, u_String] :=
-  (
-    If[!MemberQ[Usage[app],{n,Verbatim[p],_,_}],
-      Usage[app] = Sort[Append[Usage[app],{n, p, r, u}]]
-      ];
-    )
+Usage[Append,Usage,Usage,{{__Symbol},__},_String,"Search a list of Usage-text-domain's."]
+Usage[app:{__Symbol},s__] := StringDrop[StringJoin[(ToString[#] <> ":\n\n" <> Usage[#,s] <> "\n\n")& /@ app],-2]
+
+Usage[Append,Usage,Usage,{All,__},_String,"Search all Usage-text-domain's."]
+Usage[All,s__] := Usage[Usage[List],s]
 
 End[]
 

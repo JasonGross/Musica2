@@ -71,22 +71,22 @@ Begin["`Private`"]
 
 Options[PianoRoll] = {MinTime -> 0, MaxTime -> Infinity, MinNote -> Automatic, MaxNote -> Automatic}
 
-Usage[Musica2,PianoRoll,{_Note, ___},_Graphics,"todo"]
+Usage[Append,Musica2,PianoRoll,{_Note, ___},_Graphics,"todo"]
 PianoRoll[x_Note, opts___] := PianoRoll[Midi[x,opts],opts]
 
-Usage[Musica2,PianoRoll,{_Melody, ___},_Graphics,"todo"]
+Usage[Append,Musica2,PianoRoll,{_Melody, ___},_Graphics,"todo"]
 PianoRoll[x_Melody, opts___] := PianoRoll[Midi[x,opts],opts]
 
-Usage[Musica2,PianoRoll,{_Chord, ___},_Graphics,"todo"]
+Usage[Append,Musica2,PianoRoll,{_Chord, ___},_Graphics,"todo"]
 PianoRoll[x_Chord, opts___] := PianoRoll[Midi[x,opts],opts]
 
-Usage[Musica2,PianoRoll,{_Counterpoint, ___},_Graphics,"todo"]
+Usage[Append,Musica2,PianoRoll,{_Counterpoint, ___},_Graphics,"todo"]
 PianoRoll[x_Counterpoint, opts___] := PianoRoll[Midi[x,opts],opts]
 
-Usage[Musica2,PianoRoll,{_Progression, ___},_Graphics,"todo"]
+Usage[Append,Musica2,PianoRoll,{_Progression, ___},_Graphics,"todo"]
 PianoRoll[x_Progression, opts___] := PianoRoll[Midi[x,opts],opts]
 
-Usage[Musica2,PianoRoll,{_Midi, ___},_Graphics,"todo"]
+Usage[Append,Musica2,PianoRoll,{_Midi, ___},_Graphics,"todo"]
 PianoRoll[mx_Midi, opts___] :=
   Module[{m = Midi[mx, TimeUnit->Tick],duration},
     duration = TotalDuration[m];

@@ -145,10 +145,10 @@ HelixNoteNaming[] := HelixNoteNaming[{12,{"c","d","e","f","g","a","b"},{5,5,3},2
 
 (* HelixNoteNaming common functions *********************************************************)
 
-Usage[Musica2,Convert,{PitchCode,String,_HelixNoteNaming},_,"todo"];
+Usage[Append,Musica2,Convert,{PitchCode,String,_HelixNoteNaming},_Function,"todo"];
 Convert[PitchCode,String,x_HelixNoteNaming] := NoteNamingFunction[x, False]
 
-Usage[Musica2,Convert,{String,PitchCode,_HelixNoteNaming},_,"todo"];
+Usage[Append,Musica2,Convert,{String,PitchCode,_HelixNoteNaming},_Function,"todo"];
 Convert[String,PitchCode,x_HelixNoteNaming] := NoteNamingFunction[x, True]
 
 HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][p_Integer] := NoteNamingFunction[HelixNoteNaming[o,d]][p,0]
@@ -213,7 +213,7 @@ HelixNoteNaming /: TestSuite[HelixNoteNaming] = Join[TestSuite[HelixNoteNaming],
 
 (* HelixChordNaming constructors ************************************************************)
 
-Usage[Musica2,HelixChordNaming,{},_HelixChordNaming,"todo"];
+Usage[Append,Musica2,HelixChordNaming,{},_HelixChordNaming,"todo"];
 HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
   {{"m-5"},      {0, 3, 6}},
   {{"sus2"},     {0, 2, 7}},
@@ -234,10 +234,10 @@ HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
 
 (* HelixChordNaming common functions ********************************************************)
 
-Usage[Musica2,Convert,{{PitchCode},String,_HelixChordNaming},_,"todo"];
+Usage[Append,Musica2,Convert,{{PitchCode},String,_HelixChordNaming},_Function,"todo"];
 Convert[{PitchCode},String,x_HelixChordNaming] := ChordNamingFunction[x, False]
 
-Usage[Musica2,Convert,{String,{PitchCode},_HelixChordNaming},_,"todo"];
+Usage[Append,Musica2,Convert,{String,{PitchCode},_HelixChordNaming},_Function,"todo"];
 Convert[String,{PitchCode},x_HelixChordNaming] := ChordNamingFunction[x, True]
 
 HelixChordNaming[o_?OptionQ, d_?(DataQ[HelixChordNaming])][p:{__Integer}] := ChordNamingFunction[HelixChordNaming[o,d]][p,0]

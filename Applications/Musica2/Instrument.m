@@ -79,14 +79,14 @@ Convert[Melody, Snippet, opts___?OptionQ] := Convert[Melody, Snippet, Instrument
 
 (* BasicInstrument constructors *************************************************************)
 
-Usage[Musica2,BasicInstrument,{},_BasicInstrument,"todo"];
+Usage[Append,Musica2,BasicInstrument,{},_BasicInstrument,"todo"];
 BasicInstrument[] := BasicInstrument[{Convert[PitchCode,Frequency,Tuning],Function[v, v/127],Function[{f,a,sr},N[a Sin[2Pi f #/sr]]&]}]
 
 (* BasicInstrument reverse constructors *****************************************************)
 
 (* BasicInstrument common functions *********************************************************)
 
-Usage[Musica2,Convert,{Melody, Snippet, _BasicInstrument, ___?OptionQ},_,"todo"];
+Usage[Append,Musica2,Convert,{Melody, Snippet, _BasicInstrument, ___?OptionQ},_Function,"todo"];
 Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ] :=
   Module[
     {
