@@ -67,21 +67,20 @@ Unprotect[
 Unprotect[
   ];
 
-CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), SnippetData_, SampleRate_Integer, SampleCount_Integer}];
+CreateElement[Snippet,{SnippetType:(SampledSoundFunction|SampledSoundList), SnippetData_, SnippetRate_Integer, SnippetCount_Integer}];
 CreateContainer[Sound,Snippet];
 
 SampleCount::usage = ""
 SoundType::usage = ""
-SnippetData::usage = ""
 
 Begin["`Private`"]
 
 (*****************)
 
 Options[Snippet] = {
-  SoundType:>(SoundType/.Options[Sound]),
-  SampleRate:>(SampleRate/.Options[Sound]),
-  SampleCount:>(SampleCount/.Options[Sound])
+  SnippetType:>(SoundType/.Options[Sound]),
+  SnippetRate:>(SampleRate/.Options[Sound]),
+  SnippetCount:>(SampleCount/.Options[Sound])
   }
 
 Options[Sound] = {
@@ -134,15 +133,15 @@ Pack[Sound] = Function[{sup,sub},
   ];
 UnPack[Sound] = Function[{sub,opts},
   Convert[SnippetData[sub],
-    SoundType[sub],  SampleCount[sub],
+    SnippetType[sub],SnippetCount[sub],
     SoundType/.opts, SampleCount/.opts
     ]
   ];
 UnPackOpts[Sound] = Function[{subs,opts},
   {
-    SoundType->(SoundType/.opts/.{SoundType->SoundType[subs[[1]]]}),
-    SampleRate->(SampleRate/.opts/.{SampleRate->SampleRate[subs[[1]]]}),
-    SampleCount->(SampleCount/.opts/.{SampleCount->SampleCount[subs[[1]]]})
+    SoundType->(SoundType/.opts/.{SoundType->SnippetType[subs[[1]]]}),
+    SampleRate->(SampleRate/.opts/.{SampleRate->SnippetRate[subs[[1]]]}),
+    SampleCount->(SampleCount/.opts/.{SampleCount->SnippetCount[subs[[1]]]})
     }
   ];
 
@@ -205,14 +204,17 @@ Sound /: Mix[s_Sound,2] :=
       mix = If[c == 1, {{1 &, 1 &}},Table[N[{Evaluate[2(c - i)/(c^2 - c)] &, Evaluate[2(i - 1)/(c^2 - c)] &}], {i, c}]];
       Mix[s, mix]
       ]
-    ]
+    ] /; SoundQ[s]
 
+Snippet /: SampleCount[x_Snippet] := SnippetCount[x]
 Sound /: SampleCount[x_Sound] := SampleCount /. Opts[x]
 
+Snippet /: SampleRate[x_Snippet] := SnippetRate[x]
 Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
 Snippet /: Show[x_Snippet] := Show[Sound[x]] /; SnippetQ[x]
 
+Snippet /: SoundType[x_Snippet] := SnippetType[x]
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 
 End[]

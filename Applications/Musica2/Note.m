@@ -52,7 +52,7 @@ BeginPackage["Musica2`Note`",
 Unprotect[
   ];
 
-CreateElement[Note, {Duration_, PcV:{PitchCode_,Velocity_}}];
+CreateElement[Note, {NoteDuration_, PcV:{PitchCode_,Velocity_}}];
 CreateContainer[Chord,Note];
 CreateContainer[Melody,Note];
 CreateContainer[Progression,Chord];
@@ -65,28 +65,29 @@ Begin["`Private`"]
 
 (*****************)
 
-Options[Chord] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
+Options[Chord] = {NoteDuration:>(NoteDuration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 DataQ[Chord] = MatchQ[#, {({_,_}|{_?OptionQ,{_,_}})...}]&
-Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{_Integer,_Integer}],Note[{Duration/.Opts[sup],sub}],Note[{Duration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]]]];
+Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{_Integer,_Integer}],Note[{NoteDuration/.Opts[sup],sub}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]]]];
 UnPack[Chord] = Function[{sub,opts},If[Opts[sub]=={},Data[sub][[2]],{Opts[sub],PcV[sub]}]];
-UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,Duration->Duration[subs[[1]]]]];
+UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,NoteDuration->NoteDuration[subs[[1]]]]];
 
-Options[Counterpoint] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
+Options[Counterpoint] = {NoteDuration:>(NoteDuration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 
-Options[Melody] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
+Options[Melody] = {NoteDuration:>(NoteDuration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 
-Options[Note] = {Duration->1,Velocity->64}
+Options[Note] = {NoteDuration->1,Velocity->64}
 
-Options[Progression] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
+Options[Progression] = {NoteDuration:>(NoteDuration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 
 (*****************)
 
-Chord /: Duration[x_Chord] := Duration /. Opts[x]
-Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x]
-Melody /: Duration[x_Melody] := Total[Duration /@ x]
-Progression /: Duration[x_Progression] := Total[Duration /@ x]
+Chord /: Duration[x_Chord] := Duration /. Opts[x] /; TypeQ[Chord][x]
+Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x] /; TypeQ[Counterpoint][x]
+Melody /: Duration[x_Melody] := Total[Duration /@ x] /; TypeQ[Melody][x]
+Note /: Duration[x_Note] := NoteDuration[x] /; TypeQ[Note][x]
+Progression /: Duration[x_Progression] := Total[Duration /@ x] /; TypeQ[Progression][x]
 
-Note[p_, opts___?OptionQ] := Note[{Duration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
+Note[p_, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
 
 p2f = Function[p, 220*2^((p - 57)/12)];
 v2a = Function[v, v/127];
@@ -95,7 +96,7 @@ zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]] &];
 Melody /: Show[x_Melody] := Show[Snippet[x]] /; MelodyQ[x]
 
 Melody /: Snippet[x_Melody, opts___?OptionQ] :=
-  Module[{d,p,v,f,a,sr=SampleRate/.{opts}/.Options[Snippet]},
+  Module[{d,p,v,f,a,sr=SnippetRate/.{opts}/.Options[Snippet]},
     d = (Duration /@ x) * sr;
     p = PitchCode /@ x /. {DataNoValue -> 0};
     v = Velocity /@ x /. {DataNoValue -> 0};
