@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2005-01-20  bch :  quite a lot actually, better handling of opts and conversions a,d seq and par and...
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-24  bch :  changed SnippetData to Content
   2004-09-22  bch :  changed Show to Play2
@@ -83,7 +84,7 @@ Unprotect[
 
 CreateElement[Snippet,
   {SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},
-  {SampledSoundFunction,Sin[2 Pi 440 #]&,2^13,2^13},
+  {SampledSoundFunction,Sin[2 Pi 440 #/2^13]&,2^13,2^13},
   "todo"
   ];
 CreateContainer[Sound,Snippet,"todo"];
@@ -146,14 +147,22 @@ Pack[Sound] = Function[{sup,sub},
 UnPack[Sound] = Function[{sub,opts},
   Content[Snippet[sub,Sequence @@ opts]]
   ];
-UnPackOpts[Sound] = Function[{subs,opts},
-  {
-    SoundType->(SoundType/.opts/.{SoundType->SoundType[subs[[1]]]}),
-    SampleRate->(SampleRate/.opts/.{SampleRate->SampleRate[subs[[1]]]}),
-    SampleCount->(SampleCount/.opts/.{SampleCount->Max[SampleCount/@subs]})
-    }
-  ];
+UnPackOpts[Sound] = Function[{subs,opts},{
+  SoundType->(SoundType/.opts/.{SoundType->SoundType[subs[[1]]]}),
+  SampleRate->(SampleRate/.opts/.{SampleRate->SampleRate[subs[[1]]]}),
+  SampleCount->(SampleCount/.opts/.{SampleCount->Max[SampleCount /@ subs]})
+  }];
 
+Tidy[Snippet] = Function[s,
+  Module[{r = s},
+    If[SoundType[r] === SampledSoundFunction,
+      r = ReplacePart[r,UnCompile[Content[r]],Content],
+      r = ReplacePart[r,Length[Content[r]],SampleCount]
+      ];
+    r
+    ]
+  ]
+  
 (*****************)
 
 Snippet /: Data[x_Snippet, y_, SoundType, pos_] :=
@@ -166,7 +175,7 @@ Snippet /: Data[x_Snippet, y_, SoundType, pos_] :=
       ];
     If[SoundType[x] === SampledSoundList && y === SampledSoundFunction,
       d = Content[s];
-      f = ListInterpolation[d,InterpolationOrder->1];
+      f = Interpolation[d,InterpolationOrder->1];
       s = ReplacePart[s,f,Content];
       s = Data[s,SampledSoundFunction,pos];
       ];
@@ -174,16 +183,20 @@ Snippet /: Data[x_Snippet, y_, SoundType, pos_] :=
     ]
 
 Snippet /: Data[x_Snippet, y_, SampleCount, pos_] :=
-  Module[{s = x,d},
+  Module[{s = x,d,sc=SampleCount[x]},
     If[y =!= SampleCount[x] && IntegerQ[y] && 0 < y,
-      If[SoundType[x] === SampledSoundList,
-        d = Content[s];
-        d = If[y < SampleCount[s],
-          Take[d,y],
-          PadRight[d,y]
-          ];
-        s = ReplacePart[s,d,Content];
+      d = Content[s];
+      d = If[SoundType[x] === SampledSoundList,
+        If[sc < y,
+          PadRight[d,y],
+          Take[d,y]
+          ],
+        If[sc < y,
+          Evaluate[If[sc < #,0,Evaluate[d[#]]]]&,
+          d
+          ]
         ];
+      s = ReplacePart[s,d,Content];
       s = Data[s,y,pos];
       ];
     s
@@ -192,7 +205,8 @@ Snippet /: Data[x_Snippet, y_, SampleCount, pos_] :=
 Snippet /: Duration[x_Snippet] := SampleCount[x]/SampleRate[x]
 Sound   /: Duration[x_Sound] := SampleCount[x]/SampleRate[x]
 
-Mix[x:{__Snippet}] := "todo" (* todo: write the code! *)
+Mix[x:{__Snippet}] := Snippet[Mix[Par[x],1]][[1]]
+
 Mix[x_Sound, mix : {{__}...}] :=
   Module[
     {
@@ -213,6 +227,18 @@ Mix[x_Sound, mix : {{__}...}] :=
     Sound[fl,Sequence @@ Opts[x]]
     ] /; (SoundType[x]===SampledSoundFunction) && (Length[x] == Length[mix]) && Module[{o = Union[Length /@ mix]}, (Length[o] == 1) && (1 <= o[[1]])]
 
+Mix[x_Sound, mix : {{__}...}] :=
+  Module[
+    {
+      sl = Table[
+        Transpose[{Transpose[mix][[c]], Data[x]}],
+        {c, Length[mix[[1]]]}
+        ]
+      },
+    sl = Function[t,Total[Function[fd,MapIndexed[(fd[[1]][#2[[1]]]#1)&,fd[[2]]]]/@t]] /@ sl;
+    Sound[sl,Sequence @@ Opts[x]]
+    ] /; (SoundType[x]===SampledSoundList) && (Length[x] == Length[mix]) && Module[{o = Union[Length /@ mix]}, (Length[o] == 1) && (1 <= o[[1]])]
+
 Mix[s_Sound,1] :=
   Module[{c = Length[s],mix},
     If[c == 1, s,
@@ -230,7 +256,7 @@ Mix[s_Sound,2] :=
     ]
 
 Par[x:{__Snippet},opts___?OptionQ] := Sound[x,opts]
-Par[x:{__Sound},  opts___?OptionQ] := Sound[Flatten[Snippet /@ x],opts] (* todo: handle opts *)
+Par[x:{__Sound},  opts___?OptionQ] := Sound[Flatten[Snippet /@ x],opts]
 
 Snippet /: Play2[x_Snippet] := Play2[Sound[x]]
 Sound   /: Play2[x_Sound]   := Show[Mix[x,2]]
@@ -239,8 +265,63 @@ Sound /: SampleCount[x_Sound] := SampleCount /. Opts[x]
 
 Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
-Seq[x:{__Snippet},opts___?OptionQ] := "todo" (* todo: write the code! *)
-Seq[x:{__Sound},  opts___?OptionQ] := "todo" (* todo: write the code! *)
+SSF[fl_, vl_,dl_] :=
+  Module[{c,it,bl,ni},
+    bl = MapThread[(#1[c-#2])&, {fl, vl}];
+    ni = MakeNestedIfs[Transpose[{dl, bl}], 0&];
+    it = ni[c-1];
+    Function[Evaluate[c], Evaluate[it]]
+    ]
+
+Seq[x:{__Snippet},opts___?OptionQ] :=
+  Module[
+    {
+      s,c,d,v,
+      st = SoundType /. {opts} /. {SoundType->SoundType[x[[1]]]},
+      sr = SampleRate /. {opts} /. {SampleRate->SampleRate[x[[1]]]},
+      sc
+      },
+    s = Snippet[x,SoundType->st,SampleRate->sr];
+    s = Tidy /@ s;
+    s = If[st === SampledSoundList,
+
+      c = Flatten[Content /@ s];
+      sc = Length[c];
+      Snippet[{SampledSoundList, c, sr, sc}],
+      
+      d = SampleCount /@ s;
+      v = Drop[DeltasToValues[d],-1];
+      c = SSF[Content/@s,v,d];
+      sc = Total[SampleCount /@ s];
+      Snippet[{SampledSoundFunction, c, sr, sc}]
+      ];
+    s
+    ]
+    
+Seq[x:{__Sound},opts___?OptionQ] :=
+  Module[
+    {
+      s=x,
+      st = SoundType /. {opts} /. {SoundType->SoundType[x[[1]]]},
+      sr = SampleRate /. {opts} /. {SampleRate->SampleRate[x[[1]]]},
+      sc,
+      ch = Max[Length /@ x]
+      },
+    s = (
+      s=#;
+      While[Length[s]<ch,
+        s=Append[s,Snippet[SampledSoundList]]
+        ];
+      s
+      )& /@ s;
+    s = Snippet /@ s;
+    s = Transpose[s];
+    s = Seq /@ s;
+    Sound[s]
+    ]
+
+Snippet[SampledSoundFunction] := Snippet[{SampledSoundFunction,0#,2,2}]
+Snippet[SampledSoundList] := Snippet[{SampledSoundList,{0,0},2,2}]
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 

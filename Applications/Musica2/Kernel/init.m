@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-1-20 at 13:44 *)
+(* :History: File created 2005-1-21 at 8:25 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];

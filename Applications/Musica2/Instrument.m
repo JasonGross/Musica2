@@ -50,7 +50,9 @@ BeginPackage["Musica2`Instrument`",
   ]
 
 Unprotect[
-  Convert
+  Convert,
+  Snippet,
+  Sound
   ];
 
 Unprotect[
@@ -94,7 +96,9 @@ Protect[
   ];
 
 Protect[
-  Convert
+  Convert,
+  Snippet,
+  Sound
   ];
 
 EndPackage[]

@@ -380,10 +380,7 @@ Seq[x:{__Melody}]       := Melody[Flatten[Note /@ x]]
 Seq[x:{__Note}]         := Melody[x]
 Seq[x:{__Progression}]  := Progression[Flatten[Chord /@ x]]
 
-v2a = Function[v, v/127];
-zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]]&];
-
-Chord        /: Snippet[x_Chord, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
+Chord         /: Snippet[x_Chord, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
 Counterpoint /: Snippet[x_Counterpoint, opts___?OptionQ] := Snippet[#,opts]& /@ x
 Melody       /: Snippet[x_Melody, opts___?OptionQ] := Convert[Melody,Snippet,Instrument,opts][x]
 Note         /: Snippet[x_Note, opts___?OptionQ] := Snippet[Melody[x],opts]

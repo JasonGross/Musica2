@@ -311,7 +311,7 @@ Midi /: Export[fn_String,mx_Midi] :=
       _,
       (Print["failure ",#1];Close[f];#1)&
       ];
-    m
+    fn
     ]
 
 MidiImport::"error 1"="No MThd";
