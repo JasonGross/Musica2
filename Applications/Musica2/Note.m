@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2005-01-19  bch :  major change in Scale
   2005-01-07  bch :  made Melody[c_Chord] return a list of melodies
   2004-12-13  bch :  removed PcV from Note
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
@@ -62,6 +63,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Note`",
   {
     "Musica2`Common`",
+    "Musica2`Instrument`",
     "Musica2`Sound`",
     "Musica2`Test`",
     "Musica2`Tuning`",
@@ -126,7 +128,7 @@ CreateContainer[Counterpoint,Melody,"todo"];
 
 CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},{12,{{0},1}},"todo",{DirectedInfinity}];
 CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},{12,{0,0,0,0,0,0,0}},"todo",{DirectedInfinity}];
-CreateElement[Scale, {Octave_Integer, Content:{__}},Null,"todo"];
+CreateElement[Scale, {Tonic_Integer, Steps:{__Integer}},{0,{2,2,1,2,2,2,1}},"todo"];
 CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}},{{3,4},{0,1}},"todo"];
 
 ModeAeolian::usage = "todo"
@@ -172,8 +174,6 @@ Tidy[Melody] = Module[{n = Note[#],i},
   Melody[n,Sequence @@ Opts[#]]
   ]&
 
-Options[Note] = {NoteDuration->1,Velocity->64}
-
 (*****************)
 
 Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
@@ -196,8 +196,35 @@ Progression  /: Duration[x_Progression]  := Total[Duration /@ x]
 Convert[Time,PitchCode,x_Melody] := NoteFunction[x, PitchCode]
 Convert[Time,Velocity,x_Melody] := NoteFunction[x, Velocity]
 
-Convert[ScaleStep,PitchCode,x_Scale] := ScaleFunction[x]
-Convert[PitchCode,ScaleStep,x_Scale] := ScaleFunction[Inverse[x]]
+Convert[ScaleStep,PitchCode,x_Scale] :=
+  Module[
+    {
+      scalesize = Length[x],
+      pitchcode = PitchCode[x],
+      octave = Octave[x],
+      f
+      },
+    f = Function[ss, Floor[ss/scalesize]*octave + pitchcode[[Mod[ss, scalesize] + 1]]];
+    Function[ss,DataApply[f,ss]]
+    ]
+
+Convert[PitchCode,ScaleStep,x_Scale] :=
+  Module[
+    {
+      scalesize = Length[x],
+      pitchcode = PitchCode[x],
+      octave = Octave[x],
+      tonic = Tonic[x],
+      f
+      },
+    f = Function[pc,
+      If[#==={},DataAnyValue,
+        #[[1,1]]-1+Floor[(pc-tonic)/octave]*scalesize
+        ]&[Position[pitchcode,Mod[pc,octave,tonic]]]
+      ];
+    Function[ss,DataApply[f,ss]]
+    ]
+
 Convert[ScaleStep,PitchCode] := Convert[ScaleStep,PitchCode,Scale[]]
 Convert[PitchCode,ScaleStep] := Convert[PitchCode,ScaleStep,Scale[]]
 
@@ -229,17 +256,6 @@ FigBass[x:{__Integer}, opts___?OptionQ] :=
     FigBass[{o,{Sort[r],c}}, Sequence @@ RemOpts[{opts},Octave]]
     ]
 
-Scale /: Inverse[x_Scale] :=
-  Module[{pc = Mod[Content[x],Octave[x]],c,o=Length[Content[x]]},
-    c = Table[
-      If[#==={},DataAnyValue,
-        #[[1,1]]-1-o*((Content[x][[#[[1,1]]]]-i)/Octave[x])
-        ]&[Position[pc,i]],
-      {i,0,Octave[x]-1}
-      ];
-    Scale[{o,c},Sequence @@ Opts[x]]
-    ]
-
 Intervals[x_Chord,      opts___?OptionQ] := Intervals[PitchCode[x],opts]
 Intervals[x_FigBass,    opts___?OptionQ] := Intervals[PitchCode[x],opts]
 Intervals[x_Melody,     opts___?OptionQ] := Intervals[PitchCode[x],opts]
@@ -265,7 +281,7 @@ Intervals[x:{__Integer},y:{__Integer}, opts___?OptionQ] :=
     Intervals[{o,Table[Count[c,i],{i,0,m}]},Sequence@@RemOpts[{opts},Octave]]
     ]
 
-Scale /: Length[x_Scale] := Length[Content[x]]
+Scale /: Length[x_Scale] := Length[Steps[x]]
 
 Melody[x_Chord,opts___?OptionQ]       := Melody[#,opts]& /@ Note[x]
 Melody[x_Intervals,opts___?OptionQ]   := Melody[PitchCode[x],opts]
@@ -298,6 +314,8 @@ NoteRestQ[x_Note] := DataNoValueQ[PitchCode[x]] || DataNoValueQ[Velocity[x]] || 
 
 NoteTieQ[x_Note] := DataTieQ[PitchCode[x]] || DataTieQ[Velocity[x]]
 
+Scale /: Octave[x_Scale] := Total[Steps[x]]
+
 Par[x:{__Chord}]        := Chord[Flatten[Note /@ x]]
 Par[x:{__Counterpoint}] := Counterpoint[Flatten[Melody /@ x]]
 Par[x:{__Melody}]       := Counterpoint[x]
@@ -323,7 +341,7 @@ PitchCode[x_Intervals] :=
       ]
     ]
 
-PitchCode[x_Scale] := Append[Content[x],Content[x][[1]]+Octave[x]] (* todo: what about strange, unsorted scales? *)
+PitchCode[x_Scale] := DeltasToValues[Steps[x],Tonic[x]]
 
 PitchCode[x_ThirdStack] :=
   Module[{b=Base[x]},
@@ -343,25 +361,18 @@ Progression[x_Melody]                        := Progression[Chord[x]]
 
 f712[x_] := Round[12/7(x-1)+2]
 f712[x_,k_,m_] := Module[{r=f712[x+m]+7k,z=f712[0+m]+7k},r-(z-Mod[z,12])]
-Scale[k_Integer,m_Integer, opts___?OptionQ] := Scale[{12,Table[f712[i,k,m],{i,0,6}]},opts]
-Scale[k_Integer, opts___?OptionQ] := Scale[{12,Table[f712[i,k,3k],{i,0,6}]+12Quotient[k + 5,7*12]},opts]
-
-Scale[] := Scale[0,ModeMajor]
+Scale[k_Integer,m_Integer, opts___?OptionQ] := Scale[Table[f712[i,k,m],{i,0,7}],opts]
+Scale[k_Integer, opts___?OptionQ] := Scale[Table[f712[i,k,3k],{i,0,7}]+12Quotient[k + 5,7*12],opts]
 
 Scale[x_Intervals,   opts___?OptionQ] := Scale[PitchCode[x],opts]
-Scale[x:{__Integer}, opts___?OptionQ] := Scale[{Max[x]-Min[x],Drop[x,-1]},opts] (* todo: what about strange, unsorted scales? *)
+Scale[x:{__Integer}, opts___?OptionQ] := Scale[{Min[x],ValuesToDeltas[x]},opts] (* todo: what about strange, unsorted scales? *)
 
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Chord]        := Module[{f=ScaleFunction[Scale[o,d]]},Map[f,x,PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Counterpoint] := Module[{f=ScaleFunction[Scale[o,d]]},Map[f,x,PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Integer]      := ScaleFunction[Scale[o,d]][x]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Melody]       := Module[{f=ScaleFunction[Scale[o,d]]},Map[f,x,PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Note]         := Module[{f=ScaleFunction[Scale[o,d]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Progression]  := Module[{f=ScaleFunction[Scale[o,d]]},Map[f,x,PitchCode]]
-
-ScaleFunction[x_Scale] :=
-  Module[{f=Function[ss,Module[{scalesize = Length[Content[x]]},Floor[ss/scalesize]*Octave[x] + x[[Content, Mod[ss, scalesize] + 1]]]]},
-    Function[ss,DataApply[f,ss]]
-    ]
+Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Chord]        := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
+Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Counterpoint] := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
+Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Integer]      := Convert[ScaleStep,PitchCode,Scale[o,d]][x]
+Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Melody]       := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
+Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Note]         := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
+Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Progression]  := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
 
 Seq[x:{__Chord}]        := Progression[x]
 Seq[x:{__Counterpoint}] := Counterpoint[Seq[Progression /@ x]]
@@ -374,15 +385,7 @@ zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]]&];
 
 Chord        /: Snippet[x_Chord, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
 Counterpoint /: Snippet[x_Counterpoint, opts___?OptionQ] := Snippet[#,opts]& /@ x
-Melody       /: Snippet[x_Melody, opts___?OptionQ] :=
-  Module[{d,p,v,f,a,sr=SampleRate/.{opts}/.Options[Sound]},
-    (* todo: use NoteFunction here *)
-    d = NoteDuration[x] * sr;
-    {p,v}=Transpose[MapThread[If[DataPlainValueQ[{#1,#2}],{#1,#2},{0,0}]&,{PitchCode[x],Velocity[x]}]];
-    f = MakeNestedIfs[Transpose[{d,Tuning /@ p}]];
-    a = MakeNestedIfs[Transpose[{d,v2a /@ v}]];
-    Snippet[{SampledSoundFunction,Function[t, zin[f[t], a[t], sr][t]],Round[sr],Round[Duration[x]sr]},Sequence@@RemOpts[{opts},SampleRate]]
-    ]
+Melody       /: Snippet[x_Melody, opts___?OptionQ] := Convert[Melody,Snippet,Instrument,opts][x]
 Note         /: Snippet[x_Note, opts___?OptionQ] := Snippet[Melody[x],opts]
 Progression  /: Snippet[x_Progression, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
 
@@ -414,6 +417,11 @@ ThirdStack[{base:{__Integer},pc:{__Integer}}, opts___?OptionQ] := (* todo: this 
 
 ThirdStack[x:{__Integer}, opts___?OptionQ] :=  ThirdStack[{Union[ValuesToDeltas[Union[x]]],x},opts] (* todo: this is too easy, should be the last try really *)
 
+Scale /: TestSuite[Scale] = Join[TestSuite[Scale],{
+  TestCase[Convert[PitchCode, ScaleStep] /@ Convert[ScaleStep, PitchCode] /@ Range[-10, 10], Range[-10, 10]],
+  TestCase[Data[Scale[PitchCode[Scale[]]]],{0, {2, 2, 1, 2, 2, 2, 1}}]
+  }]
+  
 End[]
 
 Protect[

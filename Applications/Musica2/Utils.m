@@ -76,6 +76,7 @@ Unprotect[
   DataUnTie,
   DeltasToValues,
   FunctionQ,
+  GetOpts,
   MakeNestedIfs,
   NormalizeList,
   ParOfSeqToSeqOfPar,
@@ -99,10 +100,12 @@ DataTieQ::usage = "DataTieQ[expr_] tests if expr is/contains a tie or not."
 DataUnTie::usage = "DataUnTie[d_], the opposite to calling DataTie."
 DeltasToValues::usage = "DeltasToValues[d_List, c_Integer:0] is the opposite to ValuesToDeltas";
 FunctionQ::usage = "FunctionQ[expr_] tests if expr is a function."
+GetOpts::usage = "todo"
 MakeNestedIfs::usage = "MakeNestedIfs[de$:{{_,_}...}, default$_] and MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] creates a function containing nested if's. The de-argument is a list of {delta,expr} which describes the function to return. The default-argument is the expr the function returned will return when called whith a parameter outside the normal range and defaults to 0 (zero)."
 NormalizeList::usage = "NormalizeList[d_,opts___] takes a list of numbers and normalize them to range from -1 to 1. opts can take PlayRange->{lo,hi} as an argument which otherwise will be calculated."
 ParOfSeqToSeqOfPar::usage = "todo"
 RatiosToValues::usage = "todo"
+RemOpts::usage = "todo"
 SeqOfParToParOfSeq::usage = "todo"
 UnCompile::usage = "UnCompile[f_] returns f in an uncompiled version."
 Utils::usage = "todo"
@@ -156,6 +159,8 @@ DeltasToValues[d_List, c_:0] :=
     ]
 
 FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition | _InterpolatingFunction]
+
+GetOpts[x:{___?OptionQ},opts__Symbol] := Cases[x,(n$_->_)/;MemberQ[{opts},n$]]
 
 MNI[x$_, c$_, e$_, p$_, d$_] :=
   Module[{t$ = x$, r$},
@@ -400,6 +405,7 @@ Protect[
   DataUnTie,
   DeltasToValues,
   FunctionQ,
+  GetOpts,
   MakeNestedIfs,
   NormalizeList,
   ParOfSeqToSeqOfPar,

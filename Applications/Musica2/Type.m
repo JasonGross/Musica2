@@ -29,6 +29,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Type` *)
 
 (* :History:
+  2005-01-20  bch :  Options are created from the default
+                     Map and MapIndexed nor return T[{}] on empty lists
+                     removed RulesToData
   2005-01-15  bch :  added TestSuite, Type and Types
   2005-01-08  bch :  added default-values to elements
   2004-12-21  bch :  added OrderedQ and Sort[x_T,s:{__Symbol}]
@@ -69,7 +72,6 @@ Members::usage = "todo"
 Opts::usage = "todo"
 Pack::usage = "todo"
 Pos::usage = "todo"
-RulesToData::usage = "todo"
 Struct::usage = "todo"
 Type::usage = "todo"
 Types::usage = "todo"
@@ -121,10 +123,16 @@ DeclareContainer[T_Symbol, ET_Symbol, U_String] := (
   DeclareCommon[T,U];
   );
 
+(* low level stuff, "backdoors" for setting opts and data (dont intercept the first two) *)
+Data[x_, d_, pos_] := x[[0]][ReplacePart[Data[x], d, pos],Sequence @@ Opts[x]];
+Opts[x_, d_, s_, False] := x[[0]][Data[x], Sequence @@ AddOpts[Opts[x],s->d]];
+Data[x_, d_, s_, pos_] := Data[x,d,pos];
+Opts[x_, d_, s_] := Opts[x, d, s, False];
+
 DefineCommon[T_Symbol] := (
   Types = Prepend[Types,T];
 
-  (* no options *)
+  (* no options, but preparing a placeholder *)
   Options[T] = {};
 
   (* test-function *)
@@ -138,7 +146,7 @@ DefineCommon[T_Symbol] := (
   (* basic format, the precondition (/; TypeQ[T][x]) might go away later, currentli its good for debugging *)
   Format[x_T] := "\[SkeletonIndicator]"<>SymbolName[T]<>"\[SkeletonIndicator]" /; TypeQ[T][x];
 
-  (* the "backdoor" to the info and data *)
+  (* the "backdoor" to the opts and data *)
   T /: Opts[x_T] := ReplacePart[x,List,{0}][[1]] /; TypeQ[T][x];
   T /: Data[x_T] := ReplacePart[x,List,{0}][[2]] /; TypeQ[T][x];
 
@@ -148,6 +156,13 @@ DefineCommon[T_Symbol] := (
 
   T /: ContainerQ[x_T] := ContainerQ[T];
 
+  T[x_T, o__?OptionQ] :=
+    Module[{r = x},
+      Scan[(r = If[MemberQ[Members[T],#[[1]]],ReplacePart[r,#[[2]],#[[1]]],Opts[r,#[[2]],#[[1]]]])&,{o}];
+      r
+      ];
+  T[x:{__T}, o__?OptionQ] := T[#,o]& /@ x;
+  
   T /: TestSuite[T] := {};
 
   MessageName[T,"usage"] = T::usage <> "TypeQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is of type "<>SymbolName[T]<>" by checking both Head and data.\[NewLine]";
@@ -185,7 +200,7 @@ DefineElement[T_Symbol, P_, D_, K_] :=
 
     T /: Part[x_T, s_Symbol] := Data[x][[Sequence @@ Pos[T,s]]];
     T /: Part[x_T, s_Symbol, n__Integer] := Part[x,s][[n]];
-    T /: ReplacePart[x_T, d_, s_Symbol] := T[ReplacePart[Data[x], d, Pos[T,s]],Sequence @@ Opts[x]];
+    T /: ReplacePart[x_T, d_, s_Symbol] := Data[x, d, s, Pos[T,s]];
 
     Scan[(
       T /: #[x_T] := x[[#]];
@@ -196,14 +211,6 @@ DefineElement[T_Symbol, P_, D_, K_] :=
     ContainerQ[T] = False;
 
     T /: DataToRules[x_T] := (# -> #[x]) & /@ Members[T];
-    T /: RulesToData[x_T, o__?OptionQ] :=
-      Module[{r = x, d = DataToRules[x]},
-        Scan[
-          (r = ReplacePart[r, # /. o /. d, #]) &,
-          Members[x]
-          ];
-        r
-      ];
 
     T /: OrderedQ[x1_T, x2_T, s : {__}] :=
       Module[{f = s, y},
@@ -221,8 +228,6 @@ DefineElement[T_Symbol, P_, D_, K_] :=
         True
         ];
 
-    If[D =!= Null, T[] := T[D]];
-
     MessageName[T,"usage"] = T::usage <> SymbolName[T]<>" is an element (not a container).\[NewLine]";
     MessageName[T,"usage"] = T::usage <> SymbolName[T]<>"[d_?(DataQ["<>SymbolName[T]<>"]),opts___?OptionQ] is the standard constructor and returns an object of type "<>SymbolName[T]<>".\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "DataQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is valid data for "<>SymbolName[T]<>".\[NewLine]";
@@ -233,6 +238,13 @@ DefineElement[T_Symbol, P_, D_, K_] :=
 
     DefineCommon[T];
 
+    If[D =!= Null,
+      Module[{d=T[D]},
+        T[] := T[D];
+        Options[T] = Join[Options[T],(#->#[d])& /@ Members[T]];
+        ];
+      ];
+    
     T /: TestSuite[T] = Join[TestSuite[T],{
       TestCase[ContainerQ[T],False],
       TestCase[Struct[T],P],
@@ -247,7 +259,6 @@ DefineElement[T_Symbol, P_, D_, K_] :=
     MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", s_Symbol, n_Integer] where s is a member of "<>ToString[Members[T]]<>" returns the value of the n:th part of member s in x.\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "ReplacePart[x_"<>SymbolName[T]<>", d_, s_Symbol] where s is a member of "<>ToString[Members[T]]<>" returns x with the value of member s replaced by d.\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "s[x_"<>SymbolName[T]<>"] where s is a member of "<>ToString[Members[T]]<>" returns the value of that member in x.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "RulesToData[x_"<>SymbolName[T]<>", r__?OptionQ] returns the object x with its data changed by the rules r.\[NewLine]";
 (*
     Print["END: ",T];
 *)
@@ -262,7 +273,7 @@ DefineContainer[T_Symbol, ET_Symbol] :=
 
     (* outgoing and incoming element's *)
     Pack[T] = Function[{container,element},If[MatchQ[element,{{__?OptionQ},_?(DataQ[ET])}],ET[element[[2]], Sequence @@ element[[1]]],ET[element]]];
-    UnPack[T] = Function[{element,opts},If[Opts[element]=={},Data[element],{Opts[element],Data[element]}]];
+    UnPack[T] = Function[{element,opts},If[Opts[element]==={},Data[element],{Opts[element],Data[element]}]];
     UnPackOpts[T] = Function[{elements,opts},opts];
 
     (* constructors, container from element *)
@@ -292,8 +303,8 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     T /: Insert[x_T, y_ET, n_Integer] := T[Insert[ET[x],y,n], Sequence @@ Opts[x]];
     T /: Last[x_T] := Part[x,-1];
     T /: Length[x_T] := Length[Data[x]];
-    T /: Map[f_, x_T] := Module[{r=Map[f, ET[x]]},If[MatchQ[r,{__ET}],T[r,Sequence@@Opts[x]],r]];
-    T /: MapIndexed[f_, x_T] := Module[{r=MapIndexed[f, ET[x]]},If[MatchQ[r,{__ET}],T[r,Sequence@@Opts[x]],r]];
+    T /: Map[f_, x_T] := Module[{r=Map[f, ET[x]]},If[MatchQ[r,{___ET}],T[r,Sequence@@Opts[x]],r]];
+    T /: MapIndexed[f_, x_T] := Module[{r=MapIndexed[f, ET[x]]},If[MatchQ[r,{___ET}],T[r,Sequence@@Opts[x]],r]];
     T /: Most[x_T] := T[Most[Data[x]], Sequence @@ Opts[x]];
     T /: Part[x_T, n_Integer] := Pack[T][x,#]&[Part[Data[x],n]] /; n!=0;
     T /: Part[x_T, n_Integer, m__Integer] := Part[x,n][[m]] /; n!=0;
@@ -322,6 +333,12 @@ DefineContainer[T_Symbol, ET_Symbol] :=
       T /: Sort[x_T, s_Symbol] := T[Sort[ET[x],OrderedQ[{s[#1], s[#2]}]&], Sequence @@ Opts[x]]
       ];
 
+    T /: ReplacePart[x_T, y_, s_Symbol] :=
+      If[ListQ[y] && Length[y]==Length[x],
+        MapIndexed[ReplacePart[#,y[[#2[[1]]]],s]&,x],
+        Map[ReplacePart[#,y,s]&,x]
+        ];
+    
     T /: Part[x_T, s_Symbol] := #[[s]]&/@ x;
     T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0;
 

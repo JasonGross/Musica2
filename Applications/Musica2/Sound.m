@@ -144,49 +144,51 @@ Pack[Sound] = Function[{sup,sub},
     ]
   ];
 UnPack[Sound] = Function[{sub,opts},
-  Convert[Content[sub],
-    SoundType[sub],SampleCount[sub],
-    SoundType/.opts, SampleCount/.opts
-    ]
+  Content[Snippet[sub,Sequence @@ opts]]
   ];
 UnPackOpts[Sound] = Function[{subs,opts},
   {
     SoundType->(SoundType/.opts/.{SoundType->SoundType[subs[[1]]]}),
     SampleRate->(SampleRate/.opts/.{SampleRate->SampleRate[subs[[1]]]}),
-    SampleCount->(SampleCount/.opts/.{SampleCount->SampleCount[subs[[1]]]})
+    SampleCount->(SampleCount/.opts/.{SampleCount->Max[SampleCount/@subs]})
     }
   ];
 
 (*****************)
 
-Convert[f_, SampledSoundFunction, scin_Integer, SampledSoundFunction, scout_Integer] := (* todo: preserve pitch and duration? *)
-  Module[{},
-    f
+Snippet /: Data[x_Snippet, y_, SoundType, pos_] :=
+  Module[{s = x,f,d,i},
+    If[SoundType[x] === SampledSoundFunction && y === SampledSoundList,
+      f = Content[s];
+      d = Table[f[i],{i,SampleCount[s]}];
+      s = ReplacePart[s,d,Content];
+      s = Data[s,SampledSoundList,pos];
+      ];
+    If[SoundType[x] === SampledSoundList && y === SampledSoundFunction,
+      d = Content[s];
+      f = ListInterpolation[d,InterpolationOrder->1];
+      s = ReplacePart[s,f,Content];
+      s = Data[s,SampledSoundFunction,pos];
+      ];
+    s
     ]
 
-Convert[f_, SampledSoundFunction, scin_Integer, SampledSoundList, scout_Integer] := (* todo: preserve pitch and duration? *)
-  Module[{},
-    Convert[Table[f[i],{i,Max[scin,scout]}],SampledSoundList, Max[scin,scout],SampledSoundList, scout]
+Snippet /: Data[x_Snippet, y_, SampleCount, pos_] :=
+  Module[{s = x,d},
+    If[y =!= SampleCount[x] && IntegerQ[y] && 0 < y,
+      If[SoundType[x] === SampledSoundList,
+        d = Content[s];
+        d = If[y < SampleCount[s],
+          Take[d,y],
+          PadRight[d,y]
+          ];
+        s = ReplacePart[s,d,Content];
+        ];
+      s = Data[s,y,pos];
+      ];
+    s
     ]
-
-Convert[d_List, SampledSoundList, scin_Integer, SampledSoundFunction, scout_Integer] := (* todo: preserve pitch and duration? *)
-  Module[{},
-    ListInterpolation[
-      Convert[d, SampledSoundList, scin, SampledSoundList, scout],
-      InterpolationOrder->1
-      ]
-    ]
-
-Convert[d_List, SampledSoundList, scin_Integer, SampledSoundList, scout_Integer] := (* todo: preserve pitch and duration? *)
-  Module[{},
-    If[scout == scin, d,
-      If[scout < scin,
-        Take[d,scout],
-        PadRight[d,scout,d]
-        ]
-       ]
-    ]
-
+    
 Snippet /: Duration[x_Snippet] := SampleCount[x]/SampleRate[x]
 Sound   /: Duration[x_Sound] := SampleCount[x]/SampleRate[x]
 
@@ -239,22 +241,6 @@ Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
 Seq[x:{__Snippet},opts___?OptionQ] := "todo" (* todo: write the code! *)
 Seq[x:{__Sound},  opts___?OptionQ] := "todo" (* todo: write the code! *)
-
-Snippet[x_Snippet, opts___?OptionQ] :=
-  Module[
-    {
-      s = x,
-      stout = SoundType /. {opts} /. (SoundType->SoundType[x]),
-      stin  = SoundType[x],
-      srout = SampleRate /. {opts} /. (SampleRate->SampleRate[x]),
-      srin  = SampleRate[x],
-      scout = SampleCount /. {opts} /. (SampleCount->SampleCount[x]),
-      scin  = SampleCount[x],
-      d
-      },
-      d = Convert[Content[s],stin,scin,stout,scout];
-      Snippet[{stout,d,srout,scout},Sequence @@ Opts[x]]
-    ]
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 

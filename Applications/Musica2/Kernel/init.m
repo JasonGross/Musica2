@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-1-17 at 12:15 *)
+(* :History: File created 2005-1-20 at 13:44 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -23,12 +23,12 @@ DeclarePackage["Musica2`Instrument`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"EOT", "Event", "EventData", "EventQ", "EventTime", "EventType", 
- "EventTypeEOT", "EventTypeKeySignature", "EventTypeMeta", 
- "EventTypeNoteOff", "EventTypeNoteOn", "EventTypeSysX0", "EventTypeSysX7", 
- "EventTypeTempo", "EventTypeTimeSignature", "Midi", "MidiChannel", "MidiQ", 
- "MilliSecond", "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", 
- "TempoTrack", "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
+{"Event", "EventData", "EventQ", "EventTime", "EventType", "EventTypeEOT", 
+ "EventTypeKeySignature", "EventTypeMeta", "EventTypeNoteOff", 
+ "EventTypeNoteOn", "EventTypeSysX0", "EventTypeSysX7", "EventTypeTempo", 
+ "EventTypeTimeSignature", "Midi", "MidiChannel", "MidiQ", "MilliSecond", 
+ "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", "TempoTrack", 
+ "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
 ];
 
 DeclarePackage["Musica2`Naming`",
@@ -46,7 +46,8 @@ DeclarePackage["Musica2`Note`",
  "ModeMajor", "ModeMinor", "ModeMixolydian", "ModePhrygian", "Note", 
  "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "NoteRestQ", 
  "NoteTieQ", "Progression", "ProgressionQ", "Scale", "ScaleFunction", 
- "ScaleQ", "ScaleStep", "ThirdStack", "ThirdStackQ", "Velocity"}
+ "ScaleQ", "ScaleStep", "Steps", "ThirdStack", "ThirdStackQ", "Tonic", 
+ "Velocity"}
 ];
 
 DeclarePackage["Musica2`PianoRoll`",
@@ -77,15 +78,14 @@ DeclarePackage["Musica2`Tuning`",
 
 DeclarePackage["Musica2`Type`",
 {"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
- "DataToRules", "ElementType", "Members", "Opts", "Pack", "Pos", 
- "RulesToData", "Struct", "Tidy", "Type", "TypeQ", "Types", "UnPack", 
- "UnPackOpts"}
+ "DataToRules", "ElementType", "Members", "Opts", "Pack", "Pos", "Struct", 
+ "Tidy", "Type", "TypeQ", "Types", "UnPack", "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",
 {"AddOpts", "Circular", "DataAnyValue", "DataAnyValueQ", "DataApply", 
  "DataNoValue", "DataNoValueQ", "DataPlainValueQ", "DataTie", "DataTieQ", 
- "DataUnTie", "DeltasToValues", "FunctionQ", "MakeNestedIfs", 
+ "DataUnTie", "DeltasToValues", "FunctionQ", "GetOpts", "MakeNestedIfs", 
  "NormalizeList", "ParOfSeqToSeqOfPar", "RatiosToValues", "RemOpts", 
  "SeqOfParToParOfSeq", "UnCompile", "Utils", "ValuesToDeltas", 
  "ValuesToRatios"}
