@@ -300,7 +300,7 @@ MidiDataAnyValueQ[expr_] := If[AtomQ[expr],expr===MidiDataAnyValue||expr===MidiT
 
 MidiDataNoValueQ[expr_] := If[AtomQ[expr],expr===MidiDataNoValue||expr===MidiTie[MidiDataNoValue],Or@@(MidiDataNoValueQ/@expr)]
 
-MidiEmpty = Midi[{MidiShape->MidiFile,MidiTiming->MidiAbsolute,MidiTimeUnit->MidiTick},{}]
+MidiEmpty = Midi[{MidiShape->MidiFile,MidiTiming->MidiAbsolute,MidiTimeUnit->MidiTick},{{}}]
 
 MidiEOT = {MidiMeta,16^^2F};
 
@@ -616,7 +616,8 @@ MidiRemNotes[m_Midi] := MidiRemEvents[m,{_, {(MidiNoteOn | MidiNoteOff), _}}]
 MidiRemQPM[m_Midi] := MidiRemEvents[m,{_, {MidiTempo, _}}]
 
 MidiSeq[mx:{_Midi,_Midi...}, opts___] :=
-  Module[{m=MidiSetState[#,{MidiSetShape->MidiFile,MidiTiming->MidiAbsolute,MidiTimeUnit->MidiSec}]&/@mx,d,s=0,t,q},
+  Module[{m=MidiSetState[#,{MidiSetShape->MidiFile,MidiTiming->MidiAbsolute,MidiTimeUnit->MidiSec}]&/@mx,d,s=0,t,q,x},
+    x=Max @@ (Length[#[[2]]]&/@m);
     d=Reap[
       Scan[(* per midi *)
         (
@@ -634,8 +635,10 @@ MidiSeq[mx:{_Midi,_Midi...}, opts___] :=
           s+=q;
           )&,
         m
-        ]
+        ],
+      Range[x]
       ][[2]];
+    d=If[#==={},#,#[[1]]]&/@d;
     MidiSetState[
       MidiAddEOT[Midi[m[[1,1]],d]],
       MidiGetState[mx[[1]]]
