@@ -41,9 +41,9 @@ Wolfram Research.
 
 (*NotebookFileLineBreakTest
 NotebookFileLineBreakTest*)
-(*NotebookOptionsPosition[     29473,       1003]*)
-(*NotebookOutlinePosition[     30188,       1028]*)
-(*  CellTagsIndexPosition[     30144,       1024]*)
+(*NotebookOptionsPosition[     10013,        346]*)
+(*NotebookOutlinePosition[     10728,        371]*)
+(*  CellTagsIndexPosition[     10684,        367]*)
 (*WindowFrame->Normal*)
 
 
@@ -83,6 +83,9 @@ Cell[CellGroupData[{
 Cell["History", "Subtitle"],
 
 Cell["\<\
+2004-09-15 Bo C. Herlin : major rewrite, started using up-values \
+and a kind of template for types
+2004-09-14 Bo C. Herlin : added Patterns section
 2004-09-13 Bo C. Herlin : added some use of Chord's and Melody's
 2004-09-12 Bo C. Herlin : added use of Common.m's Duration/Info-things
 2004-09-11 Bo C. Herlin : added use of Note.m's Chord- and Melody-types
@@ -106,6 +109,26 @@ MidiEqualizeEOT to MidiAddEOT
 2004-08-08 Bo C. Herlin : added this new state-thing 
 2004-08-04 Bo C. Herlin : first release
 2004-07-28 Bo C. Herlin : created\
+\>", "Text"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Welcome", "Subtitle"],
+
+Cell["\<\
+Hi there! Welcome to Musica2. 
+This is a randomly created notebook that sometimes also works as a testbench \
+when I extend Musica2. I try to make everything in this notebook to work in \
+every release, and even in the CVS at sourceforge.net.
+If You find errors, please tell me about them.
+If You miss anything, please tell me about it.
+If You would like something changed, please tell me what it is.
+If You have a contribution, please send it to me.
+If You... I think You got the idea now...
+Mail me at bo@gcab.net, or even better, post a message to a forum at \
+http://sourceforge.net/forum/?group_id=90149.
+And above all; Have Fun!\
 \>", "Text"]
 }, Closed]],
 
@@ -168,843 +191,163 @@ Cell[BoxData[{
 
 Cell[CellGroupData[{
 
-Cell["Tour of Musica2", "Subtitle"],
-
-Cell["\<\
-Hi there! Welcome to Musica2. 
-This is a randomly created notebook that sometimes also works as a testbench \
-when I extend Musica2. I try to make everything in this notebook to work in \
-every release, and even in the CVS at sourceforge.net.
-If You find errors, please tell me about them.
-If You miss anything, please tell me about it.
-If You would like something changed, please tell me what it is.
-If You have a contribution, please send it to me.
-If You... I think You got the idea now...
-Mail me at bo@gcab.net, or even better, post a message to a forum at \
-http://sourceforge.net/forum/?group_id=90149.
-And above all; Have Fun!\
-\>", "Text"],
-
-Cell[CellGroupData[{
-
-Cell["Midi", "Subsubtitle"],
+Cell["Mini-tour of Musica2", "Subtitle"],
 
 Cell["Read from a SMF (StandardMidiFile).", "Text"],
 
 Cell[BoxData[
-    \(m = MidiImportSMF[MidiTestFile]\)], "Input"],
+    \(m = Import[MidiTestFile, Midi]\)], "Input"],
+
+Cell["Get the info from the Midi.", "Text"],
+
+Cell[BoxData[
+    \(Info[m]\)], "Input"],
+
+Cell["Get nr of tracks.", "Text"],
+
+Cell[BoxData[
+    \(Length[m]\)], "Input"],
+
+Cell["Get the duration in ticks.", "Text"],
+
+Cell[BoxData[
+    \(Duration[m]\)], "Input"],
+
+Cell["Get the duration in seconds.", "Text"],
+
+Cell[BoxData[
+    \(Duration[Midi[m, TimeUnit \[Rule] Second]] // N\)], "Input"],
 
 Cell["\<\
-Play it. The piece is about 42 sec long and currently it takes at \
-least 65 sec to create the sound-objects and render it in stereo on my 1GHz \
-laptop.\
+Play it. Currently it takes about 24 sec to create the \
+sound-objects, mix it and render it in stereo on my 1GHz laptop.\
 \>", "Text"],
 
 Cell[BoxData[
-    \(Timing[MidiPlay[m]]\)], "Input"],
-
-Cell["\<\
-Write to a Wav-file, takes a little bit longer than MidiPlay above.\
-\
-\>", "Text"],
-
-Cell[BoxData[
-    \(Timing[MidiExportWav["\<tmp.wav\>", m]]\)], "Input"],
+    \(Timing[Show[m]]\)], "Input"],
 
 Cell["Write to a SMF.", "Text"],
 
 Cell[BoxData[
-    \(MidiExportSMF["\<tmp.mid\>", m]\)], "Input"],
-
-Cell["\<\
-Midi contain two parts: info and data (music). The first part is a \
-list of rules with values for different attributes and the second part is the \
-midi-data whos structure depends on info.\
-\>", "Text"],
-
-Cell["\<\
-Info contain rules for each attribute:
-\tMidiFileFormat (0 or 1),if omitted defaults to Options[Midi]
-\tMidiShape (MidiFile,MidiMelody or MidiChord)
-\tMidiTimeUnit (MidiTick, MidiSec or MidiMilliSec)
-\tMidiTiming (MidiDelta or MidiAbsolute)
-\tMidiTPQ (TicksPerQuarter),if omitted defaults to Options[Midi]
-\tMidiQPM (QuartersPerMinute),if omitted defaults to Options[Midi], used as \
-default tempo\
-\>", "Text"],
-
-Cell[BoxData[
-    \(GetInfo[m]\)], "Input"],
-
-Cell[BoxData[
-    \(Options[Midi]\)], "Input"],
-
-Cell["\<\
-The info-parts MidiShape, MidiTimeUnit and MidiTiming are called \
-the State.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(MidiGetState[m]\)], "Input"],
-
-Cell["Create a list of Midi's to test on.", "Text"],
-
-Cell[BoxData[
-    \(ml = MidiImportSMF /@ MidiTestFileList\)], "Input"],
-
-Cell["What are the lengths of the tracks?", "Text"],
-
-Cell[BoxData[
-    \(GetDurations /@ ml // ColumnForm\)], "Input"],
-
-Cell["Equalize them per file. This also adds EOT if missing.", "Text"],
-
-Cell[BoxData[
-    \(\(GetDurations[MidiFixEOT[#]] &\) /@ ml // ColumnForm\)], "Input"],
-
-Cell["Keep the max-duration.", "Text"],
-
-Cell[BoxData[
-    \(\(GetDurations[MidiFixEOT[#, True]] &\) /@ ml // ColumnForm\)], "Input"],
-
-Cell["What are the lengths of the files (unmodified)?", "Text"],
-
-Cell[BoxData[
-    \(GetDuration /@ ml\)], "Input"],
-
-Cell["On which channels per track are there notes?", "Text"],
-
-Cell[BoxData[
-    \(MidiGetChannels /@ ml // ColumnForm\)], "Input"],
-
-Cell["What are the pitch-ranges per track and channel?", "Text"],
-
-Cell[BoxData[
-    \(MidiGetPitchRanges /@ ml // ColumnForm\)], "Input"],
-
-Cell["What are the pitch-ranges per file?", "Text"],
-
-Cell[BoxData[
-    \(MidiGetPitchRange /@ ml\)], "Input"],
-
-Cell["\<\
-Do the files use NoteOff's instead of NoteOn's with velocity \
-zero?\
-\>", "Text"],
-
-Cell[BoxData[
-    \(\(# === MidiFixNoteOff[#] &\) /@ ml\)], "Input"],
-
-Cell["\<\
-If a second parameter is supplied you can turn all \
-NoteOff-velocitys to zero.\
-\>", "Text"],
-
-Cell["\<\
-Currently, some of the functions just called above only work if the \
-Midi-object has shape MidiFile, this will be fixed.\
-\>", "Text"],
-
-Cell["\<\
-Since changing to shape MidiMelody is neglecting velocity for \
-NoteOff's I'll set them all to zero so that I easier can check for any \
-loss.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(m = MidiFixNoteOff[m, True]\)], "Input"],
-
-Cell["\<\
-I will also change timing to MidiAbsolute for the same \
-reason.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(m = MidiSetState[m, {MidiTiming \[Rule] MidiAbsolute}]\)], "Input"],
-
-Cell["\<\
-When shape is MidiFile the music-part is a list of tracks \
-containing events as {timing, {type, data}}.\
-\>", "Text"],
-
-Cell["\<\
-Type is always an integer, except if the event is a meta-event, \
-then its a list as {255,integer}.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(GetData[m] // ColumnForm\)], "Input"],
-
-Cell["\<\
-This looks very much like an EventList in the original \
-musica-package.\
-\>", "Text"],
-
-Cell["Change shape to MidiMelody.", "Text"],
-
-Cell[BoxData[
-    \(mv = MidiSetState[m, {MidiShape \[Rule] MidiMelody}]\)], "Input"],
-
-Cell["\<\
-You can supply a MidiMelodyReleaseTimeFunction to MidiSetState when \
-changing shape from MidiFile to MidiMelody to intruduce a minimum release \
-time. First parameter is the track-nr, the second is the note as \
-{{on,off},{ch,p,v}}.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(MidiSetState[m, {MidiShape \[Rule] MidiMelody}, 
-      MidiMelodyReleaseTimeFunction \[Rule] 
-        Function[{t, n}, If[n[\([2, 2]\)] \[Equal] 72, Print[t, "\< \>", n]]; 
-          0]]\)], "Input"],
-
-Cell["\<\
-When shape is MidiMelody the music-part is a list of voices \
-containing data as {{type, track},{{timing, data}...}}.\
-\>", "Text"],
-
-Cell["There is no type MidiNoteOff in shape MidiMelody.", "Text"],
-
-Cell["\<\
-If the voice contains notes, type MidiNoteOn, track is not just a \
-number but a list as {track,channel}.\
-\>", "Text"],
-
-Cell["\<\
-If the voice contains notes, the data is {timing,{pitch,velocity}} \
-since channel is added to the track-info, se above.\
-\>", "Text"],
-
-Cell["\<\
-A rest is represented by the value of {DataNoValue,DataNoValue}. \
-The data for a rest is discarded when changing back to shape MidiFile.\
-\>", \
-"Text"],
-
-Cell[BoxData[
-    \({\[IndentingNewLine]DataNoValue, \[IndentingNewLine]DataNoValueQ[
-        2], \[IndentingNewLine]DataNoValueQ[
-        DataNoValue], \[IndentingNewLine]DataNoValueQ[
-        Log[DataTie[DataNoValue + 12]/2]]\[IndentingNewLine]}\)], "Input"],
-
-Cell["\<\
-If the data is a list just one of the elements has to be \
-DataNoValue for DataNoValueQ to return true.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(DataNoValueQ[{1, DataNoValue, 2, 3}]\)], "Input"],
-
-Cell[BoxData[
-    \(GetData[mv] // ColumnForm\)], "Input"],
-
-Cell["Change shape back to MidiFile again.", "Text"],
-
-Cell[BoxData[
-    \(mf = MidiSetState[mv, {MidiShape -> MidiFile}]\)], "Input"],
-
-Cell["\<\
-What did we miss? (nothing if you used my testfile) (TODO: All \
-channel messages except notes are currently discarded when changing to shape \
-MidiMelody or MidiChord).\
-\>", "Text"],
-
-Cell[BoxData[
-    \(MapThread[Complement, {GetData[m], GetData[mf]}] // 
-      ColumnForm\)], "Input"],
-
-Cell["\<\
-What did we add? This should at least be all empty for all \
-testfiles.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(MapThread[Complement, {GetData[mf], GetData[m]}] // 
-      ColumnForm\)], "Input"],
-
-Cell["Plot the pitch.", "Text"],
-
-Cell[BoxData[
-    \(\(p = \(MakeNestedIfs[\({#[\([1]\)], #[\([2, 
-                        1]\)]} &\) /@ #] &\) /@ \((\(GetData[#[\([2]\)]] &\) /@ 
-                MidiGetMelodies[m] /. {DataNoValue \[Rule] 
-                  0})\);\)\)], "Input"],
-
-Cell[BoxData[
-    \(Plot[Evaluate[\(#[t] &\) /@ p], {t, 0, GetDuration[m]}, 
-      PlotRange -> MidiGetPitchRange[m], 
-      PlotStyle \[Rule] {{Red}, {Green}, {Blue}}]\)], "Input"],
-
-Cell["Next shape is MidiChord.", "Text"],
-
-Cell[BoxData[
-    \(mc = MidiSetState[mv, {MidiShape \[Rule] MidiChord}]\)], "Input"],
-
-Cell["\<\
-When shape is MidiChord the music-part is a list containing data as \
-{{type, {track...}},{{timing, {data...}}...}} for each type.\
-\>", "Text"],
-
-Cell["There is no type MidiNoteOff in shape chord.", "Text"],
-
-Cell["\<\
-Currently, the data is negative or has the head DataTie if there is \
-a tie.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(GetData[mc] // ColumnForm\)], "Input"],
-
-Cell["Negative pitch means tie, DataNoValue means a rest.", "Text"],
-
-Cell[BoxData[
-    \({\[IndentingNewLine]DataTieQ[\(-3\)], \[IndentingNewLine]DataTie[
-        60], \[IndentingNewLine]DataTie[
-        DataNoValue], \[IndentingNewLine]DataUnTie[\(-61\)], \
-\[IndentingNewLine]DataTie[anything], \[IndentingNewLine]DataUnTie[
-        DataTie[anything]], \[IndentingNewLine]DataUnTie[
-        anything], \[IndentingNewLine]DataTieQ[
-        anything], \[IndentingNewLine]DataTieQ[
-        DataTie[anything]], \[IndentingNewLine]DataTieQ[
-        Log[DataTie[DataNoValue + 12]/2]], \[IndentingNewLine]DataUnTie[
-        Log[DataTie[DataNoValue + 12]/2]]\[IndentingNewLine]}\)], "Input"],
-
-Cell["Get the list of all chords, just the pitch.", "Text"],
-
-Cell[BoxData[
-    \(\(\(Transpose[#]\)[\([1]\)] &\) /@ \(Transpose[\(GetData[mc]\)[\([1, 
-              2]\)]]\)[\([2]\)]\)], "Input"],
-
-Cell["or, using MidiGetChords wich is better", "Text"],
-
-Cell[BoxData[
-    \(\(\(Transpose[#]\)[\([1]\)] &\) /@ \(Transpose[
-          GetData /@ \(MidiGetChords[mc]\)[\([2]\)]]\)[\([2]\)]\)], "Input"],
-
-Cell["\<\
-We can use supplied patterns to check the data. Not much of a test \
-yet really, but the sourcecode of the patterns may help a confused \
-programmer.\
-\>", "Text"],
-
-Cell["We can check the info part.", "Text"],
-
-Cell[BoxData[
-    \(\(MatchQ[GetInfo[#], MidiPatternInfo] &\) /@ {mf, mv, mc}\)], "Input"],
-
-Cell["We can check the music part.", "Text"],
-
-Cell[BoxData[
-    \(\(MatchQ[GetData[#], MidiPatternFile] &\) /@ {mf, mv, mc}\)], "Input"],
-
-Cell[BoxData[
-    \(\(MatchQ[GetData[#], MidiPatternMelody] &\) /@ {mf, mv, mc}\)], "Input"],
-
-Cell[BoxData[
-    \(\(MatchQ[GetData[#], MidiPatternChord] &\) /@ {mf, mv, mc}\)], "Input"],
-
-Cell["Or we can check the whole package so to speak.", "Text"],
-
-Cell[BoxData[
-    \(\(MatchQ[#, MidiPatternMidi] &\) /@ {mf, mv, mc}\)], "Input"],
-
-Cell["MidiQ is not very picky yet, but might be...", "Text"],
-
-Cell[BoxData[
-    \(MidiQ /@ {mf, mv, mc}\)], "Input"],
-
-Cell["Change TimeUnit to MidiSec and then get the duration in sec.", "Text"],
-
-Cell[BoxData[
-    \(\(GetDuration[MidiSetState[#, {MidiTimeUnit \[Rule] MidiSec}]] &\) /@ 
-      ml\)], "Input"],
-
-Cell["Get all tempo-changes and their starting time.", "Text"],
-
-Cell[BoxData[
-    \(Round[MidiGetQPM /@ ml] // ColumnForm\)], "Input"],
-
-Cell["There are some functions for creating Midi-objects.", "Text"],
-
-Cell["\<\
-A starting point for making Midi-objects using these functions \
-could be MidiEmpty:\
-\>", "Text"],
-
-Cell[BoxData[
-    \(e = MidiEmpty\)], "Input"],
-
-Cell["\<\
-Add notes in a {{{{on,off},{ch,p,v}}...}...} format as returned by \
-MidiGetNotes:\
-\>", "Text"],
-
-Cell[BoxData[
-    \(e = MidiAddNotes[e, MidiGetNotes[m]]\)], "Input"],
-
-Cell["Add qpm in a {{on,qpm}...} format as returned by MidiGetQPM:", "Text"],
-
-Cell[BoxData[
-    \(e = MidiAddQPM[e, MidiGetQPM[m]]\)], "Input"],
-
-Cell["Then add/adjust EOT.", "Text"],
-
-Cell[BoxData[
-    \(e = MidiFixEOT[e]\)], "Input"],
-
-Cell["You can also remove all notes.", "Text"],
-
-Cell[BoxData[
-    \(e = MidiRemNotes[e]\)], "Input"],
-
-Cell["And all QPM.", "Text"],
-
-Cell[BoxData[
-    \(e = MidiRemQPM[e]\)], "Input"],
-
-Cell["Only EOT left.", "Text"],
-
-Cell[BoxData[
-    \(GetData[e] // ColumnForm\)], "Input"],
-
-Cell["\<\
-MidiSetNotes[m,n] is like calling MidiAddNotes[MidiRemNotes[m],n] \
-but with better state handling.\
-\>", "Text"],
-
-Cell["Combining Midi's is easy:", "Text"],
-
-Cell[BoxData[{
-    \(\(ma = 
-        MidiAddNotes[
-          MidiSetState[
-            MidiEmpty, {MidiTimeUnit \[Rule] 
-                MidiSec}], {{}, {{{0, 1}, {0, 60, 
-                  64}}}}];\)\), "\[IndentingNewLine]", 
-    \(\(mb = 
-        MidiAddNotes[
-          MidiSetState[
-            MidiEmpty, {MidiTimeUnit \[Rule] 
-                MidiSec}], {{}, {{{0, 1}, {0, 67, 64}}}}];\)\)}], "Input"],
-
-Cell["\<\
-MidiPar takes track 2 and up from each Midi, combines the tracks in \
-parallel, and makes a new Midi. Track 1 in the new Midi comes from the first \
-track in the first Midi in the list.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[MidiPar[{ma, mb}]]\)], "Input"],
-
-Cell["\<\
-MidiSeq takes all tracks from each Midi, combines the tracks in \
-sequence, and makes a new Midi.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[MidiSeq[{ma, mb}]]\)], "Input"],
-
-Cell[BoxData[
-    \(MidiPlay[MidiSeq[{MidiPar[{ma, mb}], MidiPar[{mb, ma}]}]]\)], "Input"],
-
-Cell["\<\
-You can use the Chord- and Melody-objects to create a \
-Midi-object.\
-\>", "Text"],
-
-Cell["A scale in C-major...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Melody[{0, 2, 4, 5, 7, 9, 11, 12} + 60], 
-        MidiTimeUnit \[Rule] MidiSec]]\)], "Input"],
-
-Cell["...or...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Melody[{0, 2, 4, 5, 7, 9, 11, 12} + 60, Duration \[Rule] 960], 
-        MidiQPM \[Rule] 60]]\)], "Input"],
-
-Cell["...or with duration added...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Melody[\(\((# + {0, 60})\) &\) /@ {{1, 0}, {1.5, 2}, {0.5, 
-                4}, {0.3, 5}, {0.3, 7}, {0.3, 9}, {1, 11}, {2, 12}}], 
-        MidiTimeUnit \[Rule] MidiSec]]\)], "Input"],
-
-Cell["...or with both duration and velocity added...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Melody[\(\((# + {0, {60, 0}})\) &\) /@ {{1, {0, 60}}, {1.5, {2, 
-                  20}}, {0.5, {4, 70}}, {0.3, {5, 60}}, {0.3, {7, 
-                  50}}, {0.3, {9, 40}}, {1, {11, 30}}, {2, {12, 20}}}], 
-        MidiTimeUnit \[Rule] MidiSec]]\)], "Input"],
-
-Cell["A C7 chord:", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Chord[{0, 4, 7, 10} + 60, Duration \[Rule] 960], 
-        MidiQPM \[Rule] 60]]\)], "Input"],
-
-Cell["A sequence of 7-chords...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Table[
-          Chord[Mod[{0, 4, 7, 10} + 7  t, 12] + 60, 
-            Duration \[Rule] 960], {t, 6}], MidiQPM \[Rule] 60]]\)], "Input"],
-
-Cell["...or with duration added...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Table[
-          Chord[{{1, 1.5, 0.5, 2, 0.5, 0.5}[\([t]\)], 
-              Mod[{0, 4, 7, 10} + 7  t, 12] + 60}], {t, 6}], 
-        MidiTimeUnit \[Rule] MidiSec]]\)], "Input"],
-
-Cell["...or with both duration and (random) velocity added...", "Text"],
-
-Cell[BoxData[
-    \(MidiPlay[
-      Midi[Table[
-          Chord[{{1, 1.5, 0.5, 2, 0.5, 
-                  0.5}[\([t]\)], \({#, Random[Integer, {10, 120}]} &\) /@ 
-                  Mod[{0, 4, 7, 10} + 7  t, 12] + 60}], {t, 6}], 
-        MidiTimeUnit \[Rule] MidiSec]]\)], "Input"],
-
-Cell["\<\
-Eventually, when I know how Midi-objects preferably are created, I \
-will produce some more functions so that one doesnt have to mess with too \
-much low level details like below. But until then: embrace!\
-\>", "Text"],
-
-Cell["\<\
-Three simple ways of creating Midi-objects in a low-level-way with \
-random notes getting slightly different results.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(\(\(NRT = 4;\)\( (*\ nr\ of\ tracks\ *) \)\)\)], "Input"],
-
-Cell[BoxData[
-    \(\(\(NRN = 100;\)\( (*\ nr\ of\ notes\ per\ track\ *) \)\)\)], "Input"],
-
-Cell["Create a Midi object in shape file.", "Text"],
-
-Cell[BoxData[
-    \(m1 = 
-      Midi[\[IndentingNewLine]{MidiShape \[Rule] MidiFile, 
-          MidiTimeUnit \[Rule] MidiTick, 
-          MidiTiming \[Rule] 
-            MidiAbsolute}, \[IndentingNewLine]Join[\[IndentingNewLine]{{}},  \
-(*\ empty\ master\ track\ *) \[IndentingNewLine]\(Flatten[#, 1] &\) /@ 
-            Table[\[IndentingNewLine]Module[{s = Random[Integer, {0, 10000}], 
-                  c = Random[Integer, {0, 15}], 
-                  p = Random[Integer, {0, 127}], 
-                  v = Random[Integer, {1, 127}], 
-                  d = Random[
-                      Integer, {1, 
-                        100}]}, \[IndentingNewLine]{{s, {MidiNoteOn, {c, p, 
-                        v}}}, {s + 
-                      d, {MidiNoteOff, {c, p, 
-                        0}}}}\[IndentingNewLine]], \[IndentingNewLine]{t, 
-                NRT}, {i, 
-                NRN}\[IndentingNewLine]]\[IndentingNewLine]]\
-\[IndentingNewLine]]\)], "Input"],
-
-Cell[BoxData[
-    \(MatchQ[GetData[m1], MidiPatternFile] && MidiQ[m1]\)], "Input"],
-
-Cell["Create a Midi object in shape voice.", "Text"],
-
-Cell[BoxData[
-    \(m2 = 
-      Midi[\[IndentingNewLine]{MidiShape \[Rule] MidiMelody, 
-          MidiTimeUnit \[Rule] MidiTick, 
-          MidiTiming \[Rule] 
-            MidiAbsolute}, \
-\[IndentingNewLine]Table[\[IndentingNewLine]Module[{c = 
-                Random[Integer, {0, 
-                    15}]}, \[IndentingNewLine]{{MidiNoteOn, {t, 
-                  c}}, \[IndentingNewLine]Flatten[
-                Table[\[IndentingNewLine]Module[{s = 
-                        Random[Integer, {0, 10000}], 
-                      p = Random[Integer, {0, 127}], 
-                      v = Random[Integer, {1, 127}], 
-                      d = Random[
-                          Integer, {1, 100}]}, \[IndentingNewLine]{{d, {p, 
-                          v}}, {d + 
-                          s, {p, \(-v\)}}}\[IndentingNewLine]], \
-\[IndentingNewLine]{i, NRN}\[IndentingNewLine]], 
-                1]\[IndentingNewLine]}\[IndentingNewLine]], \
-\[IndentingNewLine]{t, 
-            NRT}\[IndentingNewLine]]\[IndentingNewLine]]\)], "Input"],
-
-Cell[BoxData[
-    \(MatchQ[GetData[m2], MidiPatternMelody] && MidiQ[m2]\)], "Input"],
-
-Cell["Create a Midi object in shape chord.", "Text"],
-
-Cell[BoxData[
-    \(m3 = 
-      Midi[\[IndentingNewLine]{MidiShape \[Rule] MidiChord, 
-          MidiTimeUnit \[Rule] MidiTick, 
-          MidiTiming \[Rule] 
-            MidiDelta}, \[IndentingNewLine]{{{MidiNoteOn, 
-              Table[Module[{c = Random[Integer, {0, 15}]}, {t, c}], {t, 
-                  NRT}]}, \
-\[IndentingNewLine]Table[\[IndentingNewLine]Module[{d = 
-                    Random[Integer, {1, 
-                        100}]}, \[IndentingNewLine]{\[IndentingNewLine]d, \
-\[IndentingNewLine]Table[\[IndentingNewLine]Module[{p = 
-                          Random[Integer, {0, 127}], 
-                        v = Random[
-                            Integer, {1, 127}]}, \[IndentingNewLine]{p, 
-                        v}\[IndentingNewLine]], \[IndentingNewLine]{t, 
-                      NRT}\[IndentingNewLine]]\[IndentingNewLine]}\
-\[IndentingNewLine]], \[IndentingNewLine]{i, 
-                NRN}\[IndentingNewLine]]\[IndentingNewLine]}}\
-\[IndentingNewLine]]\)], "Input"],
-
-Cell[BoxData[
-    \(MatchQ[GetData[m3], MidiPatternChord] && MidiQ[m3]\)], "Input"]
+    \(Export["\<tmp.mid\>", m]\)], "Input"]
 }, Open  ]],
 
 Cell[CellGroupData[{
 
-Cell["Sound", "Subsubtitle"],
+Cell["Note", "Subtitle"],
 
-Cell["Start with a function taking sec as parameter.", "Text"],
+Cell["todo", "Text"]
+}, Open  ]],
 
-Cell[BoxData[
-    \(f = Sin[2  Pi\ 220\ #] &\)], "Input"],
+Cell[CellGroupData[{
 
-Cell[BoxData[
-    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
+Cell["Midi", "Subtitle"],
 
-Cell["Make a 1 sec sound-function-object.", "Text"],
+Cell["todo", "Text"]
+}, Open  ]],
 
-Cell[BoxData[
-    \(s = SoundMakeFunc[f, Duration \[Rule] 1]\)], "Input"],
+Cell[CellGroupData[{
 
-Cell[BoxData[
-    \(GetInfo[s]\)], "Input"],
+Cell["Sound", "Subtitle"],
 
-Cell[BoxData[
-    \(Show[s]\)], "Input"],
+Cell["todo", "Text"]
+}, Open  ]],
 
-Cell["\<\
-Zound (yes, Zound, NOT Sound) has some default-values, just like \
-Midi, so the SoundDuration could have been omitted in the case above .\
-\>", \
-"Text"],
+Cell[CellGroupData[{
 
-Cell[BoxData[
-    \(Options[Zound]\)], "Input"],
-
-Cell["Make a sound using the Audio-package.", "Text"],
-
-Cell[BoxData[
-    \(s = Waveform[Triangle, 220, 0.5]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[s]\)], "Input"],
-
-Cell["Get the function.", "Text"],
-
-Cell[BoxData[
-    \(\((f = \(SoundGetFunc[s]\)[\([1]\)])\)[t]\)], "Input"],
-
-Cell[BoxData[
-    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
-
-Cell["Convert sample-rate.", "Text"],
-
-Cell[BoxData[
-    \(s = SoundMakeFunc[s, SampleRate \[Rule] 2^12]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[s]\)], "Input"],
-
-Cell["Make it into a sound-sample-list.", "Text"],
-
-Cell[BoxData[
-    \(s = SoundMakeList[s]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[s]\)], "Input"],
-
-Cell["Get the function (which is really a list now).", "Text"],
-
-Cell[BoxData[
-    \(f = \(SoundGetFunc[s]\)[\([1]\)]\)], "Input"],
-
-Cell[BoxData[
-    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
-
-Cell["Do it again, but smothen the curve.", "Text"],
-
-Cell[BoxData[
-    \(f = \(SoundGetFunc[s, 
-          InterpolationOrder \[Rule] 1]\)[\([1]\)]\)], "Input"],
-
-Cell[BoxData[
-    \(Plot[f[t], {t, 0, 0.01}]\)], "Input"],
-
-Cell["Start with two sounds.", "Text"],
-
-Cell[BoxData[
-    \(sa = SoundMakeFunc[Sin[2  Pi\ 220\ #] &, Duration \[Rule] 1]; 
-    sb = SoundMakeFunc[Sin[2  Pi\ 220\ 3/2\ #] &, 
-        Duration \[Rule] 1];\)], "Input"],
-
-Cell["Make a sound by combining them in paralell.", "Text"],
-
-Cell[BoxData[
-    \(sp = SoundPar[{sa, sb}]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[sp]\)], "Input"],
+Cell["Patterns (as in design)", "Subtitle"],
 
 Cell["\<\
-Make a sound by combining them in sequence, just like \
-Beethowen...\
-\>", "Text"],
-
-Cell[BoxData[
-    \(ss = SoundSeq[{sa, sb}]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[ss]\)], "Input"],
-
-Cell["Make a sound by combining sound in paralell and in sequence.", "Text"],
-
-Cell[BoxData[
-    \(ssp = SoundSeq[{SoundPar[{sa, sb}], SoundPar[{sb, sa}]}]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[ssp]\)], "Input"],
-
-Cell["Slice it up...", "Text"],
-
-Cell[BoxData[
-    \(ssl = SoundUnSeq[ssp, {0.7, 1.1}]\)], "Input"],
-
-Cell["...and take the portion from the middle.", "Text"],
-
-Cell[BoxData[
-    \(sm = ssl[\([2]\)]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[sm]\)], "Input"],
-
-Cell[BoxData[
-    \(sd = SoundImportWav[DataFolder <> "\<lin8.wav\>"]\)], "Input"],
-
-Cell[BoxData[
-    \(GetInfo[sd]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[sd]\)], "Input"],
-
-Cell["\<\
-Lets get a small part from it (quite tiny actually), just the \"o\" \
-when he says Torvalds.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(sdp = 
-      SoundMakeList[
-        Take[\(SoundGetList[sd]\)[\([1]\)], {10300, 10342}]]\)], "Input"],
-
-Cell[BoxData[
-    \(GetInfo[sdp]\)], "Input"],
-
-Cell[BoxData[
-    \(Show[sdp]\)], "Input"],
-
-Cell["First, lets use a sinewavesound.", "Text"],
-
-Cell[BoxData[
-    \(m2s = MidiToSound[m, SoundBySine[]]\)], "Input"],
-
-Cell[BoxData[
-    \(GetInfo[m2s]\)], "Input"],
-
-Cell["\<\
-This takes a while to render, on my laptop, 1GHz, it takes about 70 \
-sec.\
-\>", "Text"],
-
-Cell[BoxData[
-    \(Timing[Show[m2s]]\)], "Input"],
-
-Cell["\<\
-Calling Show[MidiToSound[m,SoundBySine[]]] is the same as calling \
-MidiPlay[m].\
-\>", "Text"],
-
-Cell["This is MidiPlay the hard (and somewhat slower) way:", "Text"],
-
-Cell[BoxData[
-    \(Timing[
-      Show[MidiToSound[m, 
-          SoundBySample[SoundMakeFunc[Sin[2  Pi\ 440\ #] &]]]]]\)], "Input"],
-
-Cell["Then we let Linus do his solo-quartet", "Text"],
-
-Cell[BoxData[
-    \(m2s = MidiToSound[m, SoundBySample[sdp]]\)], "Input"],
-
-Cell["On my laptop it takes about 160 sec.", "Text"],
-
-Cell[BoxData[
-    \(Timing[Show[m2s]]\)], "Input"],
-
-Cell["\<\
-HeHe, what made it sound so awful? Ill look into it another \
-day.\
+There are currently three \"domains\":
+  1: Midi, with subtype Track with subtype Event
+  2: Progression with subtype Chord with subtype Note, and Counterpoint with \
+subtype Melody with subtype Note
+  3: Sound with subtype Snippet\
 \>", "Text"],
 
 Cell["\<\
-Now, lets hear him sing our 3rd random composition (m3 takes 22 sec \
-to convert and render, m1 and m2 takes much, much longer):\
+Progression, Counterpoint, Melody, Chord and Note does not have any \
+information or data concerning track-nr or channel-nr which are \
+Midi-specific.\
 \>", "Text"],
 
-Cell[BoxData[
-    \(Timing[Show[MidiToSound[m3, SoundBySample[sdp]]]]\)], "Input"],
+Cell["\<\
+Each type T has default-values in its Options:
+  Options[T]\
+\>", "Text"],
 
-Cell["Hmmm, let's leave Linus to his OS-kernel shall we?", "Text"]
+Cell["\<\
+Each type T has functions for retrieving info and \"raw\" data:
+  Info[x_T]
+  Data[x_T]\
+\>", "Text"],
+
+Cell["\<\
+Each type T has a test function for the whole type:
+  TypeQ[T]
+and one for the data:
+  DataQ[T]\
+\>", "Text"],
+
+Cell["\<\
+Each type T has a \"constructor\" that takes the output from Info \
+and Data as input:
+  T[Data[x], Sequence@@Info[x]]
+  T[d_?(DataQ[T]),opts___?OptionQ]
+(And sometimes versions that takes \"simplified data\" where the omitted data \
+is taken from Options[X])\
+\>", "Text"],
+
+Cell["\<\
+Most types T has a Duration-function:
+  Duration[x_T]\
+\>", "Text"],
+
+Cell["\<\
+Each type T with a subtype has functions like:
+  SubType[T]
+  SubType[x_T]\
+\>", "Text"],
+
+Cell["\<\
+Each type T that contains a subtype ST has \"constructors\" like:
+  T[{y__?(TypeQ[ST])},opts___?OptionQ]
+  T[y_?(TypeQ[ST]),opts___?OptionQ]
+and a \"constructor\" for its subtype:
+  ST[x_T]\
+\>", "Text"],
+
+Cell["\<\
+Each type T that contains a subtype ST has upvalues for functions \
+like:
+  Append[x_T, y_?(TypeQ[ST])]
+  Delete[x_T, n__]
+  Drop[x_T, n_]
+  Extract[x_T, n_Integer]
+  First[x_T]
+  Insert[x_T, y_?(TypeQ[ST]), n_Integer]
+  Last[x_T]
+  Length[x_T]
+  Map[f_, x_T]
+  MapIndexed[f_, x_T]
+  Most[x_T]
+  Part[x_T, n_Integer]
+  Prepend[x_T, y_?(TypeQ[ST])]
+  ReplacePart[x_T, y_?(TypeQ[ST]), n_Integer]
+  Rest[x_T]
+  Scan[f_, x_T]
+  Select[x_T, f_]
+  Take[x_T, n_]
+Unfortunately I havent found a way yet to trap and set an upvalue for an \
+expression like x[[n]]=expr.\
+\>", "Text"]
 }, Open  ]]
-}, Open  ]],
-
-Cell[CellGroupData[{
-
-Cell["Cleanup", "Subtitle"],
-
-Cell[BoxData[
-    \(Names["\<Global`*\>"]\)], "Input"],
-
-Cell[BoxData[
-    \(Remove[anything, c, cor, cun, d, DataFolder, d$, e, f, fug, i, m, m1, 
-      m2, m2s, m3, ma, mb, mc, mf, MidiTestFile, MidiTestFileList, ml, mv, n, 
-      NRN, NRT, n$, p, pre, p$, s, sa, sb, sd, sdp, sm, sp, ss, ssl, ssp, s$, 
-      t, t$, v, v$]\)], "Input"],
-
-Cell[BoxData[
-    \(Names["\<Global`*\>"]\)], "Input"]
-}, Closed]]
 }, Open  ]]
 },
 FrontEndVersion->"5.0 for X",
 ScreenRectangle->{{0, 1600}, {0, 1200}},
 AutoGeneratedPackage->Automatic,
-WindowSize->{1028, 975},
+WindowSize->{1028, 958},
 WindowMargins->{{0, Automatic}, {31, Automatic}},
 Magnification->1,
 StyleDefinitions -> "Default.nb"
@@ -1039,259 +382,81 @@ Cell[1911, 61, 720, 16, 284, "Text"]
 
 Cell[CellGroupData[{
 Cell[2668, 82, 27, 0, 53, "Subtitle"],
-Cell[2698, 84, 1406, 24, 320, "Text"]
+Cell[2698, 84, 1555, 27, 356, "Text"]
 }, Closed]],
 
 Cell[CellGroupData[{
-Cell[4141, 113, 24, 0, 53, "Subtitle"],
-Cell[4168, 115, 117, 3, 32, "Text"],
-Cell[4288, 120, 80, 2, 27, "Input",
+Cell[4290, 116, 27, 0, 53, "Subtitle"],
+Cell[4320, 118, 658, 13, 194, "Text"]
+}, Closed]],
+
+Cell[CellGroupData[{
+Cell[5015, 136, 24, 0, 53, "Subtitle"],
+Cell[5042, 138, 117, 3, 32, "Text"],
+Cell[5162, 143, 80, 2, 27, "Input",
   InitializationCell->True],
-Cell[4371, 124, 37, 0, 32, "Text"],
-Cell[4411, 126, 84, 2, 27, "Input",
+Cell[5245, 147, 37, 0, 32, "Text"],
+Cell[5285, 149, 84, 2, 27, "Input",
   InitializationCell->True],
-Cell[4498, 130, 92, 3, 32, "Text"],
-Cell[4593, 135, 72, 2, 27, "Input",
+Cell[5372, 153, 92, 3, 32, "Text"],
+Cell[5467, 158, 72, 2, 27, "Input",
   InitializationCell->True],
-Cell[4668, 139, 70, 0, 32, "Text"],
-Cell[4741, 141, 112, 2, 27, "Input",
+Cell[5542, 162, 70, 0, 32, "Text"],
+Cell[5615, 164, 112, 2, 27, "Input",
   InitializationCell->True],
-Cell[4856, 145, 775, 13, 75, "Input",
+Cell[5730, 168, 775, 13, 75, "Input",
   InitializationCell->True],
-Cell[5634, 160, 67, 0, 32, "Text"],
-Cell[5704, 162, 166, 3, 43, "Input",
+Cell[6508, 183, 67, 0, 32, "Text"],
+Cell[6578, 185, 166, 3, 43, "Input",
   InitializationCell->True]
 }, Closed]],
 
 Cell[CellGroupData[{
-Cell[5907, 170, 35, 0, 53, "Subtitle"],
-Cell[5945, 172, 658, 13, 194, "Text"],
-
-Cell[CellGroupData[{
-Cell[6628, 189, 27, 0, 31, "Subsubtitle"],
-Cell[6658, 191, 51, 0, 32, "Text"],
-Cell[6712, 193, 64, 1, 27, "Input"],
-Cell[6779, 196, 177, 4, 32, "Text"],
-Cell[6959, 202, 52, 1, 27, "Input"],
-Cell[7014, 205, 93, 3, 32, "Text"],
-Cell[7110, 210, 72, 1, 27, "Input"],
-Cell[7185, 213, 31, 0, 32, "Text"],
-Cell[7219, 215, 64, 1, 27, "Input"],
-Cell[7286, 218, 214, 4, 50, "Text"],
-Cell[7503, 224, 421, 9, 140, "Text"],
-Cell[7927, 235, 43, 1, 27, "Input"],
-Cell[7973, 238, 46, 1, 27, "Input"],
-Cell[8022, 241, 101, 3, 32, "Text"],
-Cell[8126, 246, 48, 1, 27, "Input"],
-Cell[8177, 249, 51, 0, 32, "Text"],
-Cell[8231, 251, 71, 1, 27, "Input"],
-Cell[8305, 254, 51, 0, 32, "Text"],
-Cell[8359, 256, 65, 1, 27, "Input"],
-Cell[8427, 259, 70, 0, 32, "Text"],
-Cell[8500, 261, 86, 1, 27, "Input"],
-Cell[8589, 264, 38, 0, 32, "Text"],
-Cell[8630, 266, 92, 1, 27, "Input"],
-Cell[8725, 269, 63, 0, 32, "Text"],
-Cell[8791, 271, 50, 1, 27, "Input"],
-Cell[8844, 274, 60, 0, 32, "Text"],
-Cell[8907, 276, 68, 1, 27, "Input"],
-Cell[8978, 279, 64, 0, 32, "Text"],
-Cell[9045, 281, 71, 1, 27, "Input"],
-Cell[9119, 284, 51, 0, 32, "Text"],
-Cell[9173, 286, 56, 1, 27, "Input"],
-Cell[9232, 289, 92, 3, 32, "Text"],
-Cell[9327, 294, 68, 1, 27, "Input"],
-Cell[9398, 297, 103, 3, 32, "Text"],
-Cell[9504, 302, 145, 3, 32, "Text"],
-Cell[9652, 307, 166, 4, 32, "Text"],
-Cell[9821, 313, 60, 1, 27, "Input"],
-Cell[9884, 316, 88, 3, 32, "Text"],
-Cell[9975, 321, 87, 1, 27, "Input"],
-Cell[10065, 324, 128, 3, 32, "Text"],
-Cell[10196, 329, 123, 3, 32, "Text"],
-Cell[10322, 334, 57, 1, 27, "Input"],
-Cell[10382, 337, 96, 3, 32, "Text"],
-Cell[10481, 342, 43, 0, 32, "Text"],
-Cell[10527, 344, 85, 1, 27, "Input"],
-Cell[10615, 347, 257, 5, 50, "Text"],
-Cell[10875, 354, 219, 4, 27, "Input"],
-Cell[11097, 360, 141, 3, 32, "Text"],
-Cell[11241, 365, 65, 0, 32, "Text"],
-Cell[11309, 367, 129, 3, 32, "Text"],
-Cell[11441, 372, 144, 3, 32, "Text"],
-Cell[11588, 377, 163, 4, 32, "Text"],
-Cell[11754, 383, 260, 4, 107, "Input"],
-Cell[12017, 389, 127, 3, 32, "Text"],
-Cell[12147, 394, 69, 1, 27, "Input"],
-Cell[12219, 397, 58, 1, 27, "Input"],
-Cell[12280, 400, 52, 0, 32, "Text"],
-Cell[12335, 402, 79, 1, 27, "Input"],
-Cell[12417, 405, 193, 4, 32, "Text"],
-Cell[12613, 411, 102, 2, 27, "Input"],
-Cell[12718, 415, 95, 3, 32, "Text"],
-Cell[12816, 420, 102, 2, 27, "Input"],
-Cell[12921, 424, 31, 0, 32, "Text"],
-Cell[12955, 426, 246, 4, 27, "Input"],
-Cell[13204, 432, 181, 3, 27, "Input"],
-Cell[13388, 437, 40, 0, 32, "Text"],
-Cell[13431, 439, 85, 1, 27, "Input"],
-Cell[13519, 442, 154, 3, 32, "Text"],
-Cell[13676, 447, 60, 0, 32, "Text"],
-Cell[13739, 449, 100, 3, 32, "Text"],
-Cell[13842, 454, 58, 1, 27, "Input"],
-Cell[13903, 457, 67, 0, 32, "Text"],
-Cell[13973, 459, 616, 10, 219, "Input"],
-Cell[14592, 471, 59, 0, 32, "Text"],
-Cell[14654, 473, 134, 2, 27, "Input"],
-Cell[14791, 477, 54, 0, 32, "Text"],
-Cell[14848, 479, 144, 2, 27, "Input"],
-Cell[14995, 483, 173, 4, 32, "Text"],
-Cell[15171, 489, 43, 0, 32, "Text"],
-Cell[15217, 491, 90, 1, 27, "Input"],
-Cell[15310, 494, 44, 0, 32, "Text"],
-Cell[15357, 496, 90, 1, 27, "Input"],
-Cell[15450, 499, 92, 1, 27, "Input"],
-Cell[15545, 502, 91, 1, 27, "Input"],
-Cell[15639, 505, 62, 0, 32, "Text"],
-Cell[15704, 507, 81, 1, 27, "Input"],
-Cell[15788, 510, 60, 0, 32, "Text"],
-Cell[15851, 512, 54, 1, 27, "Input"],
-Cell[15908, 515, 76, 0, 32, "Text"],
-Cell[15987, 517, 112, 2, 27, "Input"],
-Cell[16102, 521, 62, 0, 32, "Text"],
-Cell[16167, 523, 70, 1, 27, "Input"],
-Cell[16240, 526, 67, 0, 32, "Text"],
-Cell[16310, 528, 108, 3, 32, "Text"],
-Cell[16421, 533, 46, 1, 27, "Input"],
-Cell[16470, 536, 106, 3, 32, "Text"],
-Cell[16579, 541, 69, 1, 27, "Input"],
-Cell[16651, 544, 76, 0, 32, "Text"],
-Cell[16730, 546, 65, 1, 27, "Input"],
-Cell[16798, 549, 36, 0, 32, "Text"],
-Cell[16837, 551, 50, 1, 27, "Input"],
-Cell[16890, 554, 46, 0, 32, "Text"],
-Cell[16939, 556, 52, 1, 27, "Input"],
-Cell[16994, 559, 28, 0, 32, "Text"],
-Cell[17025, 561, 50, 1, 27, "Input"],
-Cell[17078, 564, 30, 0, 32, "Text"],
-Cell[17111, 566, 57, 1, 27, "Input"],
-Cell[17171, 569, 123, 3, 32, "Text"],
-Cell[17297, 574, 41, 0, 32, "Text"],
-Cell[17341, 576, 408, 11, 43, "Input"],
-Cell[17752, 589, 209, 4, 32, "Text"],
-Cell[17964, 595, 60, 1, 27, "Input"],
-Cell[18027, 598, 121, 3, 32, "Text"],
-Cell[18151, 603, 60, 1, 27, "Input"],
-Cell[18214, 606, 90, 1, 27, "Input"],
-Cell[18307, 609, 92, 3, 32, "Text"],
-Cell[18402, 614, 37, 0, 32, "Text"],
-Cell[18442, 616, 134, 3, 27, "Input"],
-Cell[18579, 621, 24, 0, 32, "Text"],
-Cell[18606, 623, 146, 3, 27, "Input"],
-Cell[18755, 628, 44, 0, 32, "Text"],
-Cell[18802, 630, 223, 4, 43, "Input"],
-Cell[19028, 636, 62, 0, 32, "Text"],
-Cell[19093, 638, 297, 5, 75, "Input"],
-Cell[19393, 645, 27, 0, 32, "Text"],
-Cell[19423, 647, 132, 3, 27, "Input"],
-Cell[19558, 652, 41, 0, 32, "Text"],
-Cell[19602, 654, 178, 4, 27, "Input"],
-Cell[19783, 660, 44, 0, 32, "Text"],
-Cell[19830, 662, 216, 5, 27, "Input"],
-Cell[20049, 669, 71, 0, 32, "Text"],
-Cell[20123, 671, 280, 6, 43, "Input"],
-Cell[20406, 679, 228, 4, 50, "Text"],
-Cell[20637, 685, 141, 3, 32, "Text"],
-Cell[20781, 690, 77, 1, 27, "Input"],
-Cell[20861, 693, 90, 1, 27, "Input"],
-Cell[20954, 696, 51, 0, 32, "Text"],
-Cell[21008, 698, 960, 19, 219, "Input"],
-Cell[21971, 719, 82, 1, 27, "Input"],
-Cell[22056, 722, 52, 0, 32, "Text"],
-Cell[22111, 724, 1033, 21, 283, "Input"],
-Cell[23147, 747, 84, 1, 27, "Input"],
-Cell[23234, 750, 52, 0, 32, "Text"],
-Cell[23289, 752, 995, 19, 315, "Input"],
-Cell[24287, 773, 83, 1, 27, "Input"]
+Cell[6781, 193, 40, 0, 53, "Subtitle"],
+Cell[6824, 195, 51, 0, 32, "Text"],
+Cell[6878, 197, 63, 1, 27, "Input"],
+Cell[6944, 200, 43, 0, 32, "Text"],
+Cell[6990, 202, 40, 1, 27, "Input"],
+Cell[7033, 205, 33, 0, 32, "Text"],
+Cell[7069, 207, 42, 1, 27, "Input"],
+Cell[7114, 210, 42, 0, 32, "Text"],
+Cell[7159, 212, 44, 1, 27, "Input"],
+Cell[7206, 215, 44, 0, 32, "Text"],
+Cell[7253, 217, 80, 1, 27, "Input"],
+Cell[7336, 220, 145, 3, 32, "Text"],
+Cell[7484, 225, 48, 1, 27, "Input"],
+Cell[7535, 228, 31, 0, 32, "Text"],
+Cell[7569, 230, 57, 1, 27, "Input"]
 }, Open  ]],
 
 Cell[CellGroupData[{
-Cell[24407, 779, 28, 0, 31, "Subsubtitle"],
-Cell[24438, 781, 62, 0, 32, "Text"],
-Cell[24503, 783, 57, 1, 27, "Input"],
-Cell[24563, 786, 57, 1, 27, "Input"],
-Cell[24623, 789, 51, 0, 32, "Text"],
-Cell[24677, 791, 73, 1, 27, "Input"],
-Cell[24753, 794, 43, 1, 27, "Input"],
-Cell[24799, 797, 40, 1, 27, "Input"],
-Cell[24842, 800, 163, 4, 32, "Text"],
-Cell[25008, 806, 47, 1, 27, "Input"],
-Cell[25058, 809, 53, 0, 32, "Text"],
-Cell[25114, 811, 65, 1, 27, "Input"],
-Cell[25182, 814, 40, 1, 27, "Input"],
-Cell[25225, 817, 33, 0, 32, "Text"],
-Cell[25261, 819, 74, 1, 27, "Input"],
-Cell[25338, 822, 57, 1, 27, "Input"],
-Cell[25398, 825, 36, 0, 32, "Text"],
-Cell[25437, 827, 78, 1, 27, "Input"],
-Cell[25518, 830, 40, 1, 27, "Input"],
-Cell[25561, 833, 49, 0, 32, "Text"],
-Cell[25613, 835, 53, 1, 27, "Input"],
-Cell[25669, 838, 40, 1, 27, "Input"],
-Cell[25712, 841, 62, 0, 32, "Text"],
-Cell[25777, 843, 65, 1, 27, "Input"],
-Cell[25845, 846, 57, 1, 27, "Input"],
-Cell[25905, 849, 51, 0, 32, "Text"],
-Cell[25959, 851, 106, 2, 27, "Input"],
-Cell[26068, 855, 57, 1, 27, "Input"],
-Cell[26128, 858, 38, 0, 32, "Text"],
-Cell[26169, 860, 175, 3, 27, "Input"],
-Cell[26347, 865, 59, 0, 32, "Text"],
-Cell[26409, 867, 56, 1, 27, "Input"],
-Cell[26468, 870, 41, 1, 27, "Input"],
-Cell[26512, 873, 92, 3, 32, "Text"],
-Cell[26607, 878, 56, 1, 27, "Input"],
-Cell[26666, 881, 41, 1, 27, "Input"],
-Cell[26710, 884, 76, 0, 32, "Text"],
-Cell[26789, 886, 89, 1, 27, "Input"],
-Cell[26881, 889, 42, 1, 27, "Input"],
-Cell[26926, 892, 30, 0, 32, "Text"],
-Cell[26959, 894, 66, 1, 27, "Input"],
-Cell[27028, 897, 56, 0, 32, "Text"],
-Cell[27087, 899, 50, 1, 27, "Input"],
-Cell[27140, 902, 41, 1, 27, "Input"],
-Cell[27184, 905, 82, 1, 27, "Input"],
-Cell[27269, 908, 44, 1, 27, "Input"],
-Cell[27316, 911, 41, 1, 27, "Input"],
-Cell[27360, 914, 116, 3, 32, "Text"],
-Cell[27479, 919, 121, 3, 27, "Input"],
-Cell[27603, 924, 45, 1, 27, "Input"],
-Cell[27651, 927, 42, 1, 27, "Input"],
-Cell[27696, 930, 48, 0, 32, "Text"],
-Cell[27747, 932, 68, 1, 27, "Input"],
-Cell[27818, 935, 45, 1, 27, "Input"],
-Cell[27866, 938, 98, 3, 32, "Text"],
-Cell[27967, 943, 50, 1, 27, "Input"],
-Cell[28020, 946, 104, 3, 32, "Text"],
-Cell[28127, 951, 68, 0, 32, "Text"],
-Cell[28198, 953, 131, 3, 27, "Input"],
-Cell[28332, 958, 53, 0, 32, "Text"],
-Cell[28388, 960, 73, 1, 27, "Input"],
-Cell[28464, 963, 52, 0, 32, "Text"],
-Cell[28519, 965, 50, 1, 27, "Input"],
-Cell[28572, 968, 90, 3, 32, "Text"],
-Cell[28665, 973, 152, 3, 32, "Text"],
-Cell[28820, 978, 82, 1, 27, "Input"],
-Cell[28905, 981, 66, 0, 32, "Text"]
+Cell[7663, 236, 24, 0, 51, "Subtitle"],
+Cell[7690, 238, 20, 0, 32, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[7747, 243, 24, 0, 51, "Subtitle"],
+Cell[7774, 245, 20, 0, 32, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[7831, 250, 25, 0, 51, "Subtitle"],
+Cell[7859, 252, 20, 0, 32, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[7916, 257, 43, 0, 51, "Subtitle"],
+Cell[7962, 259, 255, 6, 86, "Text"],
+Cell[8220, 267, 174, 4, 32, "Text"],
+Cell[8397, 273, 83, 3, 50, "Text"],
+Cell[8483, 278, 111, 4, 68, "Text"],
+Cell[8597, 284, 119, 5, 86, "Text"],
+Cell[8719, 291, 283, 7, 86, "Text"],
+Cell[9005, 300, 77, 3, 50, "Text"],
+Cell[9085, 305, 98, 4, 68, "Text"],
+Cell[9186, 311, 213, 6, 104, "Text"],
+Cell[9402, 319, 583, 23, 374, "Text"]
 }, Open  ]]
-}, Open  ]],
-
-Cell[CellGroupData[{
-Cell[29020, 987, 27, 0, 51, "Subtitle"],
-Cell[29050, 989, 54, 1, 27, "Input"],
-Cell[29107, 992, 281, 4, 43, "Input"],
-Cell[29391, 998, 54, 1, 27, "Input"]
-}, Closed]]
 }, Open  ]]
 }
 ]

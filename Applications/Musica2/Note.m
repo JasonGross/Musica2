@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
   2004-09-03  bch :  created
 *)
 
@@ -42,243 +43,84 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Note`",
   {
     "Musica2`Common`",
+    "Musica2`Sound`",
     "Musica2`Utils`"
     }
   ]
 
 Unprotect[
-  GetData,
-  GetDuration,
-  GetDurations,
-  GetInfo,
-  SetDuration,
-  SetDurations
   ];
 
-Unprotect[
-  Chord,
-  ChordOfSilence,
-  ChordQ,
-  ChordsToMelodies,
-  GetDurationCenter,
-  GetDurationGCD,
-  GetDurationLCM,
-  GetDurationMean,
-  GetDurationRange,
-  GetNoteCount,
-  GetPitchCodes,
-  GetPitchCodeCenter,
-  GetPitchCodeMean,
-  GetPitchCodeRange,
-  GetVelocitys,
-  GetVelocityCenter,
-  GetVelocityMean,
-  GetVelocityRange,
-  MelodiesToChords,
-  Melody,
-  MelodyOfSilence,
-  MelodyQ,
-  Note,
-  Scale,
-  ScaleStepToPitchCode,
-  ScaleQ,
-  SetPitchCode,
-  SetPitchCodes,
-  SetVelocity,
-  SetVelocitys,
-  Velocity
-  ];
-
-Note::todo = "Write help/usage-text's for the package."
-
-Chord::usage = "todo"
-ChordOfSilence::usage = "todo"
-ChordQ::usage = "todo"
-ChordsToMelodies::usage = "todo"
-GetDurationCenter::usage = "todo"
-GetDurationGCD::usage = "todo"
-GetDurationLCM::usage = "todo"
-GetDurationMean::usage = "todo"
-GetDurationRange::usage = "todo"
-GetNoteCount::usage = "todo"
-GetPitchCodes::usage = "todo"
-GetPitchCodeCenter::usage = "todo"
-GetPitchCodeMean::usage = "todo"
-GetPitchCodeRange::usage = "todo"
-GetVelocitys::usage = "todo"
-GetVelocityCenter::usage = "todo"
-GetVelocityMean::usage = "todo"
-GetVelocityRange::usage = "todo"
-MelodiesToChords::usage = "todo"
-Melody::usage = "todo"
-MelodyOfSilence::usage = "todo"
-MelodyQ::usage = "todo"
-Note::usage = "todo"<>ToDoString<>Note::todo
-Scale::usage = "todo"
-ScaleStepToPitchCode::usage = "todo"
-ScaleQ::usage = "todo"
-SetPitchCode::usage = "todo"
-SetPitchCodes::usage = "todo"
-SetVelocity::usage = "todo"
-SetVelocitys::usage = "todo"
-Velocity::usage = "todo"
+Chord::usage = ""
+ChordQ::usage = ""
+Counterpoint::usage = ""
+CounterpointQ::usage = ""
+Melody::usage = ""
+MelodyQ::usage = ""
+Note::usage = ""
+NoteQ::usage = ""
+PitchCode::usage = ""
+Progression::usage = ""
+ProgressionQ::usage = ""
+Velocity::usage = ""
 
 Begin["`Private`"]
 
-Format[n_Chord] := "\[SkeletonIndicator]Chord\[SkeletonIndicator]" /; ChordQ[n]
-Format[m_Melody] := "\[SkeletonIndicator]Melody\[SkeletonIndicator]" /; MelodyQ[m]
-Format[s_Scale] := "\[SkeletonIndicator]Scale\[SkeletonIndicator]" /; ScaleQ[s]
+(*****************)
 
-Options[Chord] =
-  {
-    Duration :> (Duration /. Options[Note]),
-    Velocity :> (Velocity /. Options[Note])
-    };
+DefineSup[Chord,Note];
+Options[Chord] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
+DataQ[Chord] = MatchQ[#, {({_,_}|{_?OptionQ,{_,_}})...}]&
+Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{_Integer,_Integer}],Note[{Duration/.Info[sup],sub}],Note[{Duration/.Info[sup],sub[[2]]}, Sequence @@ sub[[1]]]]];
+UnPack[Chord] = Function[{sub,opts},If[Info[sub]=={},Data[sub][[2]],{Info[sub],Data[sub][[2]]}]];
+UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,Duration->Duration[subs[[1]]]]];
 
-Options[Melody] =
-  {
-    Duration :> (Duration /. Options[Note]),
-    Velocity :> (Velocity /. Options[Note])
-    };
+DefineSup[Counterpoint,Melody];
+Options[Counterpoint] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 
-Options[Note] =
-  {
-    Duration -> 1,
-    Velocity -> 64
-    };
+DefineSup[Melody,Note];
+Options[Melody] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 
-Chord[dpv:{_,{{_,_},{_,_}...}}, opts___?OptionQ] := Chord[{opts},dpv](* TODO: remove any Duration and Velocity from opts *)
-Chord[pv:{{_,_},{_,_}...}, opts___?OptionQ] := Chord[{Duration/.{opts}/.Options[Chord],pv},opts]
-Chord[{d_,p:{__}}, opts___?OptionQ] := Chord[{d,{#,Velocity/.{opts}/.Options[Chord]}& /@ p},opts]
-Chord[p:{__}, opts___?OptionQ] := Chord[{Duration/.{opts}/.Options[Chord],p},opts]
+DefineSub[Note];
+DataQ[Note] = MatchQ[#, {_, {_,_}}]&
+Options[Note] = {Duration->1,Velocity->64}
 
-ChordOfSilence[n_Integer,opts___?OptionQ] := Chord[Table[DataNoValue,{n}],opts]
+DefineSup[Progression,Chord];
+Options[Progression] = {Duration:>(Duration/.Options[Note]),Velocity:>(Velocity/.Options[Note])}
 
-ChordQ[expr_] := MatchQ[expr,Chord[_?OptionQ,{_,{{_,_}...}}]]
+(*****************)
 
-ChordsToMelodies[c:{_Chord,_Chord...}] := Melody/@SeqOfParToParOfSeq[#[[2]]&/@c]
+Chord /: Duration[x_Chord] := Duration /. Info[x]
+Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x]
+Melody /: Duration[x_Melody] := Total[Duration /@ x]
+Note /: Duration[x_Note] := Data[x][[1]]
+Progression /: Duration[x_Progression] := Total[Duration /@ x]
 
-GetData[c_?ChordQ] := c[[2]]
-GetData[m_?MelodyQ] := m[[2]]
+Note[p_, opts___?OptionQ] := Note[{Duration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
 
-GetDuration[c_?ChordQ] := c[[2,1]]
-GetDuration[m_?MelodyQ] := Total[GetDurations[m]]
-GetDurations[m_?MelodyQ] := #[[1]]& /@ m[[2]]
-GetDurationCenter[x_] := Mean[GetDurationRange[x]]
-GetDurationGCD[x_] := GCD@@Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]
-GetDurationLCM[x_] := LCM@@Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]
-GetDurationMean[x_] := Mean[Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]]
-GetDurationRange[x_] := {Min[#],Max[#]}&[Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]]
+Note /: PitchCode[x_Note] := Data[x][[2,1]]
 
-GetInfo[c_?ChordQ] := c[[1]]
-GetInfo[m_?MelodyQ] := m[[1]]
+p2f = Function[p, 220*2^((p - 57)/12)];
+v2a = Function[v, v/127];
+zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]] &];
 
-GetNoteCount[c_?ChordQ] := Length[c[[2,2]]]
-GetNoteCount[m_?MelodyQ] := Length[m[[2]]]
+Melody /: Show[x_Melody] := Show[Snippet[x]] /; MelodyQ[x]
 
-GetPitchCodes[c_?ChordQ] := #[[1]]& /@ c[[2,2]]
-GetPitchCodes[m_?MelodyQ] := #[[2,1]]& /@ m[[2]]
-GetPitchCodes[s_?ScaleQ] := s[[2,2]]
-GetPitchCodeCenter[x_] := Mean[GetPitchCodeRange[x]]
-GetPitchCodeMean[x_] := Mean[Cases[Flatten[GetPitchCodes[x]],p$_/;(!DataNoValueQ[p$])]]
-GetPitchCodeRange[x_] := {Min[#],Max[#]}&[Cases[Flatten[GetPitchCodes[x]],p$_/;(!DataNoValueQ[p$])]]
+Melody /: Snippet[x_Melody, opts___?OptionQ] :=
+  Module[{v,f,a,sr=SampleRate/.{opts}/.Options[Snippet]},
+    v = N[Data[x] /. {DataNoValue -> 0}];
+    f = MakeNestedIfs[{#[[1]]sr, p2f[#[[2, 1]]]} & /@ v];
+    a = MakeNestedIfs[{#[[1]]sr, v2a[#[[2, 2]]]} & /@ v];
+    Snippet[{Function[t, zin[f[t], a[t], sr][t]],Duration[x]sr,sr}]
+    ] /; MelodyQ[x]
 
-GetVelocitys[c_?ChordQ] := #[[2]]& /@ c[[2,2]]
-GetVelocitys[m_?MelodyQ] := #[[2,2]]& /@ m[[2]]
-GetVelocityCenter[x_] := Mean[GetVelocityRange[x]]
-GetVelocityMean[x_] := Mean[Cases[Flatten[GetVelocitys[x]],p$_/;(!DataNoValueQ[p$])]]
-GetVelocityRange[x_] := {Min[#],Max[#]}&[Cases[Flatten[GetVelocitys[x]],p$_/;(!DataNoValueQ[p$])]]
+Counterpoint /: Sound[x_Counterpoint, opts___?OptionQ] := Sound[Snippet[#,opts]& /@ x] /; CounterpointQ[x]
 
-MelodiesToChords[m:{_Melody,_Melody...}] := Chord/@ParOfSeqToSeqOfPar[#[[2]]&/@m]
-
-Melody[dpv:{{_,{_,_}}...}, opts___?OptionQ] := Melody[{opts},dpv](* TODO: remove any Duration and Velocity from opts *)
-Melody[dp:{{_,_}...}, opts___?OptionQ] := Melody[{#[[1]],{#[[2]],Velocity/.{opts}/.Options[Melody]}}& /@ dp,opts]
-Melody[p:{__}, opts___?OptionQ] := Melody[{Duration/.{opts}/.Options[Melody],#}& /@ p,opts]
-
-MelodyOfSilence[n_Integer, opts___?OptionQ] := Melody[Table[DataNoValue,{n}],opts]
-
-MelodyQ[expr_] := MatchQ[expr,Melody[_?OptionQ,{{_,{_,_}}...}]]
-
-Scale[opts___?OptionQ] := Scale[{12,{0,2,4,5,7,9,11}},opts]
-Scale[p:{__Integer}, opts___?OptionQ] := Scale[{12,p},opts]
-Scale[op:{_Integer,{__Integer}}, opts___?OptionQ] := Scale[{opts},op]
-
-ScaleStepToPitchCode[ss_Integer,s_?ScaleQ] :=
-  Module[{scalesize=Length[s[[2,2]]]},
-    Floor[ss/scalesize]*s[[2,1]] + s[[2,2,Mod[ss,scalesize]+1]]
-    ]
-
-ScaleStepToPitchCode[x_?((ChordQ[#]||MelodyQ[#])&),s_?ScaleQ] :=
-  SetPitchCodes[x,
-    If[DataNoValueQ[#],#,
-      If[DataTieQ[#],
-        DataTie[ScaleStepToPitchCode[DataUnTie[#],s]],
-        ScaleStepToPitchCode[#,s]
-        ]
-      ]& /@ GetPitchCodes[x]
-    ]
-
-ScaleQ[expr_] := MatchQ[expr,Scale[_?OptionQ,{_Integer,{__Integer}}]]
-
-SetDuration[c_?ChordQ, d_] := ReplacePart[c,d,{2,1}]
-SetDuration[m_?MelodyQ, f_] := Module[{r=m}, Do[r[[2,i,1]] = f[r[[2,i,1]],i],{i,GetNoteCount[m]}]; r]
-SetDurations[m_?MelodyQ, d_List] := Module[{r=m}, Do[r[[2,i,1]] = d[[i]], {i,GetNoteCount[m]}]; r] /; Length[d]==GetNoteCount[m]
-
-SetPitchCode[c_?ChordQ, f_] := Module[{r=c}, Do[r[[2,2,i,1]] = f[r[[2,2,i,1]],i], {i,GetNoteCount[c]}]; r]
-SetPitchCode[m_?MelodyQ, f_] := Module[{r=m}, Do[r[[2,i,2,1]] = f[r[[2,i,2,1]],i], {i,GetNoteCount[m]}]; r]
-
-SetPitchCodes[c_?ChordQ, p_List] := Module[{r=c}, Do[r[[2,2,i,1]] = p[[i]], {i,GetNoteCount[c]}]; r] /; Length[p]==GetNoteCount[c]
-SetPitchCodes[m_?MelodyQ, p_List] := Module[{r=m}, Do[r[[2,i,2,1]] = p[[i]], {i,GetNoteCount[m]}]; r] /; Length[p]==GetNoteCount[m]
-
-SetVelocity[c_?ChordQ, f_] := Module[{r=c}, Do[r[[2,2,i,2]] = f[r[[2,2,i,2]],i], {i,GetNoteCount[c]}]; r]
-SetVelocity[m_?MelodyQ, f_] := Module[{r=m}, Do[r[[2,i,2,2]] = f[r[[2,i,2,2]],i], {i,GetNoteCount[m]}]; r]
-
-SetVelocitys[c_?ChordQ, v_List] := Module[{r=c}, Do[r[[2,2,i,2]] = v[[i]], {i,GetNoteCount[c]}]; r] /; Length[v]==GetNoteCount[c]
-SetVelocitys[m_?MelodyQ, v_List] := Module[{r=m}, Do[r[[2,i,2,2]] = v[[i]], {i,GetNoteCount[m]}]; r] /; Length[v]==GetNoteCount[m]
+Note /: Velocity[x_Note] := Data[x][[2,2]]
 
 End[]
 
 Protect[
-  GetData,
-  GetDuration,
-  GetDurations,
-  GetInfo,
-  SetDuration,
-  SetDurations
-  ];
-
-Protect[
-  Chord,
-  ChordOfSilence,
-  ChordQ,
-  ChordsToMelodies,
-  GetDurationCenter,
-  GetDurationGCD,
-  GetDurationLCM,
-  GetDurationMean,
-  GetDurationRange,
-  GetNoteCount,
-  GetPitchCodes,
-  GetPitchCodeCenter,
-  GetPitchCodeMean,
-  GetPitchCodeRange,
-  GetVelocitys,
-  GetVelocityCenter,
-  GetVelocityMean,
-  GetVelocityRange,
-  MelodiesToChords,
-  Melody,
-  MelodyOfSilence,
-  MelodyQ,
-  Note,
-  Scale,
-  ScaleStepToPitchCode,
-  ScaleQ,
-  SetPitchCode,
-  SetPitchCodes,
-  SetVelocity,
-  SetVelocitys,
-  Velocity
   ];
 
 EndPackage[]

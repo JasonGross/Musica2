@@ -1,6 +1,7 @@
 :Title: changes.txt
 
-:Summary: changes-file for Musica2
+:Summary: "changes"-file for BIG changes in Musica2.
+          For small changes see "history" in each file.
 
 :Author: Bo C. Herlin
 
@@ -8,3 +9,7 @@
 
 ------------------------------------------------------------
 
+  2004-09-16  bch :  This is a major rewrite. Started using up-values and a kind
+                     of template for types. Not every feature from the previous
+                     version is present, but this is so much better and will
+                     give you a hint where Musica2 is going.

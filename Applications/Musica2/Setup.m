@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
+                     removed MidiPlay from the list of pkg's
   2004-09-13  bch :  removed EventList from the list of pkg's
   2004-09-03  bch :  added Note and Common to the list of pkg's
   2004-08-27  bch :  added ToDo function
@@ -52,64 +54,20 @@ BeginPackage["Musica2`Setup`",
   ]
 
 Unprotect[
-  CalcMidiStateRoutes,
   ClearInitDotEm,
   MakeInitDotEm,
   ToDo
   ];
 
-CalcMidiStateRoutes::usage = "CalcMidiStateRoutes[m_Midi, opts___] takes a Midi-object as an argument and recalculates MidiStateRoutes. The option Verbose->True plots a graph along with some timings. The result returned by CalcMidiStateRoutes is the average time it takes for a change of state for the Midi-object."
 ClearInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
 MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
 ToDo::usage = "ToDo[] prints what todo ;-)"
 
 Begin["`Private`"]
 
-SW[e_, m$_,pr_] :=
-  Module[{r = e, p, q, w, t},
-    p = Position[MidiStatesExpanded, MidiGetState[m$]][[1, 1]];
-    w = Position[e, #][[1, 1]] & /@ Cases[e, {{p, _}, \[Infinity]}];
-    Scan[If[r[[#, 2]] == \[Infinity],
-      q = r[[#, 1, 2]];
-      t = Timing[MidiSetStateLow[m$, MidiStatesExpanded[[q]]]];
-      r[[#, 2]] = t[[1, 1]];
-      If[pr,Print[r[[#]]]];
-      r = SW[r, t[[2]],pr];
-      ] &, w];
-    r
-    ]
-
-COP[e_, p_] :=
-  Module[{pe = Transpose[{Drop[p, -1], Drop[p, 1]}]},
-    Total[Cases[e, {s$_, c$_} /; MemberQ[pe, s$] -> c$]]
-    ]
-
-CalcMidiStateRoutes[m_Midi, opts___] :=
-  Module[{e, g,c,p,sc,pr=Verbose/.{opts}/.{Verbose->False}},
-    Unprotect[MidiStateRoutes];
-    e = {Position[MidiStatesExpanded, #][[1, 1]] & /@ #, \[Infinity]} & /@ MidiStatePathsExpanded;
-    e = SW[e, m, pr];
-    If[MemberQ[e, {{_, _}, \[Infinity]}],
-      Print["not connected?"];
-      Print[ColumnForm[Cases[e, {{_, _}, \[Infinity]}]]];
-      ];
-    g = AddEdges[EmptyGraph[Length[MidiStatesExpanded], Type -> Directed], ReplacePart[#, EdgeWeight -> #[[2]], {2}] & /@ e];
-    If[pr,ShowGraph[SetVertexLabels[g,StringJoin[(StringTake[ToString[#[[2]]], {5}]) & /@ #] & /@ MidiStatesExpanded], VertexNumber -> True]];
-    sc=Length[MidiStatesExpanded];
-    c=0;
-    MidiStateRoutes = Table[
-      p=ShortestPath[g, f, t];
-      If[1<Length[p],c+=COP[e,p]];
-      p,
-      {f, sc},{t, sc}
-      ];
-    Protect[MidiStateRoutes];
-    c/(#^2-#)&[sc]
-    ]
-
 fn="Musica2/Applications/Musica2/Kernel/init.m";
 pkg="Musica2";
-pkgs={"Common","Midi","MidiPlay","Note","Setup","Sound","Utils"};
+pkgs={"Common","Midi","Note","Setup","Sound","Utils"};
 
 ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
 ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]
@@ -161,7 +119,6 @@ ToDo[pkg_, pkgs_] :=
 End[]
 
 Protect[
-  CalcMidiStateRoutes,
   ClearInitDotEm,
   MakeInitDotEm,
   ToDo

@@ -10,10 +10,9 @@
 
 Important todo's:
 
-Introduce a Track- and an Event-object.
+Add the features to this new major rewrite that where present in the previous version.
 
 ------------------------------------------------------------
 
 Possible todo's:
 
-Get rid of all Midi- and Sound- prefix's.
