@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-11-28  bch :  added EventTypeKeySignature and EventTypeTimeSignature
   2004-10-06  bch :  Tidy[Track] now also converts all NoteOn's with zero velocity till NoteOff's
                      Counterpoint[Track] calls Tidy[Track]
@@ -192,6 +193,15 @@ Tidy[TempoTrack] = Module[{r = #},
 
 Midi  /: Chord[x_Midi] := Chord[Counterpoint[x]]
 Track /: Chord[x_Track] := Chord[Counterpoint[x]]
+
+Convert[Second,Tick,x_Midi] := TempoFunction[TempoTrack[x], True, TPQ->TPQ[x], QPM->QPM[x]]
+Convert[Tick,Second,x_Midi] := TempoFunction[TempoTrack[x], False, TPQ->TPQ[x], QPM->QPM[x]]
+
+Convert[Second,Tick,x_TempoTrack] := TempoFunction[x, True]
+Convert[Tick,Second,x_TempoTrack] := TempoFunction[x, False]
+
+Convert[Second,Tick,x_?NumberQ] := TempoFunction[TempoTrack[Tempo[{0,x}]], True]
+Convert[Tick,Second,x_?NumberQ] := TempoFunction[TempoTrack[Tempo[{0,x}]], False]
 
 Convert[m:{__Midi}, opts___?OptionQ] :=
   Module[{o},
@@ -458,6 +468,7 @@ TempoFunction[x_TempoTrack, inv:(True|False), opts___?OptionQ] := (* tick->sec *
       u = Data /@ Tidy[x],
       k, sa, sd, ta, td, f
       },
+    If[Length[u]==0 || u[[1,1]] != 0, u = Prepend[u, {0, QPM /. {opts} /. Options[Midi]}]];
     (* convert to TPM *)
     u = {#[[1]], tpq#[[2]]} & /@ u;
     (* convert to TPS *)

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Naming` *)
 
 (* :History:
+  2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-10-26  bch :  created
 *)
 
@@ -44,6 +45,10 @@ BeginPackage["Musica2`Naming`",
     "Musica2`Utils`"
     }
   ]
+
+Unprotect[
+  Convert
+  ];
 
 Unprotect[
   ChordNaming,
@@ -82,6 +87,16 @@ SharpSymbols::usage = "todo"
 Begin["`Private`"]
 
 FlatSymbols={{"\[Flat]","b"}};
+
+Convert[{PitchCode},String] := Convert[{PitchCode},String,ChordNaming]
+Convert[String,{PitchCode}] := Convert[String,{PitchCode},ChordNaming]
+Convert[PitchCode,String] := Convert[PitchCode,String,NoteNaming]
+Convert[String,PitchCode] := Convert[String,PitchCode,NoteNaming]
+
+Convert[{PitchCode},String,x_HelixChordNaming] := ChordNamingFunction[x, False]
+Convert[String,{PitchCode},x_HelixChordNaming] := ChordNamingFunction[x, True]
+Convert[PitchCode,String,x_HelixNoteNaming] := NoteNamingFunction[x, False]
+Convert[String,PitchCode,x_HelixNoteNaming] := NoteNamingFunction[x, True]
 
 HelixChordNaming[] := HelixChordNaming[{Data[HelixNoteNaming[]], {
   {{"m-5"},      {0, 3, 6}},
@@ -262,6 +277,10 @@ PrepareString[str_String] := PrepareString[str,FlatSymbols,SharpSymbols]
 SharpSymbols={{"\[Sharp]","#"},{"x"}};
 
 End[]
+
+Protect[
+  Convert
+  ];
 
 Protect[
   ChordNaming,

@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Common` *)
 
 (* :History:
+  2004-11-29  bch :  added Time
+  2004-11-28  bch :  moved PitchCode from Note.m
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-22  bch :  added Play2
   2004-09-19  bch :  moved DefineSu(b|p) to Type.m
@@ -51,21 +53,27 @@ Unprotect[
   Content,
   Convert,
   Duration,
+  Frequency,
   Mix,
   Octave,
   Par,
+  PitchCode,
   Play2,
-  Seq
+  Seq,
+  Time
   ];
 
-Content::usage = ""
-Convert::usage = ""
-Duration::usage = ""
-Mix::usage = ""
-Octave::usage = ""
-Par::usage = ""
-Play2::usage = ""
-Seq::usage = ""
+Content::usage = "todo"
+Convert::usage = "todo"
+Duration::usage = "todo"
+Frequency::usage = "todo"
+Mix::usage = "todo"
+Octave::usage = "todo"
+Par::usage = "todo"
+PitchCode::usage = "todo"
+Play2::usage = "todo"
+Seq::usage = "todo"
+Time::usage = "todo"
 
 Begin["`Private`"]
 
@@ -75,11 +83,14 @@ Protect[
   Content,
   Convert,
   Duration,
+  Frequency,
   Mix,
   Octave,
   Par,
+  PitchCode,
   Play2,
-  Seq
+  Seq,
+  Time
   ];
 
 EndPackage[]

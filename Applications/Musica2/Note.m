@@ -32,6 +32,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2004-11-29  bch :  added use of Convert for getting ConversionFunctions
+                     added ScaleStep
+  2004-11-28  bch :  moved PitchCode to Common.m
   2004-11-27  bch :  changed Bass in FigBass to be a list of integers
   2004-11-20  bch :  added FigBass,Intervals and ThirdStack
                      added use of Tuning
@@ -66,8 +69,10 @@ BeginPackage["Musica2`Note`",
 
 Unprotect[
   Content,
+  Convert,
   Octave,
   Par,
+  PitchCode,
   Seq
   ];
 
@@ -99,12 +104,12 @@ Unprotect[
   NoteTieQ,
   NoteQ,
   Octave,
-  PitchCode,
   Progression,
   ProgressionQ,
   Scale,
   ScaleFunction,
   ScaleQ,
+  ScaleStep,
   ThirdStack,
   ThirdStackQ,
   Velocity
@@ -134,6 +139,7 @@ NoteFunction::usage = "todo"
 NotePlot::usage = "todo"
 NoteRestQ::usage = "todo"
 NoteTieQ::usage = "todo"
+ScaleStep::usage = "todo"
 
 Begin["`Private`"]
 
@@ -183,6 +189,12 @@ Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x]
 Melody       /: Duration[x_Melody]       := Total[NoteDuration /@ x]
 Note         /: Duration[x_Note]         := NoteDuration[x]
 Progression  /: Duration[x_Progression]  := Total[Duration /@ x]
+
+Convert[Time,PitchCode,x_Melody] := NoteFunction[x, PitchCode]
+Convert[Time,Velocity,x_Melody] := NoteFunction[x, Velocity]
+
+Convert[ScaleStep,PitchCode,x_Scale] := ScaleFunction[x]
+Convert[PitchCode,ScaleStep,x_Scale] := ScaleFunction[Inverse[x]]
 
 FigBass[x_Chord,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_Intervals,  opts___?OptionQ] := FigBass[PitchCode[x],opts]
@@ -402,8 +414,10 @@ End[]
 
 Protect[
   Content,
+  Convert,
   Octave,
   Par,
+  PitchCode,
   Seq
   ];
 
@@ -435,12 +449,12 @@ Protect[
   NoteTieQ,
   NoteQ,
   Octave,
-  PitchCode,
   Progression,
   ProgressionQ,
   Scale,
   ScaleFunction,
   ScaleQ,
+  ScaleStep,
   ThirdStack,
   ThirdStackQ,
   Velocity

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Tuning` *)
 
 (* :History:
+  2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-10-09  bch :  created
 *)
 
@@ -38,10 +39,15 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Tuning`",
   {
+    "Musica2`Common`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
+
+Unprotect[
+  Convert
+  ];
 
 Unprotect[
   EqualTemperament,
@@ -64,6 +70,12 @@ TuningFunction::usage = "todo"
 
 Begin["`Private`"]
 
+Convert[PitchCode,Frequency] := Convert[PitchCode,Frequency,Tuning]
+Convert[Frequency,PitchCode] := Convert[Frequency,PitchCode,Tuning]
+
+Convert[PitchCode,Frequency,x_EqualTemperament] := Function[p,FrequencyRef[x]*FrequencyOctave[x]^((p - PitchCodeRef[x])/PitchCodeOctave[x])]
+Convert[Frequency,PitchCode,x_EqualTemperament] := Function[f,PitchCodeOctave[x]*Log[FrequencyOctave[x],f/FrequencyRef[x]]+PitchCodeRef[x]]
+
 EqualTemperament[] := EqualTemperament[{{440,2},{69,12}}]
 EqualTemperament[o_?OptionQ, d_?(DataQ[EqualTemperament])][p_] := TuningFunction[EqualTemperament[o,d]][p]
 
@@ -74,6 +86,10 @@ Tuning := EqualTemperament[]
 TuningFunction[x_] := TuningFunction[x, False]
 
 End[]
+
+Protect[
+  Convert
+  ];
 
 Protect[
   EqualTemperament,

@@ -46,6 +46,7 @@ BeginPackage["Musica2`Spectrum`",
   ]
 
 Unprotect[
+  Frequency,
   Mix
   ];
 
@@ -160,6 +161,7 @@ Tone[f_, opts___?OptionQ] := Tone[{f,1},opts]
 End[]
 
 Protect[
+  Frequency,
   Mix
   ];
 

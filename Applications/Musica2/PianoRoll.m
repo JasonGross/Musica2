@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`PianoRoll` *)
 
 (* :History:
+  2004-11-29  bch :  bugfix
   2004-10-26  bch :  created
 *)
 
@@ -148,13 +149,13 @@ PianoRollNotes[n:{{___Note}...}, mintime_, maxtime_, minnote_, maxnote_] :=
 
 PianoRollMeasures[m_Midi, mintime_, maxtime_, minnote_, maxnote_, curtpq_] :=
   Module[{
-      t
+      t,r
       },
     t = {#[[1]], #[[2, 2, 1]] 4 curtpq/2^#[[2, 2, 2]], 4 curtpq/2^#[[2, 2, 2]] }& /@
         Select[Data /@ Event[m[[1]]], MatchQ[#, {_, {EventTypeTimeSignature, {_, _, _, _}}}] &];
     t = MapThread[{##} &, {Partition[Append[#[[1]] & /@ t, \[Infinity]], 2, 1], Drop[#, 1] & /@ t}];
-    If[t=={},t={{0,Infinity},{4curtpq,curtpq}}];
-    Flatten[
+    If[t=={},t={{{0,Infinity},{4curtpq,curtpq}}}];
+    r = Flatten[
       Table[
         If[Mod[i, #[[2, 1]]] == 0,
           Line[{{i, minnote}, {i, maxnote + 1}}],(* v - measure lines *)
@@ -163,19 +164,20 @@ PianoRollMeasures[m_Midi, mintime_, maxtime_, minnote_, maxnote_, curtpq_] :=
         {i, Max[mintime, #[[1, 1]]], Min[maxtime, #[[1, 2]]], #[[2, 2]]}
         ]& /@ t,
       1
-      ]
+      ];
+    r
     ]
 
 PianoRollTonics[m_Midi, mintime_, maxtime_, minnote_, maxnote_] :=
   Module[{
-      t
+      t,r
       },
     t = {#[[1]], If[128 <= #[[2, 2, 1]], #[[2, 2, 1]] - 256, #[[2, 2, 1]]], #[[2, 2, 2]] }& /@
         Select[Data /@ Event[m[[1]]], MatchQ[#, {_, {EventTypeKeySignature, {__}}}] &];
     t = MapThread[{##} &, {Partition[Append[#[[1]] & /@ t, \[Infinity]], 2, 1], Drop[#, 1] & /@ t}];
     t = {#[[1]], Mod[#[[2, 1]]*7 - #[[2, 2]]*3, 12]} & /@ t;
-    If[t=={},t={{0,Infinity},0}];
-    {
+    If[t=={},t={{{0,Infinity},0}}];
+    r = {
       RGBColor[1, .6, .6],
       Flatten[
         Table[
@@ -184,7 +186,8 @@ PianoRollTonics[m_Midi, mintime_, maxtime_, minnote_, maxnote_] :=
           ]& /@ t,
         1
         ]
-      }
+      };
+    r
     ]
 
 PianoRollNoteLines[m_Midi, mintime_, maxtime_, minnote_, maxnote_] :=
