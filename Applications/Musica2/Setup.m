@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2005-02-12  bch :  renamed DurVal.m to ValueObject.m
   2005-01-25  bch :  renamed pkgs to Packages and made it public
   2005-01-24  bch :  added DurVal to the list of pkg's
   2005-01-15  bch :  added Test to the list of pkg's
@@ -81,7 +82,7 @@ Begin["`Private`"]
 
 fn="Musica2/Applications/Musica2/Kernel/init.m";
 pkg="Musica2";
-Packages={"Common","DurVal","Instrument","Midi","Naming","Note","ObjectType","PianoRoll","Setup","Sound","Spectrum","Test","Tuning","Utils"};
+Packages={"Common","Instrument","Midi","Naming","Note","ObjectType","PianoRoll","Setup","Sound","Spectrum","Test","Tuning","Utils","ValueObject"};
 
 ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
 ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]

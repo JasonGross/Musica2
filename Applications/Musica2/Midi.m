@@ -29,6 +29,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
+  2005-02-09  bch :  moved the DurVal-code to DurVal.m and commented it out
+  2005-02-08  bch :  bugfix, and changed error-handling in Import/Export
   2005-01-31  bch :  moved TimedNote to doc as an example
                      bugfix in TotalDuration[x_Track]
   2005-01-31  bch :  added some EventType* constants
@@ -94,7 +97,6 @@ Module[
     p = {
       "Utilities`BinaryFiles`",
       "Musica2`Common`",
-      "Musica2`DurVal`",
       "Musica2`Note`",
       "Musica2`ObjectType`",
       "Musica2`Sound`",
@@ -194,120 +196,91 @@ TPQ::usage = "todo"
 
 Begin["`Private`"]
 
-(*****************)
+(* Event +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
 
-Options[Midi] = {QPM -> 120,FileFormat -> 1,TimeUnit -> Tick,TPQ -> 960};
+(* Event modifications and interceptions ****************************************************)
 
-Tidy[Midi] = Module[{r = #,eot = TotalDuration[#]},
-  r = Append[#,Event[{eot,EOT}]]& /@ r;
-  r = Tidy /@ r;
-  r
-  ]&
+(* Event constructors ***********************************************************************)
 
-Tidy[Track] = Module[{r = #,eot},
-  r = Sort[r,{EventTime,EventType}];
-  r = Event[r];
-  eot = EventTime[r[[-1]]];
-  r = Select[r,(EventType[#]=!=EventTypeEOT)&];
-  r = Append[r,Event[{eot,EOT}]];
-  (* todo rewrite next line *)
-  r = (
-    If[MatchQ[EventType[#],{EventTypeNoteOn,_}] && EventData[#][[2]]===0,
-      ReplacePart[#,{EventTypeNoteOff,EventType[#][[2]]},EventType],
-      #
+Event[x_Chord]                  := Event[Midi[x]]
+Event[x_Counterpoint]           := Event[Midi[x]]
+Event[x_Melody]                 := Event[Track[x]]
+Event[x_Note]                   := Event[Track[x]]
+Event[x_Progression]            := Event[Midi[x]]
+Event[x_Tempo, opts___?OptionQ] := Event[{#[[1]],{EventTypeTempo,{IntegerPart[#/65536],Mod[IntegerPart[#/256],256],Mod[#,256]}&[60000000/#[[2]]]}},opts]&[Data[x]]
+
+(* Event reverse constructors ***************************************************************)
+
+(* Event common functions *******************************************************************)
+
+(* Event unique functions *******************************************************************)
+
+EventTypeEOT = {EventTypeMeta,16^^2F};
+EventTypeMeta = 16^^FF;
+EventTypeNoteOff = 0;
+EventTypeNoteOn = 1;
+EventTypeKeyPressure = 2;
+EventTypeControlChange = 3;
+EventTypeProgramChange = 4;
+EventTypeChannelPressure = 5;
+EventTypePitchBend = 6;
+EventTypeSysX0 = 16^^F0;
+EventTypeSysX7 = 16^^F7;
+EventTypeKeySignature = {EventTypeMeta,16^^59};
+EventTypeTempo = {EventTypeMeta,16^^51};
+EventTypeTimeSignature = {EventTypeMeta,16^^58};
+
+EOT = {EventTypeEOT,{}};
+
+(* Event tests ******************************************************************************)
+
+Event /: TestSuite[Event] = Join[TestSuite[Event],{
+  }];
+
+(* Event -----------------------------------------------------------------------------------*)
+
+(* Track +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* Track modifications and interceptions *)
+
+(* Track constructors ***********************************************************************)
+
+Track[{DataNoValue, d_}] := Track[Event[{d, {EventTypeEOT, {}}}]]
+
+Track[x_Chord]                         := Track[Counterpoint[x]]
+Track[x_Counterpoint, opts___?OptionQ] := Track /@ x
+Track[x_Melody, opts___?OptionQ]       :=
+  Module[{d,t=0,c=MidiChannel/.{opts}/.Opts[x]/.{MidiChannel->0}},
+    Track[
+      If[#==={},#,#[[1]]]&
+        [
+          Reap[
+            Scan[(
+              d = Duration[#];
+              p = PitchCode[#];
+              v = Velocity[#];
+              If[!(DataNoValueQ[p] || DataNoValueQ[v]),
+                Sow[Event[{t  ,{{EventTypeNoteOn,c}, {p,v}}}]];
+                Sow[Event[{t+d,{{EventTypeNoteOff,c},{p,v}}}]];
+                ];
+              t += d;
+              )&,
+              x
+              ];
+            ][[2]]
+          ]
+      ,
+      Sequence@@RemOpts[{opts},MidiChannel]
       ]
-    )& /@ r;
-  r = Track[r, Sequence @@ Opts[#]];
-  r
-  ]&
-
-Tidy[TempoTrack] = Module[{r = #},
-  r = Sort[r,TempoTime];
-  r
-  ]&
-
-(*****************)
-
-Track[x_DurValType?(MatchQ[Data[#], {{EventTypeNoteOn, _}, _}] &)] :=
-  Module[
-    {
-      t = ValueType[x],
-      d = Partition[DeltasToValues[Duration[ValueList[x]]], 2, 1],
-      v = Value[ValueList[x]],
-      dv
-      },
-    dv = Transpose[{d, v}];
-    dv = Select[dv, DataPlainValueQ[#[[2]]] &];
-    dv = Flatten[
-      {
-        {#[[1, 1]], {{EventTypeNoteOn, t[[2]]}, #[[2]]}},
-        {#[[1, 2]], {{EventTypeNoteOff, t[[2]]}, #[[2]]}}
-        } & /@ dv,
-      1];
-    dv = Append[dv, {d[[-1, 2]], {EventTypeEOT, {}}}];
-    Track[Event /@ dv]
     ]
+Track[x_Note]                          := Track[Melody[x]]
+Track[x_Progression]                   := Track[Counterpoint[x]]
+Track[x_TempoTrack, opts___?OptionQ]   := Track[Event/@x]
 
-DurValType /: Track[x_DurValType] :=
-  Module[
-    {
-      t = ValueType[x],
-      d = Partition[DeltasToValues[Duration[ValueList[x]]], 2, 1],
-      v = Value[ValueList[x]],
-      dv
-      },
-    dv = Transpose[{d, v}];
-    dv = Select[dv, DataPlainValueQ[#[[2]]] &];
-    dv = {#[[1, 1]], {t, #[[2]]}} & /@ dv;
-    dv = Append[dv, {d[[-1, 2]], {EventTypeEOT, {}}}];
-    Track[Event /@ dv]
-    ]
+(* Track reverse constructors ***************************************************************)
 
-Track[x : {__DurValType}] := Tidy[Mix[Track /@ x]]
-
-Midi[x : {{__DurValType}..}, opts___?OptionQ] := Midi[Track /@ x, opts]
-
-Track /: DurValType[x_Track, t_] := DurValType /@ Melody[x] /; (t === EventTypeNoteOn)
-
-Midi /: DurValType[x_Midi, t_] := DurValType /@ Melody[x] /; (t === EventTypeNoteOn)
-
-Track /: DurValType[x_Track, t_] :=
-  Module[{y = Tidy[x], z, d, v},
-    z = Data /@ Event[Select[y, MatchQ[Data[#][[2]], t] &]];
-    If[z === {} || z[[1, 1]] =!= 0,
-      z = Prepend[z,
-        {0, {t[[1]], If[z =!= {}, DataNoValue[z[[1, 2, 2]]], DataNoValue]}}
-        ]
-      ];
-    {d, v} = Transpose[z];
-    d = ValuesToDeltas[Append[d, y[[-1, EventTime]]]];
-    v = #[[2]] & /@ v;
-    DurValType[{t[[1]], DurValList[Transpose[{d, v}]]}]
-    ] /; (t =!= EventTypeNoteOn)
-
-Track /: DurValType[x_Track] :=
-  Module[{t = Union[EventType /@ Event[x]]},
-    DurValType[x, {#,_}] & /@ t
-    ]
-
-Midi /: DurValType[x_Midi] := DurValType /@ Track[x]
-
-(*****************)
-
-
-Midi  /: Chord[x_Midi] := Chord[Counterpoint[x]]
 Track /: Chord[x_Track] := Chord[Counterpoint[x]]
 
-Convert[Second,Tick,x_Midi] := TempoFunction[TempoTrack[x], True, TPQ->TPQ[x], QPM->QPM[x]]
-Convert[Tick,Second,x_Midi] := TempoFunction[TempoTrack[x], False, TPQ->TPQ[x], QPM->QPM[x]]
-
-Convert[Second,Tick,x_TempoTrack] := TempoFunction[x, True]
-Convert[Tick,Second,x_TempoTrack] := TempoFunction[x, False]
-
-Convert[Second,Tick,x_?NumberQ] := TempoFunction[TempoTrack[Tempo[{0,x}]], True]
-Convert[Tick,Second,x_?NumberQ] := TempoFunction[TempoTrack[Tempo[{0,x}]], False]
-
-Midi  /: Counterpoint[x_Midi,rtf_:(0&)] := Counterpoint[Select[Flatten[Melody[Counterpoint[#,rtf]]& /@ x],(0<Length[#])&]]
 Track /: Counterpoint[x_Track,rtf_:(0&)] := (* todo: parameters of rtf are not set yet *)
   Module[{t=Tidy[x],on,off,n},
     (* get all note-on's as {{ch,p,time,v}...} *)
@@ -372,35 +345,155 @@ Track /: Counterpoint[x_Track,rtf_:(0&)] := (* todo: parameters of rtf are not s
     Counterpoint[Melody[#[[2]],MidiChannel->#[[1]]]& /@ n]
     ]
 
-Midi  /: TotalDuration[x_Midi]  := Max[TotalDuration /@ x]
+Track /: Melody[x_Track] := Melody[Counterpoint[x]]
+Track /: Note[x_Track] := Note[Counterpoint[x]]
+Track /: Progression[x_Track] := Progression[Counterpoint[x]]
+Track /: Snippet[x_Track, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
+Track /: Sound[x_Track,opts___?OptionQ] := Sound[Counterpoint[x],opts]
+
+(* Track common functions *******************************************************************)
+
+Mix[x:{__Track}] := Tidy[Track[Flatten[Event /@ x]]]
+
+Par[x:{__Track}, opts___?OptionQ] := Midi[x,opts]
+
+Track /: Play2[x_Track,opts___?OptionQ] := Play2[Counterpoint[x],opts]
+
+Seq[x:{__Track}] :=
+  Module[{t=0,s},
+    Tidy[Track[Flatten[Data[s=t;t+=TotalDuration[#];Map[#+s&,#,EventTime]]& /@ x,1]]]
+    ]
+
+Tidy[Track] = Module[{r = #,eot},
+  r = Sort[r,{EventTime,EventType}];
+  r = Event[r];
+  eot = EventTime[r[[-1]]];
+  r = Select[r,(EventType[#]=!=EventTypeEOT)&];
+  r = Append[r,Event[{eot,EOT}]];
+  (* todo rewrite next line *)
+  r = (
+    If[MatchQ[EventType[#],{EventTypeNoteOn,_}] && EventData[#][[2]]===0,
+      ReplacePart[#,{EventTypeNoteOff,EventType[#][[2]]},EventType],
+      #
+      ]
+    )& /@ r;
+  r = Track[r, Sequence @@ Opts[#]];
+  r
+  ]&
+
 Track /: TotalDuration[x_Track] := Max[EventTime /@ Event[x]]
 
-Event[x_Chord]                  := Event[Midi[x]]
-Event[x_Counterpoint]           := Event[Midi[x]]
-Event[x_Melody]                 := Event[Track[x]]
-Event[x_Note]                   := Event[Track[x]]
-Event[x_Progression]            := Event[Midi[x]]
-Event[x_Tempo, opts___?OptionQ] := Event[{#[[1]],{EventTypeTempo,{IntegerPart[#/65536],Mod[IntegerPart[#/256],256],Mod[#,256]}&[60000000/#[[2]]]}},opts]&[Data[x]]
+(* Track unique functions *******************************************************************)
 
-EventTypeEOT = {EventTypeMeta,16^^2F};
-EventTypeMeta = 16^^FF;
-EventTypeNoteOff = 0;
-EventTypeNoteOn = 1;
-EventTypeKeyPressure = 2;
-EventTypeControlChange = 3;
-EventTypeProgramChange = 4;
-EventTypeChannelPressure = 5;
-EventTypePitchBend = 6;
-EventTypeSysX0 = 16^^F0;
-EventTypeSysX7 = 16^^F7;
-EventTypeKeySignature = {EventTypeMeta,16^^59};
-EventTypeTempo = {EventTypeMeta,16^^51};
-EventTypeTimeSignature = {EventTypeMeta,16^^58};
+Track /: NotePlot[x_Track, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
-EOT = {EventTypeEOT,{}};
+(* Track tests ******************************************************************************)
+
+Track /: TestSuite[Track] = Join[TestSuite[Track],{
+  }];
+
+(* Track -----------------------------------------------------------------------------------*)
+
+(* Midi ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* Midi modifications and interceptions *****************************************************)
+
+Options[Midi] = {QPM -> 120,FileFormat -> 1,TimeUnit -> Tick,TPQ -> 960};
+
+Midi /: Opts[x_Midi,y_,TimeUnit] :=
+  Module[{m = x},
+    If[y =!= TimeUnit[x] && MemberQ[{Tick,Second,MilliSecond},y],
+      m = TimeUnitChange[m,TimeUnit[m],y];
+      m = Opts[m,y,TimeUnit,False];
+      ];
+    m
+    ]
+
+Midi /: Opts[x_Midi,y_,TPQ] :=
+  Module[{m = x,tpq},
+    If[y =!= TPQ[x] && NumberQ[y],
+      If[TimeUnit[m] === Tick, m = Opts[m,Second,TimeUnit]];
+      m = Opts[m,y,TPQ,False];
+      m = Opts[m,TimeUnit[x],TimeUnit];
+      ];
+    If[y === Tidy,
+      m = Opts[Opts[m,1,TPQ],Tick,TimeUnit];
+      tpq = LCM @@ (Denominator /@ Complement[Union[Flatten[EventTime[m]]], {0}]);
+      m = Opts[x,tpq,TPQ];
+      ];
+    m
+    ]
+
+(* Midi constructors ************************************************************************)
+
+Midi[x_Chord,        opts___?OptionQ] := Midi[Track[x],opts]
+Midi[x_Counterpoint, opts___?OptionQ] := Midi[Track[x],opts]
+Midi[x_Event,        opts___?OptionQ] := Midi[Track[x],opts]
+Midi[x_Melody,       opts___?OptionQ] := Midi[Track[x],opts]
+Midi[x_Note,         opts___?OptionQ] := Midi[Track[x],opts]
+Midi[x_Progression,  opts___?OptionQ] := Midi[Track[x],opts]
+
+(* Midi reverse constructors ****************************************************************)
+
+Midi  /: Chord[x_Midi] := Chord[Counterpoint[x]]
+Midi  /: Counterpoint[x_Midi,rtf_:(0&)] := Counterpoint[Select[Flatten[Melody[Counterpoint[#,rtf]]& /@ x],(0<Length[#])&]]
+Midi  /: Melody[x_Midi]  := Melody[Counterpoint[x]]
+Midi  /: Note[x_Midi]  := Note[Counterpoint[x]]
+Midi  /: Progression[x_Midi]  := Progression[Counterpoint[x]]
+Midi  /: Snippet[x_Midi,  opts___?OptionQ] := Snippet[Counterpoint[Midi[x,TimeUnit->Second]],opts]
+Midi  /: Sound[x_Midi ,opts___?OptionQ] := Sound[Counterpoint[Midi[x,TimeUnit->Second]],opts]
+
+(* Midi common functions ********************************************************************)
+
+Convert[Second,Tick,x_Midi] := TempoFunction[TempoTrack[x], True, TPQ->TPQ[x], QPM->QPM[x]]
+Convert[Tick,Second,x_Midi] := TempoFunction[TempoTrack[x], False, TPQ->TPQ[x], QPM->QPM[x]]
+
+Mix[x:{__Midi}, opts___?OptionQ] :=
+  Module[{t = Max[Length /@ x]},
+    Midi[Mix /@ Transpose[Join[Track[#],Table[Track[Event[{}]],{t-Length[#]}]]& /@ TimeUnitUnify[x,opts]]]
+    ]
+
+Par[x:{__Midi}, opts___?OptionQ]  :=
+  Module[{m=x,o},
+    m = TimeUnitUnify[x,opts];
+    o = Opts[m[[1]]];
+    Midi[Flatten[Track /@ m],Sequence @@ o]
+    ]
+
+Midi /: Play2[x_Midi, opts___?OptionQ] := Play2[Counterpoint[Midi[x,TimeUnit->Second]],opts]
+
+Seq[x:{__Midi}, opts___?OptionQ] :=
+  Module[{t = Max[Length /@ x],m=x,o},
+    m = TimeUnitUnify[m,opts];
+    o = Opts[m[[1]]];
+    m = Join[Track[#],Table[Track[Event[{}]],{t-Length[#]}]]& /@ m;
+    m = Tidy[Midi[#]]& /@ m;
+    m = Track /@ m;
+    m = Transpose[m];
+    m = Seq /@ m;
+    m = Midi[m,Sequence @@ o];
+    m
+    ]
+    
+Tidy[Midi] = Module[{r = #,eot = TotalDuration[#]},
+  r = Append[#,Event[{eot,EOT}]]& /@ r;
+  r = Tidy /@ r;
+  r
+  ]&
+
+Midi /: TotalDuration[x_Midi]  := Max[TotalDuration /@ x]
+
+(* Midi unique functions ********************************************************************)
+
+MidiExport::"error 1"="Unable to open `1` for export";
 
 Midi /: Export[fn_String,mx_Midi] :=
-  Module[{m=Midi[Tidy[mx],TimeUnit->Tick],f=Null},
+  Module[
+    {
+      f=$Failed,
+      r=$Failed,
+      m=Midi[Tidy[mx],TimeUnit->Tick]
+      },
     (* get the data and change timing to delta *)
     t = (Transpose[{ValuesToDeltas[Prepend[#[[1]],0]],#[[2]]}]&[Transpose[Data/@#]])&/@m;
 
@@ -408,59 +501,57 @@ Midi /: Export[fn_String,mx_Midi] :=
       OpenWriteBinary[fn],
       OpenWrite[fn,BinaryFormat->True]
       ];
-    
-    Catch[
+    If[f === $Failed,
+      Message[MidiExport::"error 1",fn],
       WriteString[f,"MThd"];
       WriteInt[f,4,6];
       WriteInt[f,2,FileFormat /. Opts[m] /. Options[Midi]];
       WriteInt[f,2,Length[t]];
       WriteInt[f,2,TPQ /. Opts[m] /. Options[Midi]];
       WriteTrack[f,#]&/@t;
-      Flush[f];
-      Close[f];
-      ,
-      _,
-      (Print["failure ",#1];Close[f];#1)&
+      r = fn
       ];
-    fn
+    If[f =!= $Failed,Flush[f];Close[f]];
+    r
     ]
 
-MidiImport::"error 1"="No MThd";
-MidiImport::"error 2"="Bad MThd length, should be 6 but is `1`";
+MidiImport::"error 1"="Unable to open `1` for import";
+MidiImport::"error 2"="No MThd header in `1`, probably not a MIDI-file";
+MidiImport::"error 3"="Bad MThd length in header in `1`, should be 6 but is `2`, probably not a MIDI-file";
     
 Midi /: Import[fn_String,Midi]:=
   Module[
     {
-      f=Null,
+      f=$Failed,
+      r=$Failed,
       h={TimeUnit->Tick},
       t={},
       n,tmp
       },
-    f=OpenRead[fn];
-    Catch[
-      If[StringJoin@@ReadList[f,Character,4] =!= "MThd", Message[MidiImport::"error 1"]];
-      If[(tmp=ReadInt[f,4]) =!= 6, Message[MidiImport::"error 2",tmp]];
-      AppendTo[h, FileFormat->ReadInt[f,2]];
-      n=ReadInt[f,2];
-      AppendTo[h, TPQ->ReadInt[f,2]];
-      Do[AppendTo[t, ReadTrack[f]],{n}];
-      Close[f];
-      Midi[t,Sequence @@ Sort[h]],
-      _,
-      (Print["failure ",#1];Close[f];#1)&
-      ]
+    f = OpenRead[fn];
+    If[f === $Failed,
+      Message[MidiImport::"error 1",fn],
+      If[StringJoin@@ReadList[f,Character,4] =!= "MThd",
+        Message[MidiImport::"error 2",fn],
+        If[(tmp=ReadInt[f,4]) =!= 6,
+          Message[MidiImport::"error 3",fn,tmp],
+          AppendTo[h, FileFormat->ReadInt[f,2]];
+          n=ReadInt[f,2];
+          AppendTo[h, TPQ->ReadInt[f,2]];
+          Do[AppendTo[t, ReadTrack[f]],{n}];
+          r = Midi[t,Sequence @@ Sort[h]]
+          ]
+         ]
+      ];
+    If[f =!= $Failed,Close[f]];
+    r
     ]
 
-Midi  /: Melody[x_Midi]  := Melody[Counterpoint[x]]
-Track /: Melody[x_Track] := Melody[Counterpoint[x]]
+Midi /: NotePlot[x_Midi , s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
-Midi[x_Chord,        opts___?OptionQ] := Midi[Track[x],opts]
-Midi[x_Counterpoint, opts___?OptionQ] := Midi[Track[x],opts]
-Midi[x_Melody,       opts___?OptionQ] := Midi[Track[x],opts]
-Midi[x_Note,         opts___?OptionQ] := Midi[Track[x],opts]
-Midi[x_Progression,  opts___?OptionQ] := Midi[Track[x],opts]
+QPM[x_Midi] := QPM /. Opts[x] /. Options[Midi]
 
-Midi[x_Event, opts___?OptionQ] := Midi[Track[x],opts]
+TimeUnit[x_Midi] := TimeUnit /. Opts[x] /. Options[Midi]
 
 TimeUnitChange[m_Midi, MilliSecond, MilliSecond] := m
 TimeUnitChange[m_Midi, Second, Second] := m
@@ -505,82 +596,77 @@ TimeUnitUnify[m:{__Midi}, opts___?OptionQ] :=
       )
     ]
 
-Midi /: Opts[x_Midi,y_,TimeUnit] :=
-  Module[{m = x},
-    If[y =!= TimeUnit[x] && MemberQ[{Tick,Second,MilliSecond},y],
-      m = TimeUnitChange[m,TimeUnit[m],y];
-      m = Opts[m,y,TimeUnit,False];
-      ];
-    m
+TPQ[x_Midi] := TPQ /. Opts[x] /. Options[Midi]
+
+(* Midi tests *******************************************************************************)
+
+Midi /: TestSuite[Midi] = Join[TestSuite[Midi],{
+  TestCase[
+    Module[{o, c},
+      Export["tmp.mid", "almost empty", "Text"];
+      o = Import["Musica2/Documentation/Data/cor.mid", Midi];
+      Export["tmp.mid", o];
+      c = Import["tmp.mid", Midi];
+      Data /@ Melody[o] === Data /@ Melody[c]
+      ],
+    True
     ]
-Midi /: Opts[x_Midi,y_,TPQ] :=
-  Module[{m = x,tpq},
-    If[y =!= TPQ[x] && NumberQ[y],
-      If[TimeUnit[m] === Tick, m = Opts[m,Second,TimeUnit]];
-      m = Opts[m,y,TPQ,False];
-      m = Opts[m,TimeUnit[x],TimeUnit];
-      ];
-    If[y === Tidy,
-      m = Opts[Opts[m,1,TPQ],Tick,TimeUnit];
-      tpq = LCM @@ (Denominator /@ Complement[Union[Flatten[EventTime[m]]], {0}]);
-      m = Opts[x,tpq,TPQ];
-      ];
-    m
-    ]
+  }]
+  
+(* Midi ------------------------------------------------------------------------------------*)
 
-Mix[x:{__Midi}, opts___?OptionQ] :=
-  Module[{t = Max[Length /@ x]},
-    Midi[Mix /@ Transpose[Join[Track[#],Table[Track[Event[{}]],{t-Length[#]}]]& /@ TimeUnitUnify[x,opts]]]
-    ]
-Mix[x:{__Track}] := Tidy[Track[Flatten[Event /@ x]]]
+(* Tempo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
 
-Midi  /: Note[x_Midi]  := Note[Counterpoint[x]]
-Track /: Note[x_Track] := Note[Counterpoint[x]]
+(* Tempo modifications and interceptions ****************************************************)
 
-Midi  /: NotePlot[x_Midi , s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
-Track /: NotePlot[x_Track, s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
-
-Par[x:{__Midi}, opts___?OptionQ]  :=
-  Module[{m=x,o},
-    m = TimeUnitUnify[x,opts];
-    o = Opts[m[[1]]];
-    Midi[Flatten[Track /@ m],Sequence @@ o]
-    ]
-Par[x:{__Track}, opts___?OptionQ] := Midi[x,opts]
-
-Midi  /: Play2[x_Midi, opts___?OptionQ] := Play2[Counterpoint[Midi[x,TimeUnit->Second]],opts]
-Track /: Play2[x_Track,opts___?OptionQ] := Play2[Counterpoint[x],opts]
-
-Midi  /: Progression[x_Midi]  := Progression[Counterpoint[x]]
-Track /: Progression[x_Track] := Progression[Counterpoint[x]]
-
-QPM[x_Midi] := QPM /. Opts[x] /. Options[Midi]
-
-Seq[x:{__Midi}, opts___?OptionQ] :=
-  Module[{t = Max[Length /@ x],m=x,o},
-    m = TimeUnitUnify[m,opts];
-    o = Opts[m[[1]]];
-    m = Join[Track[#],Table[Track[Event[{}]],{t-Length[#]}]]& /@ m;
-    m = Tidy[Midi[#]]& /@ m;
-    m = Track /@ m;
-    m = Transpose[m];
-    m = Seq /@ m;
-    m = Midi[m,Sequence @@ o];
-    m
-    ]
-    
-Seq[x:{__Track}] :=
-  Module[{t=0,s},
-    Tidy[Track[Flatten[Data[s=t;t+=TotalDuration[#];Map[#+s&,#,EventTime]]& /@ x,1]]]
-    ]
-
-Midi  /: Snippet[x_Midi,  opts___?OptionQ] := Snippet[Counterpoint[Midi[x,TimeUnit->Second]],opts]
-Track /: Snippet[x_Track, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
-
-Midi  /: Sound[x_Midi ,opts___?OptionQ] := Sound[Counterpoint[Midi[x,TimeUnit->Second]],opts]
-Track /: Sound[x_Track,opts___?OptionQ] := Sound[Counterpoint[x],opts]
+(* Tempo constructors ***********************************************************************)
 
 Tempo[x_Event, opts___?OptionQ] := Tempo[{#[[1]],60000000/Total[{65536, 256, 1}*#[[2,2]]]},opts]&[Data[x]] /; MatchQ[Data[x],{_,{EventTypeTempo,{_,_,_}}}]
+
+(* Tempo reverse constructors ***************************************************************)
+
+(* Tempo common functions *******************************************************************)
+
+Convert[Second,Tick,x_?NumberQ] := TempoFunction[TempoTrack[Tempo[{0,x}]], True]
+Convert[Tick,Second,x_?NumberQ] := TempoFunction[TempoTrack[Tempo[{0,x}]], False]
+
+(* Tempo unique functions *******************************************************************)
+
+(* Tempo tests ******************************************************************************)
+
+Tempo /: TestSuite[Tempo] = Join[TestSuite[Tempo],{
+  }];
+
+(* Tempo -----------------------------------------------------------------------------------*)
+
+(* TempoTrack ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* TempoTrack modifications and interceptions ***********************************************)
+
+(* TempoTrack constructors ******************************************************************)
+
+TempoTrack[x_Midi , opts___?OptionQ] := TempoTrack[x[[1]], opts, QPM -> (QPM /. {opts} /. Opts[x] /. Options[Midi])]
+
+TempoTrack[x_Track, opts___?OptionQ] :=
+  Module[{u = Data /@ Select[Tempo /@ x, TempoQ],tpq = TPQ[x]},
+    (* add a default tempo if needed *)
+    If[Length[u] == 0 || u[[1, 1]] != 0, u = Prepend[u, {0, QPM /. {opts} /. Options[Midi]}]];
+    TempoTrack[u, Sequence@@RemOpts[{opts},QPM]]
+    ]
+
+(* TempoTrack reverse constructors **********************************************************)
+
+(* TempoTrack common functions **************************************************************)
+
+Convert[Second,Tick,x_TempoTrack] := TempoFunction[x, True]
+Convert[Tick,Second,x_TempoTrack] := TempoFunction[x, False]
+
+Tidy[TempoTrack] = Module[{r = #},
+  r = Sort[r,TempoTime];
+  r
+  ]&
+
+(* TempoTrack unique functions **************************************************************)
 
 TempoFunction[x_TempoTrack, inv:(True|False), opts___?OptionQ] := (* tick->sec *)
   Module[
@@ -617,47 +703,12 @@ TempoFunction[x_TempoTrack, inv:(True|False), opts___?OptionQ] := (* tick->sec *
     Function[s, Evaluate[MakeNestedIfs[Transpose[{td, Drop[f, -1]}], f[[1]], f[[-1]]][s][s]]]
     ]
 
-TempoTrack[x_Midi , opts___?OptionQ] := TempoTrack[x[[1]], opts, QPM -> (QPM /. {opts} /. Opts[x] /. Options[Midi])]
-TempoTrack[x_Track, opts___?OptionQ] :=
-  Module[{u = Data /@ Select[Tempo /@ x, TempoQ],tpq = TPQ[x]},
-    (* add a default tempo if needed *)
-    If[Length[u] == 0 || u[[1, 1]] != 0, u = Prepend[u, {0, QPM /. {opts} /. Options[Midi]}]];
-    TempoTrack[u, Sequence@@RemOpts[{opts},QPM]]
-    ]
+(* TempoTrack tests *************************************************************************)
 
-TimeUnit[x_Midi] := TimeUnit /. Opts[x] /. Options[Midi]
+TempoTrack /: TestSuite[TempoTrack] = Join[TestSuite[TempoTrack],{
+  }];
 
-TPQ[x_Midi] := TPQ /. Opts[x] /. Options[Midi]
-
-Track[x_Chord]                         := Track[Counterpoint[x]]
-Track[x_Counterpoint, opts___?OptionQ] := Track /@ x
-Track[x_Melody, opts___?OptionQ]       :=
-  Module[{d,t=0,c=MidiChannel/.{opts}/.Opts[x]/.{MidiChannel->0}},
-    Track[
-      If[#==={},#,#[[1]]]&
-        [
-          Reap[
-            Scan[(
-              d = Duration[#];
-              p = PitchCode[#];
-              v = Velocity[#];
-              If[!(DataNoValueQ[p] || DataNoValueQ[v]),
-                Sow[Event[{t  ,{{EventTypeNoteOn,c}, {p,v}}}]];
-                Sow[Event[{t+d,{{EventTypeNoteOff,c},{p,v}}}]];
-                ];
-              t += d;
-              )&,
-              x
-              ];
-            ][[2]]
-          ]
-      ,
-      Sequence@@RemOpts[{opts},MidiChannel]
-      ]
-    ]
-Track[x_Note]                          := Track[Melody[x]]
-Track[x_Progression]                   := Track[Counterpoint[x]]
-Track[x_TempoTrack, opts___?OptionQ]   := Track[Event/@x]
+(* TempoTrack ------------------------------------------------------------------------------*)
 
 (******** private functions used by Import and Export ********)
 
@@ -781,19 +832,6 @@ WriteTrack[f_,t_] :=
 
 (*************************)
     
-Midi /: TestSuite[Midi] = Join[TestSuite[Midi],{
-  TestCase[
-    Module[{o, c},
-      Export["tmp.mid", "almost empty", "Text"];
-      o = Import["Musica2/Documentation/Data/cor.mid", Midi];
-      Export["tmp.mid", o];
-      c = Import["tmp.mid", Midi];
-      Data /@ Melody[o] === Data /@ Melody[c]
-      ],
-    True
-    ]
-  }]
-  
 End[]
 
 Protect[

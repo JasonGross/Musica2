@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Spectrum` *)
 
 (* :History:
+  2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2005-01-27  bch :  renamed Spectrum to ToneSpectrum to avoid collision with Combinatorica
   2004-10-07  bch :  created
 *)
@@ -70,19 +71,63 @@ Amplitude::usage = "Amplitude is a member of Tone."
 
 Begin["`Private`"]
 
-Mix[x:{__ToneSpectrum}, opts___?OptionQ] := ToneSpectrum[Flatten[Tone /@ x]]
+(* Tone ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
 
-ToneSpectrum /: Snippet[x_ToneSpectrum, opts___?OptionQ] := (* todo: an option to use IFFT *)
-  Module[
-    {
-      sr = Round[SampleRate /. {opts} /. Opts[x] /. Options[Sound]],
-      sc = Round[SampleCount /. {opts} /. Opts[x] /. Options[Sound]],
-      f,t
-      },
-      f = Total[(Amplitude[#] Sin[Phase[#] + 2Pi Frequency[#]t/sr])& /@ x];
-      f = Function[s,Evaluate[f /. {t->s}]];
-      Snippet[{SampledSoundFunction,f,sr,sc}]
+(* Tone modifications and interceptions *****************************************************)
+
+(* Tone constructors ************************************************************************)
+
+Tone[{f_,c_?NumberQ}, opts___?OptionQ] := Tone[{f,{Abs[c],Arg[c]}},opts]
+Tone[f_, opts___?OptionQ] := Tone[{f,1},opts]
+
+(* Tone reverse constructors ****************************************************************)
+
+complex[a_,p_] := a(Cos[p] + I Sin[p])
+Tone /: Complex[x_Tone] := complex[Amplitude[x],Phase[x]]
+
+(* Tone common functions ********************************************************************)
+
+Tidy[Tone] = Module[{r = #},
+  If[Frequency[r] < 0,
+    r = ReplacePart[r,-Frequency[r],Frequency];
+    r = ReplacePart[r,Phase[r]+Pi,Phase]
+    ];
+  If[Amplitude[r] < 0,
+    r = ReplacePart[r,-Amplitude[r],Amplitude];
+    r = ReplacePart[r,Phase[r]+Pi,Phase]
+    ];
+  If[Phase[r] < 0 || 2Pi <= Phase[r],
+    r = ReplacePart[r,Mod[Phase[r],2Pi],Phase]
+    ];
+  r
+  ]&
+
+(* Tone unique functions ********************************************************************)
+
+Tone /: Plus[a_Tone,b_Tone] := ToneSpectrum[{a,b}]
+Tone /: Power[a_Tone,2] := a*a
+Tone /: Times[a_Tone,b_Tone] :=
+  Module[{af,aa,ap,bf,ba,bp},
+    {af,{aa,ap}}=Data[Tidy[a]];
+    {bf,{ba,bp}}=Data[Tidy[b]];
+    ToneSpectrum[{
+      Tone[{Abs[af-bf],{ aa*ba/2,ap-bp+Pi/2}}],
+      Tone[{Abs[af+bf],{-aa*ba/2,ap+bp+Pi/2}}]
+      }]
     ]
+
+(* Tone tests *******************************************************************************)
+
+Tone /: TestSuite[Tone] = Join[TestSuite[Tone],{
+  }];
+
+(* Tone ------------------------------------------------------------------------------------*)
+
+(* ToneSpectrum ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* ToneSpectrum modifications and interceptions *********************************************)
+
+(* ToneSpectrum constructors ****************************************************************)
 
 ToneSpectrum[x_Snippet, opts___?OptionQ] :=
   Module[
@@ -105,6 +150,24 @@ ToneSpectrum[x_Snippet, opts___?OptionQ] :=
 
 ToneSpectrum[x:{__?AtomQ}, opts___?OptionQ] := ToneSpectrum[Tone /@ x,opts]
 
+(* ToneSpectrum reverse constructors ********************************************************)
+
+ToneSpectrum /: Snippet[x_ToneSpectrum, opts___?OptionQ] := (* todo: an option to use IFFT *)
+  Module[
+    {
+      sr = Round[SampleRate /. {opts} /. Opts[x] /. Options[Sound]],
+      sc = Round[SampleCount /. {opts} /. Opts[x] /. Options[Sound]],
+      f,t
+      },
+      f = Total[(Amplitude[#] Sin[Phase[#] + 2Pi Frequency[#]t/sr])& /@ x];
+      f = Function[s,Evaluate[f /. {t->s}]];
+      Snippet[{SampledSoundFunction,f,sr,sc}]
+    ]
+
+(* ToneSpectrum common functions ************************************************************)
+
+Mix[x:{__ToneSpectrum}, opts___?OptionQ] := ToneSpectrum[Flatten[Tone /@ x]]
+
 Tidy[ToneSpectrum] = Module[{r = #,i,c},
   r = Tidy /@ r;
   r = Select[r, 0 =!= Amplitude[#]&];
@@ -125,46 +188,22 @@ Tidy[ToneSpectrum] = Module[{r = #,i,c},
   r
   ]&
 
-Tidy[Tone] = Module[{r = #},
-  If[Frequency[r] < 0,
-    r = ReplacePart[r,-Frequency[r],Frequency];
-    r = ReplacePart[r,Phase[r]+Pi,Phase]
-    ];
-  If[Amplitude[r] < 0,
-    r = ReplacePart[r,-Amplitude[r],Amplitude];
-    r = ReplacePart[r,Phase[r]+Pi,Phase]
-    ];
-  If[Phase[r] < 0 || 2Pi <= Phase[r],
-    r = ReplacePart[r,Mod[Phase[r],2Pi],Phase]
-    ];
-  r
-  ]&
+(* ToneSpectrum unique functions ************************************************************)
 
 ToneSpectrum /: Plus[a_ToneSpectrum,b_ToneSpectrum] := ToneSpectrum[Join[Tone[a],Tone[b]]]
 ToneSpectrum /: Plus[a_ToneSpectrum,b_Tone] := ToneSpectrum[Append[Tone[a],b]]
 ToneSpectrum /: Plus[b_Tone,a_ToneSpectrum] := ToneSpectrum[Append[Tone[a],b]]
-Tone /: Plus[a_Tone,b_Tone] := ToneSpectrum[{a,b}]
-
 ToneSpectrum /: Power[a_ToneSpectrum,2] := a*a
-Tone /: Power[a_Tone,2] := a*a
-
 ToneSpectrum /: Times[a_ToneSpectrum,b_ToneSpectrum] := ToneSpectrum[Flatten[Tone /@ (a*Tone[b])]]
 ToneSpectrum /: Times[a_ToneSpectrum,b_Tone] := ToneSpectrum[Flatten[Tone /@ (Tone[a] * b)]]
 ToneSpectrum /: Times[b_Tone,a_ToneSpectrum] := ToneSpectrum[Flatten[Tone /@ (Tone[a] * b)]]
-Tone /: Times[a_Tone,b_Tone] :=
-  Module[{af,aa,ap,bf,ba,bp},
-    {af,{aa,ap}}=Data[Tidy[a]];
-    {bf,{ba,bp}}=Data[Tidy[b]];
-    ToneSpectrum[{
-      Tone[{Abs[af-bf],{ aa*ba/2,ap-bp+Pi/2}}],
-      Tone[{Abs[af+bf],{-aa*ba/2,ap+bp+Pi/2}}]
-      }]
-    ]
 
-complex[a_,p_] := a(Cos[p] + I Sin[p])
-Tone /: Complex[x_Tone] := complex[Amplitude[x],Phase[x]]
-Tone[{f_,c_?NumberQ}, opts___?OptionQ] := Tone[{f,{Abs[c],Arg[c]}},opts]
-Tone[f_, opts___?OptionQ] := Tone[{f,1},opts]
+(* ToneSpectrum tests ***********************************************************************)
+
+ToneSpectrum /: TestSuite[ToneSpectrum] = Join[TestSuite[ToneSpectrum],{
+  }];
+
+(* ToneSpectrum ----------------------------------------------------------------------------*)
 
 End[]
 

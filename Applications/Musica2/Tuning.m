@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Tuning` *)
 
 (* :History:
+  2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2005-01-09  bch :  changed the struct in EqualTemperament
                      added CustomTuning
                      removed TuningFunction
@@ -76,6 +77,20 @@ Convert[PitchCode,Frequency] := Convert[PitchCode,Frequency,Tuning]
 Convert[Frequency,PitchCode] := Convert[Frequency,PitchCode,Tuning]
 Convert[{PitchCode,Overtone},PitchCode] := Convert[{PitchCode,Overtone},PitchCode,Tuning]
 
+Tuning := EqualTemperament[]
+
+(* CustomTuning ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* CustomTuning modifications and interceptions *********************************************)
+
+(* CustomTuning constructors ****************************************************************)
+
+CustomTuning[x:{__?NumberQ},opts___?OptionQ] := CustomTuning[{{69,440},x},opts]
+
+(* CustomTuning reverse constructors ********************************************************)
+
+(* CustomTuning common functions ************************************************************)
+
 Convert[PitchCode, Frequency, x_CustomTuning] :=
   Module[{
       pr = PitchCodeRef[x],
@@ -114,26 +129,56 @@ Convert[Frequency, PitchCode, x_CustomTuning] :=
       ]
     ]
 
-
-Convert[PitchCode,Frequency,x_EqualTemperament] := Function[p,FrequencyRef[x]*FrequencyOctave[x]^((p - PitchCodeRef[x])/PitchCodeOctave[x])]
-Convert[Frequency,PitchCode,x_EqualTemperament] := Function[f,PitchCodeOctave[x]*Log[FrequencyOctave[x],f/FrequencyRef[x]]+PitchCodeRef[x]]
-
 Convert[{PitchCode,Overtone},PitchCode,x_CustomTuning] := Function[{p,o},Evaluate[Convert[Frequency,PitchCode,x][o Convert[PitchCode,Frequency,x][p]]]]
-Convert[{PitchCode,Overtone},PitchCode,x_EqualTemperament] := Function[{p,o},Evaluate[Convert[Frequency,PitchCode,x][o Convert[PitchCode,Frequency,x][p]]]]
 
 CustomTuning[o_?OptionQ, d_?(DataQ[CustomTuning])][p_] := Convert[PitchCode,Frequency,CustomTuning[o,d]][p]
-EqualTemperament[o_?OptionQ, d_?(DataQ[EqualTemperament])][p_] := Convert[PitchCode,Frequency,EqualTemperament[o,d]][p]
-
-EqualTemperament[x_Integer,opts___?OptionQ] := EqualTemperament[{{69,440},{x,2}},opts]
-CustomTuning[x:{__?NumberQ},opts___?OptionQ] := CustomTuning[{{69,440},x},opts]
 
 FrequencyOctave[x_CustomTuning] := Times @@ FrequencyRatios[x]
 
-FrequencyRatios[x_EqualTemperament] := Table[FrequencyOctave[x]^(1/PitchCodeOctave[x]),{PitchCodeOctave[x]}]
-
 PitchCodeOctave[x_CustomTuning] := Length[FrequencyRatios[x]]
 
-Tuning := EqualTemperament[]
+(* CustomTuning unique functions ************************************************************)
+
+(* CustomTuning tests ***********************************************************************)
+
+CustomTuning /: TestSuite[CustomTuning] = Join[TestSuite[CustomTuning],{
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][60], 264],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24,16/15}}]][121/2], 539/2],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][61], 275],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24,16/15}}]][123/2], 1705/6],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][62], 880/3],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][60], 1909/55],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25,25/24, 16/15}}]][61], 9617/275],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][62], 387/11],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25,25/24, 16/15}}]][63], 1557/44],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][64], 783/22]
+ }]
+
+(* CustomTuning ----------------------------------------------------------------------------*)
+
+(* EqualTemperament ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* EqualTemperament modifications and interceptions *****************************************)
+
+(* EqualTemperament constructors ************************************************************)
+
+EqualTemperament[x_Integer,opts___?OptionQ] := EqualTemperament[{{69,440},{x,2}},opts]
+
+(* EqualTemperament reverse constructors ****************************************************)
+
+(* EqualTemperament common functions ********************************************************)
+
+Convert[PitchCode,Frequency,x_EqualTemperament] := Function[p,FrequencyRef[x]*FrequencyOctave[x]^((p - PitchCodeRef[x])/PitchCodeOctave[x])]
+Convert[Frequency,PitchCode,x_EqualTemperament] := Function[f,PitchCodeOctave[x]*Log[FrequencyOctave[x],f/FrequencyRef[x]]+PitchCodeRef[x]]
+Convert[{PitchCode,Overtone},PitchCode,x_EqualTemperament] := Function[{p,o},Evaluate[Convert[Frequency,PitchCode,x][o Convert[PitchCode,Frequency,x][p]]]]
+
+EqualTemperament[o_?OptionQ, d_?(DataQ[EqualTemperament])][p_] := Convert[PitchCode,Frequency,EqualTemperament[o,d]][p]
+
+FrequencyRatios[x_EqualTemperament] := Table[FrequencyOctave[x]^(1/PitchCodeOctave[x]),{PitchCodeOctave[x]}]
+
+(* EqualTemperament unique functions ********************************************************)
+
+(* EqualTemperament tests *******************************************************************)
 
 EqualTemperament /: TestSuite[EqualTemperament] = Join[TestSuite[EqualTemperament],{
  TestCase[Convert[PitchCode, Frequency, EqualTemperament[{{69, 440}, {12, 2}}]][60], 220*2^(1/4)],
@@ -148,19 +193,8 @@ EqualTemperament /: TestSuite[EqualTemperament] = Join[TestSuite[EqualTemperamen
  TestCase[Convert[Frequency, PitchCode, EqualTemperament[{{69, 440}, {12, 2}}]][64], 69 - (12*Log[55/8])/Log[2]]
   }]
 
-CustomTuning /: TestSuite[CustomTuning] = Join[TestSuite[CustomTuning],{
- TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][60], 264],
- TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24,16/15}}]][121/2], 539/2],
- TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][61], 275],
- TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24,16/15}}]][123/2], 1705/6],
- TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][62], 880/3],
- TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][60], 1909/55],
- TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25,25/24, 16/15}}]][61], 9617/275],
- TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][62], 387/11],
- TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25,25/24, 16/15}}]][63], 1557/44],
- TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][64], 783/22]
- }]
-  
+(* EqualTemperament ------------------------------------------------------------------------*)
+
 End[]
 
 Protect[

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Instrument` *)
 
 (* :History:
+  2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2005-01-17  bch :  renamed SimpleSine to BasicInstrument and changed its struct
   2005-01-09  bch :  created
 *)
@@ -66,6 +67,22 @@ Instrument::usage = "todo"
 
 Begin["`Private`"]
 
+Instrument := BasicInstrument[]
+
+Convert[Melody, Snippet, opts___?OptionQ] := Convert[Melody, Snippet, Instrument, opts]
+
+(* BasicInstrument +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* BasicInstrument modifications and interceptions ******************************************)
+
+(* BasicInstrument constructors *************************************************************)
+
+BasicInstrument[] := BasicInstrument[{Convert[PitchCode,Frequency,Tuning],Function[v, v/127],Function[{f,a,sr},N[a Sin[2Pi f #/sr]]&]}]
+
+(* BasicInstrument reverse constructors *****************************************************)
+
+(* BasicInstrument common functions *********************************************************)
+
 Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ] :=
   Module[
     {
@@ -86,11 +103,14 @@ Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ] :=
       ]
     ]
 
-Convert[Melody, Snippet, opts___?OptionQ] := Convert[Melody, Snippet, Instrument, opts]
+(* BasicInstrument unique functions *********************************************************)
 
-Instrument := BasicInstrument[]
+(* BasicInstrument tests *)
 
-BasicInstrument[] := BasicInstrument[{Convert[PitchCode,Frequency,Tuning],Function[v, v/127],Function[{f,a,sr},N[a Sin[2Pi f #/sr]]&]}]
+BasicInstrument /: TestSuite[BasicInstrument] = Join[TestSuite[BasicInstrument],{
+  }];
+
+(* BasicInstrument -------------------------------------------------------------------------*)
 
 End[]
 

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Naming` *)
 
 (* :History:
+  2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-10-26  bch :  created
 *)
@@ -90,17 +91,122 @@ SharpSymbols::usage = "todo"
 
 Begin["`Private`"]
 
-FlatSymbols={{"\[Flat]","b"}};
+ChordNaming := HelixChordNaming[]
+ChordNamingFunction[x_] := ChordNamingFunction[x, False]
 
 Convert[{PitchCode},String] := Convert[{PitchCode},String,ChordNaming]
 Convert[String,{PitchCode}] := Convert[String,{PitchCode},ChordNaming]
 Convert[PitchCode,String] := Convert[PitchCode,String,NoteNaming]
 Convert[String,PitchCode] := Convert[String,PitchCode,NoteNaming]
 
-Convert[{PitchCode},String,x_HelixChordNaming] := ChordNamingFunction[x, False]
-Convert[String,{PitchCode},x_HelixChordNaming] := ChordNamingFunction[x, True]
+FlatSymbols={{"\[Flat]","b"}};
+
+Naming[x_Chord] := Naming[x,0]
+Naming[x_Chord,ks_] := ChordNamingFunction[ChordNaming, False][PitchCode[x],ks]
+Naming[x_String,Chord] := Chord[ChordNamingFunction[ChordNaming, True][x]]
+
+Naming[x_Note] := Naming[x,0]
+Naming[x_Note,ks_] := NoteNamingFunction[NoteNaming, False][PitchCode[x],ks]
+Naming[x_String,Note] := Note[NoteNamingFunction[NoteNaming, True][x]]
+
+NoteNaming := HelixNoteNaming[]
+NoteNamingFunction[x_] := NoteNamingFunction[x, False]
+
+PrepareString[str_String,flats:{{__String}...},sharps:{{__String}...}]:=
+  Module[{r=str,n,a=0,s={},f={}},
+    n=StringTake[r,1];
+    r=StringDrop[r,1];
+    While[
+      0<StringLength[r] &&
+        (Length[f=Position[flats,StringTake[r,1]]]!=0||
+         Length[s=Position[sharps,StringTake[r,1]]]!=0),
+      (a-=#[[1]])& /@ f;
+      (a+=#[[1]])& /@ s;
+      r=StringDrop[r,1];
+      s=f={};
+      ];
+    {n,a,r}(*{string,integer,string}*)
+    ]
+PrepareString[str_String] := PrepareString[str,FlatSymbols,SharpSymbols]
+
+SharpSymbols={{"\[Sharp]","#"},{"x"}};
+
+(* HelixNoteNaming +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* HelixNoteNaming modifications and interceptions ******************************************)
+
+(* HelixNoteNaming constructors *************************************************************)
+
+HelixNoteNaming[] := HelixNoteNaming[{12,{"c","d","e","f","g","a","b"},{5,5,3},2}]
+
+(* HelixNoteNaming reverse constructors *****************************************************)
+
+(* HelixNoteNaming common functions *********************************************************)
+
 Convert[PitchCode,String,x_HelixNoteNaming] := NoteNamingFunction[x, False]
 Convert[String,PitchCode,x_HelixNoteNaming] := NoteNamingFunction[x, True]
+
+HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][p_Integer] := NoteNamingFunction[HelixNoteNaming[o,d]][p,0]
+HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][p_Integer,ks_Integer] := NoteNamingFunction[HelixNoteNaming[o,d]][p,ks]
+HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][s_String] := NoteNamingFunction[HelixNoteNaming[o,d],True][s]
+
+NoteNamingFunction[x_HelixNoteNaming,False,False] :=
+  Module[{i,pcc=Octave[x],pn2s=NoteNames[x],h2pc,pc2h,pnc,fc=FlatsCount[x],pn2pc,h2pn},
+    h2pc=Mod[Table[PitchCodeStart[x]-i PitchCodeInterval[x],{i,0,pcc-1}],pcc];
+    pc2h=Table[Position[h2pc,i][[1,1]]-1,{i,0,pcc-1}];
+    pnc=Length[pn2s];
+    pn2pc=Sort[Take[h2pc,pnc]];
+    h2pn=Table[Position[pn2pc,h2pc[[i]]][[1,1]]-1,{i,pnc}];
+    Function[{pc,ks},
+      Module[{o,h,pn,a},
+        If[pcc==pnc,
+          pn = Mod[pc,pcc];
+          a = 0;
+          o = Floor[pc/pcc],
+          h = Mod[pc2h[[Mod[pc,pcc]+1]],pcc,ks-fc];
+          pn = h2pn[[Mod[h,pnc]+1]];
+          a = Floor[h/pnc];
+          o = (pc-h2pc[[Mod[h,pnc]+1]]-a)/pcc;
+          ];
+        {pn2s[[pn+1]] , If[a==0,"",Table[If[a<0,FlatSymbols[[1,1]],SharpSymbols[[1,1]]],{Abs[a]}]] , ToString[o]}
+        ]
+      ]
+    ]
+NoteNamingFunction[x_HelixNoteNaming,False] :=
+  Module[{nnf=NoteNamingFunction[x,False,False]},
+    Function[{pc,ks},
+      StringJoin[nnf[pc,ks]]
+      ]
+    ]
+NoteNamingFunction[x_HelixNoteNaming,True] :=
+  Module[{i,pcc=Octave[x],pn2s=NoteNames[x],h2pc,pn2pc},
+    h2pc=Mod[Table[PitchCodeStart[x]-i PitchCodeInterval[x],{i,0,pcc-1}],pcc];
+    pnc=Length[pn2s];
+    pn2pc=Sort[Take[h2pc,pnc]];
+    Function[str,
+      Module[{s,a,r,o,pn},
+        {s,a,r} = PrepareString[str,FlatSymbols,SharpSymbols];
+        pn = Position[pn2s,ToLowerCase[s]][[1,1]]-1;
+        o = ToExpression[r];
+        pn2pc[[pn+1]] + a + pcc If[o===Null,0,o]
+        ]
+      ]
+    ]
+
+(* HelixNoteNaming unique functions *********************************************************)
+
+(* HelixNoteNaming tests ********************************************************************)
+
+HelixNoteNaming /: TestSuite[HelixNoteNaming] = Join[TestSuite[HelixNoteNaming],{
+  }];
+
+(* HelixNoteNaming -------------------------------------------------------------------------*)
+
+(* HelixChordNaming ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+
+(* HelixChordNaming modifications and interceptions *****************************************)
+
+(* HelixChordNaming constructors ************************************************************)
 
 HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
   {{"m-5"},      {0, 3, 6}},
@@ -117,6 +223,14 @@ HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
   {{"mMaj7"},{0, 3, 7, 11}},
   {{"Maj7"}, {0, 4, 7, 11}}
   }}]
+
+(* HelixChordNaming reverse constructors ****************************************************)
+
+(* HelixChordNaming common functions ********************************************************)
+
+Convert[{PitchCode},String,x_HelixChordNaming] := ChordNamingFunction[x, False]
+Convert[String,{PitchCode},x_HelixChordNaming] := ChordNamingFunction[x, True]
+
 HelixChordNaming[o_?OptionQ, d_?(DataQ[HelixChordNaming])][p:{__Integer}] := ChordNamingFunction[HelixChordNaming[o,d]][p,0]
 HelixChordNaming[o_?OptionQ, d_?(DataQ[HelixChordNaming])][p:{__Integer},ks_Integer] := ChordNamingFunction[HelixChordNaming[o,d]][p,ks]
 HelixChordNaming[o_?OptionQ, d_?(DataQ[HelixChordNaming])][s_String] := ChordNamingFunction[HelixChordNaming[o,d],True][s]
@@ -199,86 +313,14 @@ ChordNamingFunction[x_HelixChordNaming, True] :=
       ]
     ]
 
-ChordNaming := HelixChordNaming[]
-ChordNamingFunction[x_] := ChordNamingFunction[x, False]
+(* HelixChordNaming unique functions ********************************************************)
 
-HelixNoteNaming[] := HelixNoteNaming[{12,{"c","d","e","f","g","a","b"},{5,5,3},2}]
-HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][p_Integer] := NoteNamingFunction[HelixNoteNaming[o,d]][p,0]
-HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][p_Integer,ks_Integer] := NoteNamingFunction[HelixNoteNaming[o,d]][p,ks]
-HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][s_String] := NoteNamingFunction[HelixNoteNaming[o,d],True][s]
+(* HelixChordNaming tests *******************************************************************)
 
-NoteNamingFunction[x_HelixNoteNaming,False,False] :=
-  Module[{i,pcc=Octave[x],pn2s=NoteNames[x],h2pc,pc2h,pnc,fc=FlatsCount[x],pn2pc,h2pn},
-    h2pc=Mod[Table[PitchCodeStart[x]-i PitchCodeInterval[x],{i,0,pcc-1}],pcc];
-    pc2h=Table[Position[h2pc,i][[1,1]]-1,{i,0,pcc-1}];
-    pnc=Length[pn2s];
-    pn2pc=Sort[Take[h2pc,pnc]];
-    h2pn=Table[Position[pn2pc,h2pc[[i]]][[1,1]]-1,{i,pnc}];
-    Function[{pc,ks},
-      Module[{o,h,pn,a},
-        If[pcc==pnc,
-          pn = Mod[pc,pcc];
-          a = 0;
-          o = Floor[pc/pcc],
-          h = Mod[pc2h[[Mod[pc,pcc]+1]],pcc,ks-fc];
-          pn = h2pn[[Mod[h,pnc]+1]];
-          a = Floor[h/pnc];
-          o = (pc-h2pc[[Mod[h,pnc]+1]]-a)/pcc;
-          ];
-        {pn2s[[pn+1]] , If[a==0,"",Table[If[a<0,FlatSymbols[[1,1]],SharpSymbols[[1,1]]],{Abs[a]}]] , ToString[o]}
-        ]
-      ]
-    ]
-NoteNamingFunction[x_HelixNoteNaming,False] :=
-  Module[{nnf=NoteNamingFunction[x,False,False]},
-    Function[{pc,ks},
-      StringJoin[nnf[pc,ks]]
-      ]
-    ]
-NoteNamingFunction[x_HelixNoteNaming,True] :=
-  Module[{i,pcc=Octave[x],pn2s=NoteNames[x],h2pc,pn2pc},
-    h2pc=Mod[Table[PitchCodeStart[x]-i PitchCodeInterval[x],{i,0,pcc-1}],pcc];
-    pnc=Length[pn2s];
-    pn2pc=Sort[Take[h2pc,pnc]];
-    Function[str,
-      Module[{s,a,r,o,pn},
-        {s,a,r} = PrepareString[str,FlatSymbols,SharpSymbols];
-        pn = Position[pn2s,ToLowerCase[s]][[1,1]]-1;
-        o = ToExpression[r];
-        pn2pc[[pn+1]] + a + pcc If[o===Null,0,o]
-        ]
-      ]
-    ]
+HelixChordNaming /: TestSuite[HelixChordNaming] = Join[TestSuite[HelixChordNaming],{
+  }];
 
-NoteNaming := HelixNoteNaming[]
-NoteNamingFunction[x_] := NoteNamingFunction[x, False]
-
-Naming[x_Chord] := Naming[x,0]
-Naming[x_Chord,ks_] := ChordNamingFunction[ChordNaming, False][PitchCode[x],ks]
-Naming[x_String,Chord] := Chord[ChordNamingFunction[ChordNaming, True][x]]
-
-Naming[x_Note] := Naming[x,0]
-Naming[x_Note,ks_] := NoteNamingFunction[NoteNaming, False][PitchCode[x],ks]
-Naming[x_String,Note] := Note[NoteNamingFunction[NoteNaming, True][x]]
-
-PrepareString[str_String,flats:{{__String}...},sharps:{{__String}...}]:=
-  Module[{r=str,n,a=0,s={},f={}},
-    n=StringTake[r,1];
-    r=StringDrop[r,1];
-    While[
-      0<StringLength[r] &&
-        (Length[f=Position[flats,StringTake[r,1]]]!=0||
-         Length[s=Position[sharps,StringTake[r,1]]]!=0),
-      (a-=#[[1]])& /@ f;
-      (a+=#[[1]])& /@ s;
-      r=StringDrop[r,1];
-      s=f={};
-      ];
-    {n,a,r}(*{string,integer,string}*)
-    ]
-PrepareString[str_String] := PrepareString[str,FlatSymbols,SharpSymbols]
-
-SharpSymbols={{"\[Sharp]","#"},{"x"}};
+(* HelixChordNaming ------------------------------------------------------------------------*)
 
 End[]
 

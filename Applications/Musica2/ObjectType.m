@@ -53,6 +53,7 @@ CreateContainer::usage = "CreateContainer is a function used to create all objec
 CreateElement::usage = "CreateContainer is a function used to create all object-types that are elements in Musica2."
 ContainerQ::usage = "todo"
 Data::usage = "todo"
+DataDeep::usage = "todo"
 DataToRules::usage = "todo"
 DataQ::usage = "todo"
 ElementType::usage = "todo"
@@ -139,9 +140,14 @@ DefineCommon[T_Symbol] := (
   T /: Opts[x_T] := ReplacePart[x,List,{0}][[1]] /; ObjectTypeQ[T][x];
   T /: Data[x_T] := ReplacePart[x,List,{0}][[2]] /; ObjectTypeQ[T][x];
 
+  DataDeep[T] = Data;
+  T /: DataDeep[x_T] := DataDeep[T][x];
+  T /: DataDeep[T,d_] := DataDeep[T[d]];
+    
+
   (* tidy it up *)
   Tidy[T] = #&;
-  Tidy[x_T] := Tidy[T][x];
+  T /: Tidy[x_T] := Tidy[T][x];
 
   T /: ContainerQ[x_T] := ContainerQ[T];
 
@@ -356,6 +362,9 @@ DefineContainer[T_Symbol, ET_Symbol] :=
       }];
     
     Tidy[T] = (Tidy /@ #)&;
+
+    T /: DataDeep[T,d_] := DataDeep[ET,If[MatchQ[#,{_?OptionQ,_}],#[[2]],#]]& /@ d;
+    DataDeep[T] = DataDeep[T,Data[#]]&;
 
     MessageName[T,"usage"] = T::usage <> "ContainerQ["<>SymbolName[T]<>"] returns True.\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "\[NewLine]";
