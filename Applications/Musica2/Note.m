@@ -92,7 +92,10 @@ Begin["`Private`"]
 (*****************)
 
 DataQ[Chord] = MatchQ[#, {({_,_}|{_?OptionQ,{_,_}})...}]&
+(*
 Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{_Integer,_Integer}],Note[{NoteDuration/.Opts[sup],sub}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]]]];
+*)
+Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{{__?OptionQ},{_,_}}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]],Note[{NoteDuration/.Opts[sup],sub}]]];
 UnPack[Chord] = Function[{sub,opts},If[Opts[sub]=={},Data[sub][[2]],{Opts[sub],PcV[sub]}]];
 UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,NoteDuration->NoteDuration[subs[[1]]]]];
 
@@ -104,6 +107,29 @@ Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
 Chord[x_Counterpoint]                   := Chord[Progression[x]]
 Chord[x_Melody]                         := Chord /@ x
 Chord[p:{__?AtomQ}, opts___?OptionQ]    := Chord[Note[#,opts]& /@ p,opts]
+
+f2p = Function[f, N[12*Log[2,f/220]+57]];
+
+(* threshold ranging from 0 to 1 *)
+Chord[x_Snippet, threshold_] := (* just for fun, when generating snippets from chords (and then back) use pitchclass=f2p[f_Integer * sc/sr] if you want exact results back *)
+  Module[
+    {
+      s = Snippet[x,SoundType -> SampledSoundList],
+      sr = SampleRate[x],
+      sc = SampleCount[x],
+      c,d,m
+      },
+    d = Fourier[SnippetData[s],FourierParameters -> {-1, 1}];
+    (* skip zero-freq *)
+    d = Rest[d];
+    (* nyquist theorem *)
+    d = Take[d,Ceiling[Length[d]/2]];
+    d = Abs[d];
+    m = Max[d];
+    c = Select[MapIndexed[{sr#2[[1]]/sc, #1} &, d], ((threshold m) <= #[[2]]) &];
+    c = {f2p[#[[1]]],127 #[[2]]/m}& /@ c;
+    Chord[{Duration[x],c}]
+    ]
 
 Counterpoint[x_Chord]                        := Counterpoint[Melody[x]]
 Counterpoint[x_Progression, opts___?OptionQ] := Counterpoint[Melody[#]& /@ SeqOfParToParOfSeq[{Duration[#],Data[#]}& /@ x]]
@@ -147,18 +173,22 @@ Progression[x_Melody]                        := Progression[Chord[x]]
 
 Scale[] := Scale[{12,{0,2,4,5,7,9,11}}]
 
-Scale[o_,d_][ss_] := ScaleFunction[Scale[d,Sequence @@ o]][ss]
+Scale[o_,d_][x_Chord]        := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
+Scale[o_,d_][x_Cponterpoint] := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
+Scale[o_,d_][x_Melody]       := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
+Scale[o_,d_][x_Note]         := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
+Scale[o_,d_][x_Progression]  := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
 
 ScaleFunction[x_Scale] :=
   Module[{f=Function[ss,Module[{scalesize = Length[PitchCode[x]]},Floor[ss/scalesize]*PitchCodeClassCount[x] + x[[PitchCode, Mod[ss, scalesize] + 1]]]]},
     Function[ss,DataApply[f,ss]]
     ]
 
-Seq[x:{__Chord}]         := Progression[x]
-Seq[x:{___Counterpoint}] := Counterpoint[Seq[Progression /@ x]]
-Seq[x:{__Melody}]        := Melody[Flatten[Note /@ x]]
-Seq[x:{__Note}]          := Melody[x]
-Seq[x:{__Progression}]   := Progression[Flatten[Chord /@ x]]
+Seq[x:{__Chord}]        := Progression[x]
+Seq[x:{__Counterpoint}] := Counterpoint[Seq[Progression /@ x]]
+Seq[x:{__Melody}]       := Melody[Flatten[Note /@ x]]
+Seq[x:{__Note}]         := Melody[x]
+Seq[x:{__Progression}]  := Progression[Flatten[Chord /@ x]]
 
 p2f = Function[p, 220*2^((p - 57)/12)];
 v2a = Function[v, v/127];

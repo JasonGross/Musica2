@@ -202,6 +202,14 @@ Mix[x_Sound, mix : {{__}...}] :=
     Sound[fl,Sequence @@ Opts[x]]
     ] /; (SoundType[x]===SampledSoundFunction) && (Length[x] == Length[mix]) && Module[{o = Union[Length /@ mix]}, (Length[o] == 1) && (1 <= o[[1]])]
 
+Mix[s_Sound,1] :=
+  Module[{c = Length[s],mix},
+    If[c == 1, s,
+      mix = Table[{Evaluate[1/c]&},{c}];
+      Mix[s, mix]
+      ]
+    ]
+
 Mix[s_Sound,2] :=
   Module[{c = Length[s],mix},
     If[c == 2, s,
@@ -222,6 +230,22 @@ Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
 Seq[x:{__Snippet},opts___?OptionQ] := "todo" (* todo: write the code! *)
 Seq[x:{__Sound},  opts___?OptionQ] := "todo" (* todo: write the code! *)
+
+Snippet[x_Snippet, opts___?OptionQ] :=
+  Module[
+    {
+      s = x,
+      stout = SoundType /. {opts} /. (SoundType->SoundType[x]),
+      stin  = SoundType[x],
+      srout = SampleRate /. {opts} /. (SampleRate->SampleRate[x]),
+      srin  = SampleRate[x],
+      scout = SampleCount /. {opts} /. (SampleCount->SampleCount[x]),
+      scin  = SampleCount[x],
+      d
+      },
+      d = Convert[SnippetData[s],stin,scin,stout,scout];
+      Snippet[{stout,d,srout,scout}]
+    ]
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 

@@ -367,16 +367,16 @@ Midi[x_Note,         opts___?OptionQ] := Midi[Track[x],opts]
 Midi[x_Progression,  opts___?OptionQ] := Midi[Track[x],opts]
 
 Midi[x_Event, opts___?OptionQ] := Midi[Track[x],opts]
-Midi[mx_Midi, opts___?OptionQ] :=
+Midi[x_Midi, opts___?OptionQ] :=
   Module[
     {
-      m=mx,
-      qpmout = QPM /. {opts} /. (QPM->QPM[mx]),
-      qpmin  = QPM[mx],
-      tpqout = TPQ /. {opts} /. (TPQ->TPQ[mx]),
-      tpqin  = TPQ[mx],
-      tuout  = TimeUnit /. {opts} /. (TimeUnit->TimeUnit[mx]),
-      tuin   = TimeUnit[mx]
+      m = x,
+      qpmout = QPM /. {opts} /. (QPM->QPM[x]),
+      qpmin  = QPM[x],
+      tpqout = TPQ /. {opts} /. (TPQ->TPQ[x]),
+      tpqin  = TPQ[x],
+      tuout  = TimeUnit /. {opts} /. (TimeUnit->TimeUnit[x]),
+      tuin   = TimeUnit[x]
       },
     If[qpmout!=qpmin || tpqout!=tpqin,
       If[tuin===Tick,m=Convert[m,tuin,tuin=Second]];

@@ -155,7 +155,10 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     DataQ[T] = MatchQ[#, {(_?(DataQ[ET])|{_?OptionQ,_?(DataQ[ET])})...}]&;
 
     (* outgoing and incoming element's *)
+(*
     Pack[T] = Function[{container,element},If[DataQ[ET][element],ET[element],ET[element[[2]], Sequence @@ element[[1]]]]];
+*)
+    Pack[T] = Function[{container,element},If[MatchQ[element,{{__?OptionQ},_?(DataQ[ET])}],ET[element[[2]], Sequence @@ element[[1]]],ET[element]]];
     UnPack[T] = Function[{element,opts},If[Opts[element]=={},Data[element],{Opts[element],Data[element]}]];
     UnPackOpts[T] = Function[{elements,opts},opts];
 
@@ -174,6 +177,7 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     Scan[(T /: #[x_T] := # /@ x)&,Members[T]];
 
     (* handy list-manipulation-functions *)
+(*
     T /: Append[x_T, y_?(TypeQ[ET])] := T[Append[Data[x],UnPack[T][y,Opts[x]]], Sequence @@ Opts[x]];
     T /: Delete[x_T, n__] := T[Delete[Data[x],n], Sequence @@ Opts[x]];
     T /: Drop[x_T, n_] := T[Drop[Data[x],n], Sequence @@ Opts[x]];
@@ -193,6 +197,27 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     T /: Scan[f_, x_T] := Scan[f, ET[x]];
     T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]];
     T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]];
+*)
+    T /: Append[x_T, y_ET] := T[Append[ET[x],y], Sequence @@ Opts[x]];
+    T /: Delete[x_T, n__] := T[Delete[Data[x],n], Sequence @@ Opts[x]];
+    T /: Drop[x_T, n_] := T[Drop[Data[x],n], Sequence @@ Opts[x]];
+    T /: Extract[x_T, n_Integer] := Part[x,n];
+    T /: First[x_T] := x[[1]];
+    T /: Insert[x_T, y_ET, n_Integer] := T[Insert[ET[x],y,n], Sequence @@ Opts[x]];
+    T /: Last[x_T] := x[[-1]];
+    T /: Length[x_T] := Length[Data[x]];
+    T /: Map[f_, x_T] := Module[{r=Map[f, ET[x]]},If[MatchQ[r,{__ET}],T[r,Sequence@@Opts[x]],r]];
+    T /: MapIndexed[f_, x_T] := Module[{r=MapIndexed[f, ET[x]]},If[MatchQ[r,{__ET}],T[r,Sequence@@Opts[x]],r]];
+    T /: Most[x_T] := T[Most[Data[x]], Sequence @@ Opts[x]];
+    T /: Part[x_T, n_Integer] := Pack[T][x,#]&[Part[Data[x],n]] /; n!=0;
+    T /: Part[x_T, n_Integer, m__Integer] := Part[x,n][[m]] /; n!=0;
+    T /: Prepend[x_T, y_ET] := T[Prepend[ET[x],y], Sequence @@ Opts[x]];
+    T /: ReplacePart[x_T, y_ET, n_Integer] := T[ReplacePart[ET[x],y,n], Sequence @@ Opts[x]] /; n!=0;
+    T /: Rest[x_T] := T[Rest[Data[x]], Sequence @@ Opts[x]];
+    T /: Scan[f_, x_T] := Scan[f, ET[x]];
+    T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]];
+    T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]];
+
 
     If[ContainerQ[ET],
       T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x],
