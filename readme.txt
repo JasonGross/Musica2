@@ -64,7 +64,7 @@ Then You just have to do <<Musica2` inside Mathematica as expected.
 Feedback:
 
 Please give me feedback! This is the only way this package might get useful for You too.
-You can mail me at bo@gcab.net and hopefully Your mail will not be treated as spam (I'll do my best), or You can attend to one of the forums at :
+You can mail me at bo@gcab.net, or You can attend to one of the forums at :
 http://sourceforge.net/forum/?group_id=90149
 
 But most important, Have fun!

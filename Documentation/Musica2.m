@@ -59,58 +59,7 @@ MidiTestFileList:={cor,fug,cun,pre};
 
 
 
-MidiToSound[m:Midi[_,_],f_,opts___]:=
-  Module[
-    {
-      mp,
-      r,c,mix
-      },
-    (* get the music as {{{timing,{p,v}}...}...} *)
-    
-    r=Cases[MidiSetState[
-            m,{MidiTimeUnit\[Rule]MidiSec,MidiShape\[Rule]MidiVoice,
-              MidiTiming\[Rule]MidiDelta}][[2]],{{MidiNoteOn,_},d$_}\[Rule]
-          d$];
-    (* calculate mean pitch *)
-    
-    mp=N[Mean[Flatten[(If[!MidiDataNoValueQ[#[[2]]],#[[2,1]],{}]&/@#)&/@r]]];
-    (* make them into lists of sound-objects *)
-    r=(
-            If[MidiDataNoValueQ[#[[2]]],
-                  
-                  SoundOfSilence[SoundChannelCount->1,
-                    SoundDuration\[Rule]#[[1]],opts],
-                  f[#[[1]],#[[2,1]],#[[2,2]],mp]
-                  ]&/@#
-            )&/@r;
-    (* then use SoundSeq *)
-    r=SoundSeq/@r;
-    (* then use SoundPar *)
-    r=SoundPar[r];
-    (* create a simple mix for two output-channels *)
-    
-    c=SoundGetChannelCount[r];
-    mix=If[c\[Equal]1,{{1&,1&}},
-        Table[N[{Evaluate[2(c-i)/(c^2-c)]&,Evaluate[2(i-1)/(c^2-c)]&}],{i,c}]
-        ];
-    (* make the mixdown *)
-    SoundMix[r,mix]
-    ]
 
-p2f=Function[p,440*2^((p-57)/12)];
-v2a=Function[v,v/127];
-osc=Function[{f,a},N[a Sin[2Pi f#]]&];
-
-SoundBySample[s_Sound,opts___]:=
-  Function[{d,p,v,mp},
-    SoundSetDuration[SoundPitchShift[s,p2f[p]/p2f[mp],opts],d,opts]]
-
-SoundBySine[opts___]:=
-  
-  Function[{d,p,v,mp},
-    SoundMakeFunc[osc[p2f[p],v2a[v]],SoundDuration\[Rule]d,opts]]
-
-MidiPlay[m:Midi[_,_]]:=Show[MidiToSound[m,SoundBySine[]]]
 
 
 

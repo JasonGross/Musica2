@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-08-19  bch :  added MidiPlay to the list of pkg's
   2004-08-08  bch :  added CalcMidiStateRoutes
   2004-08-07  bch :  created
                      added Setup to the list of pkg's
@@ -100,7 +101,7 @@ CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
     c/(#^2-#)&[sc]
     ]
 
-MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m",opts___] :=
+MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m",opts___] :=
   Module[{fout = OpenWrite[fn],d=ToString/@Date[],pr=True},
     WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
     WriteString[fout, "\n"];
