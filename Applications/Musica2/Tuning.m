@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Tuning` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2005-01-09  bch :  changed the struct in EqualTemperament
                      added CustomTuning
@@ -47,6 +48,7 @@ BeginPackage["Musica2`Tuning`",
     "Musica2`Common`",
     "Musica2`ObjectType`",
     "Musica2`Test`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -61,10 +63,10 @@ Unprotect[
   FrequencyRatios
   ];
 
-CreateElement[CustomTuning, {{PitchCodeRef_,FrequencyRef_},FrequencyRatios:{__}},{{69, 440}, {17/16, 18/17, 16/15, 25/24, 16/15, 21/20, 15/14, 16/15, 25/24, 27/25, 25/24, 16/15}},
+CreateElement[Musica2,CustomTuning, {{PitchCodeRef_,FrequencyRef_},FrequencyRatios:{__}},{{69, 440}, {17/16, 18/17, 16/15, 25/24, 16/15, 21/20, 15/14, 16/15, 25/24, 27/25, 25/24, 16/15}},
 "todo.\[NewLine]"
 ];
-CreateElement[EqualTemperament, {{PitchCodeRef_,FrequencyRef_},{PitchCodeOctave_,FrequencyOctave_}},{{69,440},{12,2}},
+CreateElement[Musica2,EqualTemperament, {{PitchCodeRef_,FrequencyRef_},{PitchCodeOctave_,FrequencyOctave_}},{{69,440},{12,2}},
 "todo.\[NewLine]"
 ];
 
@@ -85,12 +87,14 @@ Tuning := EqualTemperament[]
 
 (* CustomTuning constructors ****************************************************************)
 
+Usage[Musica2,CustomTuning,{{__?NumberQ},___?OptionQ},_CustomTuning,"todo"]
 CustomTuning[x:{__?NumberQ},opts___?OptionQ] := CustomTuning[{{69,440},x},opts]
 
 (* CustomTuning reverse constructors ********************************************************)
 
 (* CustomTuning common functions ************************************************************)
 
+Usage[Musica2,Convert,{PitchCode, Frequency, _CustomTuning},_,"todo"]
 Convert[PitchCode, Frequency, x_CustomTuning] :=
   Module[{
       pr = PitchCodeRef[x],
@@ -109,6 +113,7 @@ Convert[PitchCode, Frequency, x_CustomTuning] :=
       ]
     ]
 
+Usage[Musica2,Convert,{Frequency, PitchCode, _CustomTuning},_,"todo"]
 Convert[Frequency, PitchCode, x_CustomTuning] :=
   Module[{
       pr = PitchCodeRef[x],
@@ -129,12 +134,15 @@ Convert[Frequency, PitchCode, x_CustomTuning] :=
       ]
     ]
 
+Usage[Musica2,Convert,{{PitchCode,Overtone},PitchCode,_CustomTuning},_,"todo"]
 Convert[{PitchCode,Overtone},PitchCode,x_CustomTuning] := Function[{p,o},Evaluate[Convert[Frequency,PitchCode,x][o Convert[PitchCode,Frequency,x][p]]]]
 
 CustomTuning[o_?OptionQ, d_?(DataQ[CustomTuning])][p_] := Convert[PitchCode,Frequency,CustomTuning[o,d]][p]
 
+Usage[Musica2,FrequencyOctave,{_CustomTuning},_,"todo"]
 FrequencyOctave[x_CustomTuning] := Times @@ FrequencyRatios[x]
 
+Usage[Musica2,PitchCodeOctave,{_CustomTuning},_Integer,"todo"]
 PitchCodeOctave[x_CustomTuning] := Length[FrequencyRatios[x]]
 
 (* CustomTuning unique functions ************************************************************)
@@ -162,18 +170,25 @@ CustomTuning /: TestSuite[CustomTuning] = Join[TestSuite[CustomTuning],{
 
 (* EqualTemperament constructors ************************************************************)
 
+Usage[Musica2,EqualTemperament,{_Integer,___?OptionQ},_EqualTemperament,"todo"]
 EqualTemperament[x_Integer,opts___?OptionQ] := EqualTemperament[{{69,440},{x,2}},opts]
 
 (* EqualTemperament reverse constructors ****************************************************)
 
 (* EqualTemperament common functions ********************************************************)
 
+Usage[Musica2,Convert,{PitchCode,Frequency,_EqualTemperament},_,"todo"]
 Convert[PitchCode,Frequency,x_EqualTemperament] := Function[p,FrequencyRef[x]*FrequencyOctave[x]^((p - PitchCodeRef[x])/PitchCodeOctave[x])]
+
+Usage[Musica2,Convert,{Frequency,PitchCode,_EqualTemperament},_,"todo"]
 Convert[Frequency,PitchCode,x_EqualTemperament] := Function[f,PitchCodeOctave[x]*Log[FrequencyOctave[x],f/FrequencyRef[x]]+PitchCodeRef[x]]
+
+Usage[Musica2,Convert,{{PitchCode,Overtone},PitchCode,_EqualTemperament},_,"todo"]
 Convert[{PitchCode,Overtone},PitchCode,x_EqualTemperament] := Function[{p,o},Evaluate[Convert[Frequency,PitchCode,x][o Convert[PitchCode,Frequency,x][p]]]]
 
 EqualTemperament[o_?OptionQ, d_?(DataQ[EqualTemperament])][p_] := Convert[PitchCode,Frequency,EqualTemperament[o,d]][p]
 
+Usage[Musica2,FrequencyRatios,{_EqualTemperament},{__},"todo"]
 FrequencyRatios[x_EqualTemperament] := Table[FrequencyOctave[x]^(1/PitchCodeOctave[x]),{PitchCodeOctave[x]}]
 
 (* EqualTemperament unique functions ********************************************************)

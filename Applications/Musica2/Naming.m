@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Naming` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-10-26  bch :  created
@@ -44,6 +45,7 @@ BeginPackage["Musica2`Naming`",
     "Musica2`Note`",
     "Musica2`ObjectType`",
     "Musica2`Test`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -63,7 +65,7 @@ Unprotect[
   SharpSymbols
   ];
 
-CreateElement[HelixNoteNaming,{
+CreateElement[Musica2,HelixNoteNaming,{
 Octave_Integer,
 NoteNames:{__String},
 Helix:{PitchCodeStart_Integer,PitchCodeInterval_Integer,NameCodeStart_Integer},
@@ -72,7 +74,7 @@ FlatsCount_Integer
 "todo.\[NewLine]"
 ]
 
-CreateElement[HelixChordNaming,{
+CreateElement[Musica2,HelixChordNaming,{
 RootNaming_,
 ChordNames:{
   {{__String},{__Integer}}..
@@ -143,7 +145,10 @@ HelixNoteNaming[] := HelixNoteNaming[{12,{"c","d","e","f","g","a","b"},{5,5,3},2
 
 (* HelixNoteNaming common functions *********************************************************)
 
+Usage[Musica2,Convert,{PitchCode,String,_HelixNoteNaming},_,"todo"];
 Convert[PitchCode,String,x_HelixNoteNaming] := NoteNamingFunction[x, False]
+
+Usage[Musica2,Convert,{String,PitchCode,_HelixNoteNaming},_,"todo"];
 Convert[String,PitchCode,x_HelixNoteNaming] := NoteNamingFunction[x, True]
 
 HelixNoteNaming[o_?OptionQ, d_?(DataQ[HelixNoteNaming])][p_Integer] := NoteNamingFunction[HelixNoteNaming[o,d]][p,0]
@@ -208,6 +213,7 @@ HelixNoteNaming /: TestSuite[HelixNoteNaming] = Join[TestSuite[HelixNoteNaming],
 
 (* HelixChordNaming constructors ************************************************************)
 
+Usage[Musica2,HelixChordNaming,{},_HelixChordNaming,"todo"];
 HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
   {{"m-5"},      {0, 3, 6}},
   {{"sus2"},     {0, 2, 7}},
@@ -228,7 +234,10 @@ HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
 
 (* HelixChordNaming common functions ********************************************************)
 
+Usage[Musica2,Convert,{{PitchCode},String,_HelixChordNaming},_,"todo"];
 Convert[{PitchCode},String,x_HelixChordNaming] := ChordNamingFunction[x, False]
+
+Usage[Musica2,Convert,{String,{PitchCode},_HelixChordNaming},_,"todo"];
 Convert[String,{PitchCode},x_HelixChordNaming] := ChordNamingFunction[x, True]
 
 HelixChordNaming[o_?OptionQ, d_?(DataQ[HelixChordNaming])][p:{__Integer}] := ChordNamingFunction[HelixChordNaming[o,d]][p,0]

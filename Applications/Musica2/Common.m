@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Common` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-01-23  bch :  added TotalDuration
   2004-11-29  bch :  added Time and Overtone
   2004-11-28  bch :  moved PitchCode from Note.m
@@ -46,6 +47,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Common`",
   {
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -77,6 +79,7 @@ Duration::usage = "todo"
 Frequency::usage = "todo"
 MidiChannel::usage = "todo"
 Mix::usage = "todo"
+Musica2::usage = "todo"
 Octave::usage = "todo"
 Par::usage = "todo"
 PitchCode::usage = "todo"
@@ -88,6 +91,14 @@ UnPar::usage = "todo"
 UnSeq::usage = "todo"
 
 Begin["`Private`"]
+
+If[!MatchQ[Usage[Musica2],_List],Usage[Musica2]={}];
+
+Usage[Musica2,Duration,{_?NumberQ},_,"todo"];
+Duration[x_?NumberQ] := x
+
+Usage[Musica2,TotalDuration,{_?NumberQ},_,"todo"];
+TotalDuration[x_?NumberQ] := x
 
 End[]
 

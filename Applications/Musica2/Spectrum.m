@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Spectrum` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2005-01-27  bch :  renamed Spectrum to ToneSpectrum to avoid collision with Combinatorica
   2004-10-07  bch :  created
@@ -44,6 +45,7 @@ BeginPackage["Musica2`Spectrum`",
     "Musica2`ObjectType`",
     "Musica2`Sound`",
     "Musica2`Test`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -60,10 +62,10 @@ Unprotect[
   ToneQ
   ];
 
-CreateElement[Tone, {Frequency_, {Amplitude_, Phase_}},{440,{1,0}},
+CreateElement[Musica2,Tone, {Frequency_, {Amplitude_, Phase_}},{440,{1,0}},
 "todo.\[NewLine]"
 ];
-CreateContainer[ToneSpectrum,Tone,
+CreateContainer[Musica2,ToneSpectrum,Tone,
 "todo.\[NewLine]"
 ];
 
@@ -77,16 +79,22 @@ Begin["`Private`"]
 
 (* Tone constructors ************************************************************************)
 
+Usage[Musica2,Tone,{{_,_?NumberQ}, ___?OptionQ},_Tone,"todo"]
 Tone[{f_,c_?NumberQ}, opts___?OptionQ] := Tone[{f,{Abs[c],Arg[c]}},opts]
+
+Usage[Musica2,Tone,{_, ___?OptionQ},_Tone,"todo"]
 Tone[f_, opts___?OptionQ] := Tone[{f,1},opts]
 
 (* Tone reverse constructors ****************************************************************)
 
 complex[a_,p_] := a(Cos[p] + I Sin[p])
+
+Usage[Musica2,Complex,{_Tone},_Complex,"todo"]
 Tone /: Complex[x_Tone] := complex[Amplitude[x],Phase[x]]
 
 (* Tone common functions ********************************************************************)
 
+Usage[Musica2,Tidy,{Tone},_,"todo"]
 Tidy[Tone] = Module[{r = #},
   If[Frequency[r] < 0,
     r = ReplacePart[r,-Frequency[r],Frequency];
@@ -104,8 +112,13 @@ Tidy[Tone] = Module[{r = #},
 
 (* Tone unique functions ********************************************************************)
 
+Usage[Musica2,Plus,{_Tone,_Tone},_ToneSpectrum,"todo"]
 Tone /: Plus[a_Tone,b_Tone] := ToneSpectrum[{a,b}]
+
+Usage[Musica2,Power,{_Tone,2},_ToneSpectrum,"todo"]
 Tone /: Power[a_Tone,2] := a*a
+
+Usage[Musica2,Times,{_Tone,_Tone},_ToneSpectrum,"todo"]
 Tone /: Times[a_Tone,b_Tone] :=
   Module[{af,aa,ap,bf,ba,bp},
     {af,{aa,ap}}=Data[Tidy[a]];
@@ -129,6 +142,7 @@ Tone /: TestSuite[Tone] = Join[TestSuite[Tone],{
 
 (* ToneSpectrum constructors ****************************************************************)
 
+Usage[Musica2,ToneSpectrum,{_Snippet, ___?OptionQ},_ToneSpectrum,"todo"]
 ToneSpectrum[x_Snippet, opts___?OptionQ] :=
   Module[
     {
@@ -148,10 +162,12 @@ ToneSpectrum[x_Snippet, opts___?OptionQ] :=
     r
     ]
 
+Usage[Musica2,ToneSpectrum,{{__?AtomQ}, ___?OptionQ},_ToneSpectrum,"todo"]
 ToneSpectrum[x:{__?AtomQ}, opts___?OptionQ] := ToneSpectrum[Tone /@ x,opts]
 
 (* ToneSpectrum reverse constructors ********************************************************)
 
+Usage[Musica2,Snippet,{_ToneSpectrum, ___?OptionQ},_Snippet,"todo"]
 ToneSpectrum /: Snippet[x_ToneSpectrum, opts___?OptionQ] := (* todo: an option to use IFFT *)
   Module[
     {
@@ -166,8 +182,10 @@ ToneSpectrum /: Snippet[x_ToneSpectrum, opts___?OptionQ] := (* todo: an option t
 
 (* ToneSpectrum common functions ************************************************************)
 
+Usage[Musica2,Mix,{{__ToneSpectrum}, ___?OptionQ},_ToneSpectrum,"todo"]
 Mix[x:{__ToneSpectrum}, opts___?OptionQ] := ToneSpectrum[Flatten[Tone /@ x]]
 
+Usage[Musica2,Tidy,{ToneSpectrum},_,"todo"]
 Tidy[ToneSpectrum] = Module[{r = #,i,c},
   r = Tidy /@ r;
   r = Select[r, 0 =!= Amplitude[#]&];
@@ -190,12 +208,25 @@ Tidy[ToneSpectrum] = Module[{r = #,i,c},
 
 (* ToneSpectrum unique functions ************************************************************)
 
+Usage[Musica2,Plus,{_ToneSpectrum, _ToneSpectrum},_ToneSpectrum,"todo"]
 ToneSpectrum /: Plus[a_ToneSpectrum,b_ToneSpectrum] := ToneSpectrum[Join[Tone[a],Tone[b]]]
+
+Usage[Musica2,Plus,{_ToneSpectrum, _Tone},_ToneSpectrum,"todo"]
 ToneSpectrum /: Plus[a_ToneSpectrum,b_Tone] := ToneSpectrum[Append[Tone[a],b]]
+
+Usage[Musica2,Plus,{_Tone, _ToneSpectrum},_ToneSpectrum,"todo"]
 ToneSpectrum /: Plus[b_Tone,a_ToneSpectrum] := ToneSpectrum[Append[Tone[a],b]]
+
+Usage[Musica2,Power,{_ToneSpectrum, 2},_ToneSpectrum,"todo"]
 ToneSpectrum /: Power[a_ToneSpectrum,2] := a*a
+
+Usage[Musica2,Times,{_ToneSpectrum, _ToneSpectrum},_ToneSpectrum,"todo"]
 ToneSpectrum /: Times[a_ToneSpectrum,b_ToneSpectrum] := ToneSpectrum[Flatten[Tone /@ (a*Tone[b])]]
+
+Usage[Musica2,Times,{_ToneSpectrum, _Tone},_ToneSpectrum,"todo"]
 ToneSpectrum /: Times[a_ToneSpectrum,b_Tone] := ToneSpectrum[Flatten[Tone /@ (Tone[a] * b)]]
+
+Usage[Musica2,Times,{_Tone, _ToneSpectrum},_ToneSpectrum,"todo"]
 ToneSpectrum /: Times[b_Tone,a_ToneSpectrum] := ToneSpectrum[Flatten[Tone /@ (Tone[a] * b)]]
 
 (* ToneSpectrum tests ***********************************************************************)

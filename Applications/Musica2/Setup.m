@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-02-12  bch :  renamed DurVal.m to ValueObject.m
   2005-01-25  bch :  renamed pkgs to Packages and made it public
   2005-01-24  bch :  added DurVal to the list of pkg's
@@ -57,10 +58,12 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Setup`",
   {
+    "Musica2`Common`",
     "Musica2`Midi`",
     "Musica2`PianoRoll`",
     "Musica2`Test`",
     "Musica2`ObjectType`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -81,16 +84,16 @@ PrintUsage::usage = "todo"
 Begin["`Private`"]
 
 fn="Musica2/Applications/Musica2/Kernel/init.m";
-pkg="Musica2";
-Packages={"Common","Instrument","Midi","Naming","Note","ObjectType","PianoRoll","Setup","Sound","Spectrum","Test","Tuning","Utils","ValueObject"};
 
-ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
-ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]
+Packages[Musica2]={"Common","Instrument","Midi","Naming","Note","ObjectType","PianoRoll","Setup","Sound","Spectrum","Test","Tuning","Usage","Utils","ValueObject"};
 
-MakeInitDotEm[] := MakeInitDotEm[pkg, Packages, fn]
-MakeInitDotEm[pkg_, pkgs_, fn_] :=
+ClearInitDotEm[] := ClearInitDotEm["Musica2", fn]
+ClearInitDotEm[app_, fn_] := MakeInitDotEm[app,{},fn]
+
+MakeInitDotEm[] := MakeInitDotEm["Musica2", Packages[Musica2], fn]
+MakeInitDotEm[app_, pkgs_, fn_] :=
   Module[{fout = OpenWrite[fn],d=ToString/@Date[],pr=True},
-    WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
+    WriteString[fout,"(* :Title: Master Declarations File for " <> app <> " *)\n"];
     WriteString[fout, "\n"];
     WriteString[fout, "(* :Summary: This file contains declarations of all the major symbols contained in files in this directory.\nWhen loaded, it sets up the symbols with attribute Stub, so the correct package will be loaded when the symbol is called. *)\n"];
     WriteString[fout, "\n"];
@@ -98,13 +101,13 @@ MakeInitDotEm[pkg_, pkgs_, fn_] :=
     WriteString[fout, "\n"];
     WriteString[fout, "(* :History: File created "<>d[[1]]<>"-"<>d[[2]]<>"-"<>d[[3]]<>" at "<>d[[4]]<>":"<>d[[5]]<>" *)\n"];
     WriteString[fout, "\n"];
-    WriteString[fout, "If[!MemberQ[$Packages,\"" <> pkg <> "`\"],\n  System`Private`p = Unprotect[$Packages];\n  PrependTo[$Packages,\"" <> pkg <> "`\"];\n  Protect @@ System`Private`p  \n];\n"];
+    WriteString[fout, "If[!MemberQ[$Packages,\"" <> app <> "`\"],\n  System`Private`p = Unprotect[$Packages];\n  PrependTo[$Packages,\"" <> app <> "`\"];\n  Protect @@ System`Private`p  \n];\n"];
     WriteString[fout, "\n"];
     (
       If[pr,Print[#]];
-      Needs[pkg <> "`" <> # <> "`"];
-      n = Names[pkg <> "`" <> # <> "`*"];
-      WriteString[fout,"DeclarePackage[\"" <> pkg <> "`" <> # <> "`\",\n"];
+      Needs[app <> "`" <> # <> "`"];
+      n = Names[app <> "`" <> # <> "`*"];
+      WriteString[fout,"DeclarePackage[\"" <> app <> "`" <> # <> "`\",\n"];
       Write[fout, n];
       WriteString[fout, "];\n"];
       WriteString[fout, "\n"];
@@ -113,19 +116,22 @@ MakeInitDotEm[pkg_, pkgs_, fn_] :=
     Close[fout];
     ]
 
-Setup /: TestSuite[Setup] := (
-  Needs["Musica2`" <> # <> "`"]& /@ Packages;
-  TestSuite /@ {ObjectType,PianoRoll,Utils}
+(* this dont work very well because of currently messy dependencys *)
+Musica2 /: Needs[Musica2] := (Needs[SymbolName[Musica2] <> "`" <> # <> "`"]& /@ Packages[Musica2];Null)
+    
+Setup /: TestRun[Setup,opts___?OptionQ] := (
+  Needs["Musica2`" <> # <> "`"]& /@ Packages[Musica2];
+  And @@ (TestRun[#,opts]& /@ {ObjectType,PianoRoll,Utils})
   )
 
-Symbols[p_String] :=
+Symbols[app_Symbol,p_String] :=
   Module[{},
-    Sort[Names["Musica2`" <> p <> "`*"]]
+    Sort[Names[SymbolName[app] <> "`" <> p <> "`*"]]
     ]
   
-Symbols[] :=
+Symbols[app_Symbol] :=
   Module[{},
-    Sort[Flatten[Symbols /@ Packages]]
+    Sort[Flatten[Symbols[app,#]& /@ Packages[app]]]
     ]
   
 PrintUsage[s_String] :=
@@ -134,7 +140,7 @@ PrintUsage[s_String] :=
     Print[ToExpression[s<>"::usage"]];
     ]
 
-PrintUsage[] := (PrintUsage /@ Symbols[];)
+PrintUsage[app_Symbol] := (PrintUsage /@ Symbols[app];)
    
 End[]
 

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-01-15  bch :  added TestSuite
   2005-01-02  bch :  added ValuesToRatios and RatiosToValues
   2004-10-06  bch :  added DataNoValue functions, used in ParOfSeqToSeqOfPar
@@ -58,7 +59,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Utils`",
   {
     "DiscreteMath`Tree`",
-    "Musica2`Test`"
+    "Musica2`Test`",
+    "Musica2`Usage`"
     }
   ]
 
@@ -100,6 +102,7 @@ DataTie::usage = "A symbol that indicates a tie (in Chord in Progression for exa
 DataTieQ::usage = "DataTieQ[expr_] tests if expr is/contains a tie or not."
 DataUnTie::usage = "DataUnTie[d_], the opposite to calling DataTie."
 DeltasToValues::usage = "DeltasToValues[d_List, c_Integer:0] is the opposite to ValuesToDeltas";
+Deprecated::usage = ""
 FunctionQ::usage = "FunctionQ[expr_] tests if expr is a function."
 GetOpts::usage = "todo"
 MakeNestedIfs::usage = "MakeNestedIfs[de$:{{_,_}...}, default$_] and MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] creates a function containing nested if's. The de-argument is a list of {delta,expr} which describes the function to return. The default-argument is the expr the function returned will return when called whith a parameter outside the normal range and defaults to 0 (zero)."
@@ -115,6 +118,7 @@ ValuesToRatios::usage = "todo"
 
 Begin["`Private`"]
 
+Usage[Musica2,AddOpts,{{___?OptionQ},___?OptionQ},{___?OptionQ},"todo"]
 AddOpts[x:{___?OptionQ},opts___?OptionQ] :=
   Module[{o=x},
     Scan[
@@ -124,43 +128,58 @@ AddOpts[x:{___?OptionQ},opts___?OptionQ] :=
     o
     ]
 
+Usage[Musica2,Circular,{_List,_Integer},_,"todo"]
 Circular[x_List,n_Integer] := x[[Mod[n, Length[x], 1]]]
 
+Usage[Musica2,DataAnyValueQ,{_},(True|False),"todo"]
 DataAnyValueQ[expr_] :=
   If[AtomQ[expr],
     expr === DataAnyValue || expr === DataTie[DataAnyValue],
     Or @@ (DataAnyValueQ /@ ReplacePart[expr,List,0])
     ]
 
+Usage[Musica2,DataApply,{_,_},_,"todo"]
 DataApply[f_,d_] := If[DataAnyValueQ[d] || DataNoValueQ[d],d,If[DataTieQ[d],DataTie[#],#]&[f[DataUnTie[d]]]]
 
+Usage[Musica2,DataNoValue,{_},_,"todo"]
 DataNoValue[expr_List] := DataNoValue /@ expr
 DataNoValue[expr_] := DataNoValue
 
+Usage[Musica2,DataNoValueQ,{_},(True|False),"todo"]
 DataNoValueQ[expr_] :=
   If[AtomQ[expr],
     expr === DataNoValue || expr === DataTie[DataNoValue],
     Or @@ (DataNoValueQ /@ ReplacePart[expr,List,0])
     ]
 
+Usage[Musica2,DataPlainValueQ,{_},(True|False),"todo"]
 DataPlainValueQ[x_] := !(DataAnyValueQ[x]||DataNoValueQ[x]||DataTieQ[x])
 
 DataTie[d_DataTie] := d
 DataTie[d_List] := DataTie /@ d
 
+Usage[Musica2,DataTieQ,{_},(True|False),"todo"]
 DataTieQ[d_] := MatchQ[d,_DataTie] || (ListQ[d] && Or @@ (DataTieQ /@ d))
 
+Usage[Musica2,DataUnTie,{_},_,"todo"]
 DataUnTie[d_DataTie] := d[[1]]
 DataUnTie[d_List] := DataUnTie /@ d
 DataUnTie[d_] := d
 
+Usage[Musica2,DeltasToValues,{_List, _:0},_List,"todo"]
 DeltasToValues[d_List, c_:0] :=
   Module[{z = c},
     Prepend[(z += #)& /@ d, c]
     ]
 
+Musica2::"deprec" = "`1` is deprecated as of `2` and will not be supported in future versions of Musica2.  Use `3` instead.";
+
+Deprecated[old_,tim_,new_] := Message[Musica2::"deprec",old,tim,new]
+    
+Usage[Musica2,FunctionQ,{_},(True|False),"todo"]
 FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition | _InterpolatingFunction]
 
+Usage[Musica2,GetOpts,{{___?OptionQ},___Symbol},{___?OptionQ},"todo"]
 GetOpts[x:{___?OptionQ},opts__Symbol] := Cases[x,(n$_->_)/;MemberQ[{opts},n$]]
 
 MNI[x$_, c$_, e$_, p$_, d$_] :=
@@ -178,7 +197,10 @@ MNI[x$_, c$_, e$_, p$_, d$_] :=
       ]
     ]
 
+Usage[Musica2,MakeNestedIfs,{{{_,_}...}, _:0},_,"todo"]
 MakeNestedIfs[de$:{{_,_}...}, default$_:0] := MakeNestedIfs[de$, default$, default$]
+
+Usage[Musica2,MakeNestedIfs,{{{_,_}...}, _, _},_,"todo"]
 MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] :=
   Module[{det$,deltas$={},expr$={},t$, i$, c$},
     If[0<Length[de$],
@@ -191,6 +213,7 @@ MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] :=
     Function[Evaluate[c$], Evaluate[i$]]
     ]
 
+Usage[Musica2,NormalizeList,{_,___},_,"todo"]
 NormalizeList[d_,opts___] :=
   Module[
     {
@@ -203,6 +226,7 @@ NormalizeList[d_,opts___] :=
     (d-md)/sp
     ]
 
+Usage[Musica2,ParOfSeqToSeqOfPar,{{{{_,_},{_,_}...},{{_,_},{_,_}...}...}},{{_,{__}},{_,{__}}...},"todo"]
 ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to chords *)
   Module[{at,ut,st,al,ad,sd},
     (* get all timing *)
@@ -243,13 +267,16 @@ ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to
     Transpose[{ut,sd}]
     ]
 
+Usage[Musica2,RatiosToValues,{_List,_:1},_List,"todo"]
 RatiosToValues[r_List,c_:1] :=
   Module[{z = c},
     Prepend[(z *= #)& /@ r, c]
     ]
     
+Usage[Musica2,RemOpts,{{___?OptionQ},___Symbol},{___?OptionQ},"todo"]
 RemOpts[x:{___?OptionQ},opts__Symbol] := Cases[x,(n$_->_)/;(!MemberQ[{opts},n$])]
 
+Usage[Musica2,SeqOfParToParOfSeq,{{{_,{__}},{_,{__}}...}},{{{_,_},{_,_}...},{{_,_},{_,_}...}...},"todo"]
 SeqOfParToParOfSeq[sop:{{_,{__}},{_,{__}}...}] := (* chords to melodies *)
   Module[{v},
     Reap[
@@ -276,7 +303,10 @@ UnCompile[f_Function] := f
 UnCompile[f_Composition] := Function[x,Evaluate[f[x]]]
 UnCompile[f_InterpolatingFunction] := f
 
+Usage[Musica2,ValuesToDeltas,{_List},_List,"todo"]
 ValuesToDeltas[v_List] := Drop[v, 1] - Drop[v, -1]
+
+Usage[Musica2,ValuesToRatios,{_List},_List,"todo"]
 ValuesToRatios[v_List] := Drop[v, 1] / Drop[v, -1]
 
 Utils /: TestSuite[Utils] := {

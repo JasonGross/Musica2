@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-2-13 at 17:31 *)
+(* :History: File created 2005-2-17 at 11:58 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -15,8 +15,8 @@ If[!MemberQ[$Packages,"Musica2`"],
 
 DeclarePackage["Musica2`Common`",
 {"Content", "Convert", "Damping", "Duration", "Frequency", "MidiChannel", 
- "Mix", "Octave", "Overtone", "Par", "PitchCode", "Play2", "Seq", "Time", 
- "TotalDuration", "UnPar", "UnSeq"}
+ "Mix", "Musica2", "Octave", "Overtone", "Par", "PitchCode", "Play2", "Seq", 
+ "Time", "TotalDuration", "UnPar", "UnSeq"}
 ];
 
 DeclarePackage["Musica2`Instrument`",
@@ -56,8 +56,8 @@ DeclarePackage["Musica2`Note`",
 DeclarePackage["Musica2`ObjectType`",
 {"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataDeep", 
  "DataQ", "DataToRules", "ElementType", "Members", "ObjectType", 
- "ObjectTypeQ", "ObjectTypes", "Opts", "Pack", "Pos", "Struct", "Tidy", 
- "UnPack", "UnPackOpts"}
+ "ObjectTypeQ", "Opts", "Pack", "Pos", "Struct", "Tidy", "UnPack", 
+ "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`PianoRoll`",
@@ -88,22 +88,25 @@ DeclarePackage["Musica2`Tuning`",
  "PitchCodeRef", "Tuning"}
 ];
 
+DeclarePackage["Musica2`Usage`",
+{"Usage"}
+];
+
 DeclarePackage["Musica2`Utils`",
 {"AddOpts", "Circular", "DataAnyValue", "DataAnyValueQ", "DataApply", 
  "DataNoValue", "DataNoValueQ", "DataPlainValueQ", "DataTie", "DataTieQ", 
- "DataUnTie", "DeltasToValues", "FunctionQ", "GetOpts", "MakeNestedIfs", 
- "NormalizeList", "ParOfSeqToSeqOfPar", "RatiosToValues", "RemOpts", 
- "SeqOfParToParOfSeq", "UnCompile", "Utils", "ValuesToDeltas", 
+ "DataUnTie", "DeltasToValues", "Deprecated", "FunctionQ", "GetOpts", 
+ "MakeNestedIfs", "NormalizeList", "ParOfSeqToSeqOfPar", "RatiosToValues", 
+ "RemOpts", "SeqOfParToParOfSeq", "UnCompile", "Utils", "ValuesToDeltas", 
  "ValuesToRatios"}
 ];
 
 DeclarePackage["Musica2`ValueObject`",
-{"DurationFunction", "DurationObject", "DurationObjectQ", 
- "DurationObjectTrack", "DurationObjectTrackQ", "DurationValue", 
- "DurationValueQ", "DurationValueTrack", "DurationValueTrackQ", 
- "EventMessage", "EventMessageQ", "Object", "SnippetFunction", "TimeObject", 
- "TimeObjectQ", "TimeObjectTrack", "TimeObjectTrackQ", "TrackFunction", 
- "TypeValue", "TypeValueQ", "ValueObject", "ValueType"}
+{"DurationObjectTrack", "DurationValue", "DurationValueQ", 
+ "DurationValueTrack", "DurationValueTrackQ", "EventMessage", 
+ "EventMessageQ", "Object", "TimedObject", "TimedObjectQ", 
+ "TimedObjectTrack", "TimedObjectTrackQ", "TypeValue", "TypeValueQ", 
+ "ValueObject", "ValueType"}
 ];
 
 Null

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Instrument` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-02-13  bch :  reorganized code in file, hopefully in an uniform manner
   2005-01-17  bch :  renamed SimpleSine to BasicInstrument and changed its struct
   2005-01-09  bch :  created
@@ -46,6 +47,7 @@ BeginPackage["Musica2`Instrument`",
     "Musica2`Sound`",
     "Musica2`Test`",
     "Musica2`Tuning`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -59,7 +61,7 @@ Unprotect[
 Unprotect[
   ];
 
-CreateElement[BasicInstrument, {PitchCodeToFrequency_,VelocityToAmplitude_,TimeToSample_},Null,
+CreateElement[Musica2,BasicInstrument, {PitchCodeToFrequency_,VelocityToAmplitude_,TimeToSample_},Null,
 "BasicInstrument can be used as a third parameter to Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ], the result is a function that converts a Melody to a Snippet.\[NewLine]"
 ];
   
@@ -77,12 +79,14 @@ Convert[Melody, Snippet, opts___?OptionQ] := Convert[Melody, Snippet, Instrument
 
 (* BasicInstrument constructors *************************************************************)
 
+Usage[Musica2,BasicInstrument,{},_BasicInstrument,"todo"];
 BasicInstrument[] := BasicInstrument[{Convert[PitchCode,Frequency,Tuning],Function[v, v/127],Function[{f,a,sr},N[a Sin[2Pi f #/sr]]&]}]
 
 (* BasicInstrument reverse constructors *****************************************************)
 
 (* BasicInstrument common functions *********************************************************)
 
+Usage[Musica2,Convert,{Melody, Snippet, _BasicInstrument, ___?OptionQ},_,"todo"];
 Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ] :=
   Module[
     {

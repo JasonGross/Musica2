@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`ObjectType` *)
 
 (* :History:
+  2005-02-17  bch :  added parameter Appl to Create*
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-01-28  bch :  OrderedQ now does N before comparison
   2005-01-27  bch :  moved the content from Type.m to here
                      renamed Type to ObjectType, Types to ObjectTypes and TypeQ to ObjectTypeQ
@@ -42,6 +44,7 @@ BeginPackage["Musica2`ObjectType`",
   {
     "Musica2`Common`",
     "Musica2`Test`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -49,68 +52,78 @@ BeginPackage["Musica2`ObjectType`",
 Unprotect[
   ];
 
-CreateContainer::usage = "CreateContainer is a function used to create all object-types that are containers in Musica2."
-CreateElement::usage = "CreateContainer is a function used to create all object-types that are elements in Musica2."
-ContainerQ::usage = "todo"
-Data::usage = "todo"
+CreateContainer::usage = Usage[Musica2,"CreateContainer"]
+CreateElement::usage = Usage[Musica2,"CreateElement"]
+ContainerQ::usage = Usage[Musica2,"ContainerQ"]
+Data::usage = Usage[Musica2,"Data"]
+DataToRules::usage = Usage[Musica2,"DataToRules"]
+DataQ::usage = Usage[Musica2,"DataQ"]
+ElementType::usage = Usage[Musica2,"ElementType"]
+Members::usage = Usage[Musica2,"Members"]
+Opts::usage = Usage[Musica2,"Opts"]
+Pos::usage = Usage[Musica2,"Pos"]
+Struct::usage = Usage[Musica2,"Struct"]
+Tidy::usage = Usage[Musica2,"Tidy"]
+
 DataDeep::usage = "todo"
-DataToRules::usage = "todo"
-DataQ::usage = "todo"
-ElementType::usage = "todo"
 (* EmptyQ::usage = "todo" *)
-Members::usage = "todo"
 ObjectType::usage = "todo"
-ObjectTypes::usage = "todo"
 ObjectTypeQ::usage = "todo"
-Opts::usage = "todo"
 Pack::usage = "todo"
-Pos::usage = "todo"
-Struct::usage = "todo"
-Tidy::usage = "todo"
 UnPack::usage = "todo"
 UnPackOpts::usage = "todo"
 
 Begin["`Private`"]
 
-CreateElement[T_Symbol, P_, D_, U_String] := CreateElement[T, P, D, U, {}]
-CreateElement[T_Symbol, P_, D_, U_String, K_] := (
-  DeclareElement[T, P, D, U, K];
+Usage[Musica2,CreateElement,{_Symbol,_Symbol, _, _, _String},Null,"CreateElement[A, T, P, D, U] calls CreateElement[T, P, D, U, {}]"];
+CreateElement[A_Symbol,T_Symbol, P_, D_, U_String] := CreateElement[A, T, P, D, U, {}]
+
+Usage[Musica2,CreateElement,{_Symbol, _, _, _String,_},Null,
+"creates all object-types that are containers in Musica2. Parameters are {ApplicationName,ElementName,ElementStructure,DefaultData,UsageString,SpecialSymbols}"
+];
+CreateElement[A_Symbol,T_Symbol, P_, D_, U_String, K_] := (
+  DeclareElement[A, T, P, D, U, K];
   Begin["`Private`"];
-  DefineElement[T, P, D, K];
+  DefineElement[A, T, P, D, K];
   End[];
   );
-
-CreateContainer[T_Symbol, ET_Symbol, U_String] := (
-  DeclareContainer[T, ET, U];
+  
+Usage[Musica2,CreateContainer,{_Symbol, _Symbol, _String},Null,
+"creates all object-types that are containers in Musica2. Parameters are {ContainerName,ElementName,UsageString}"
+];
+CreateContainer[A_Symbol,T_Symbol, ET_Symbol, U_String] := (
+  DeclareContainer[A, T, ET, U];
   Begin["`Private`"];
-  DefineContainer[T, ET];
+  DefineContainer[A, T, ET];
   End[];
   );
 
 M[T_Symbol, P_] := P[[Sequence @@ #]] & /@ (Append[Drop[#, -1], 1] & /@ Position[P, Pattern])
 
 (* we dont want to mess with the already present usage-text for Sound *)
-DeclareUsage[T_Symbol,text_String] := MessageName[T,"usage"] = If[StringQ[T::usage],T::usage<>"\[NewLine]\[NewLine]Musica2: ",""]<>text;
+DeclareUsage[A_Symbol,T_Symbol,text_String] := MessageName[T,"usage"] = If[StringQ[T::usage],T::usage<>"\[NewLine]\[NewLine]Musica2: ",""]<>text;
 
-DeclareCommon[T_Symbol, U_String] := (
-  DeclareUsage[T,
+DeclareCommon[A_Symbol,T_Symbol, U_String] := (
+  DeclareUsage[A,T,
     U<>"\[NewLine]\[NewLine]"<>
     SymbolName[T]<>" is a generated object-type (see ObjectType.m).\[NewLine]"<>
     "An object of type "<>SymbolName[T]<>" has Head "<>SymbolName[T]<>" and two parts; opts and data.\[NewLine]"<>
     "The opts part must make OptionQ[opts] return True.\[NewLine]"<>
     "The data part must make DataQ["<>SymbolName[T]<>"][data] return True.\[NewLine]"<>
+    "\[NewLine]"<>
+    Usage[A,SymbolName[T]]<>
     "\[NewLine]"
   ];
-  DeclareUsage[Symbol[SymbolName[T] <> "Q"],SymbolName[T]<>"Q[expr] returns True if expr is an object of type "<>SymbolName[T]<>"\[NewLine]"];
+  DeclareUsage[A,Symbol[SymbolName[T] <> "Q"],SymbolName[T]<>"Q[expr] returns True if expr is an object of type "<>SymbolName[T]<>"\[NewLine]"];
   SetAttributes[T,ReadProtected];
   );
 
-DeclareElement[T_Symbol, P_, D_, U_String, K_] := (
-  DeclareCommon[T,U];
+DeclareElement[A_Symbol,T_Symbol, P_, D_, U_String, K_] := (
+  DeclareCommon[A,T,U];
   );
 
-DeclareContainer[T_Symbol, ET_Symbol, U_String] := (
-  DeclareCommon[T,U];
+DeclareContainer[A_Symbol,T_Symbol, ET_Symbol, U_String] := (
+  DeclareCommon[A,T,U];
   );
 
 (* low level stuff, "backdoors" for setting opts and data (dont intercept the first two) *)
@@ -119,25 +132,34 @@ Opts[x_, d_, s_, False] := x[[0]][Data[x], Sequence @@ AddOpts[Opts[x],s->d]];
 Data[x_, d_, s_, pos_] := Data[x,d,pos];
 Opts[x_, d_, s_] := Opts[x, d, s, False];
 
-DefineCommon[T_Symbol] := (
-  ObjectTypes = Prepend[ObjectTypes,T];
+DataDeep[x_?NumberQ] := x
+DataDeep[x:{___}] := DataDeep /@ x
+
+DefineCommon[A_Symbol,T_Symbol] := (
+  ObjectType[] = Prepend[ObjectType[],T];
 
   (* no options, but preparing a placeholder *)
+  Usage[A,Options,{T},{___?OptionQ},"contains default-values for "<>SymbolName[T]<>"."];
   Options[T] = {};
 
   (* test-function *)
+  Usage[A,ObjectTypeQ,{T},_,"returns a test-function for "<>SymbolName[T]<>"-objects, used by "<>SymbolName[T]<>"Q."];
   ObjectTypeQ[T] = MatchQ[#, T[_?OptionQ, _?(DataQ[T])]]&;
 
+  Usage[A,Symbol[SymbolName[T] <> "Q"],{_},(True|False),"is the test-function for "<>SymbolName[T]<>"-objects, uses the function returned by ObjectTypeQ["<>SymbolName[T]<>"]."];
   Symbol[SymbolName[T] <> "Q"][expr_] := ObjectTypeQ[T][expr];
 
   (* default constructor *)
+  Usage[A,T,{_?(DataQ[T]),___?OptionQ},_T,"is the default-constructor for "<>SymbolName[T]<>"-objects."];
   T[d_?(DataQ[T]),opts___?OptionQ] := T[{opts},d];
 
   (* basic format, the precondition (/; ObjectTypeQ[T][x]) might go away later, currentli its good for debugging *)
   Format[x_T] := "\[SkeletonIndicator]"<>SymbolName[T]<>"\[SkeletonIndicator]" /; ObjectTypeQ[T][x];
 
   (* the "backdoor" to the opts and data *)
+  Usage[A,Opts,{_T},{___?OptionQ},"returns the options for a "<>SymbolName[T]<>"-object."];
   T /: Opts[x_T] := ReplacePart[x,List,{0}][[1]] /; ObjectTypeQ[T][x];
+  Usage[A,Data,{_T},_?(DataQ[T]),"returns the data for a "<>SymbolName[T]<>"-object."];
   T /: Data[x_T] := ReplacePart[x,List,{0}][[2]] /; ObjectTypeQ[T][x];
 
   DataDeep[T] = Data;
@@ -146,45 +168,50 @@ DefineCommon[T_Symbol] := (
     
 
   (* tidy it up *)
+  Usage[A,Tidy,{T},_,"returns a Tidy function for "<>SymbolName[T]<>"-objects (which does nothing)."];
   Tidy[T] = #&;
+  Usage[A,Tidy,{_T},_T,"calls the Tidy function returnde by Tidy["<>SymbolName[T]<>"]."];
   T /: Tidy[x_T] := Tidy[T][x];
 
+  Usage[A,ContainerQ,{_T},(True|False),"test if the "<>SymbolName[T]<>"-object is a container."];
   T /: ContainerQ[x_T] := ContainerQ[T];
 
+  Usage[A,T,{_T,___?OptionQ},_T,"changes the values of members and options for the "<>SymbolName[T]<>"-object."];
   T[x_T, o___?OptionQ] :=
     Module[{r = x},
       Scan[(r = If[MemberQ[Members[T],#[[1]]],ReplacePart[r,#[[2]],#[[1]]],Opts[r,#[[2]],#[[1]]]])&,{o}];
       r
       ];
+  Usage[A,T,{{__T},___?OptionQ},{__T},"changes the values of members and options for the "<>SymbolName[T]<>"-objects."];
   T[x:{__T}, o__?OptionQ] := T[#,o]& /@ x;
   
   T /: TestSuite[T] := {};
-
-  MessageName[T,"usage"] = T::usage <> "ObjectTypeQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is of type "<>SymbolName[T]<>" by checking both Head and data.\[NewLine]";
-  MessageName[T,"usage"] = T::usage <> "Opts[x_"<>SymbolName[T]<>"] returns the opts part of an object of type "<>SymbolName[T]<>".\[NewLine]";
-  MessageName[T,"usage"] = T::usage <> "Data[x_"<>SymbolName[T]<>"] returns the data part of an object of type "<>SymbolName[T]<>".\[NewLine]";
-  MessageName[T,"usage"] = T::usage <> "DataToRules[x_"<>SymbolName[T]<>"] returns the data part of an object of type "<>SymbolName[T]<>" as a list of Rules.\[NewLine]";
-  MessageName[T,"usage"] = T::usage <> "Tidy[x_"<>SymbolName[T]<>"] returns x in a tidy shape. It might not do anything though...\[NewLine]";
-  MessageName[T,"usage"] = T::usage <> "ContainerQ[x_"<>SymbolName[T]<>"] returns ContainerQ["<>SymbolName[T]<>"].\[NewLine]";
   );
 
-DefineElement[T_Symbol, P_, D_, K_] :=
-  Module[{i,k=Union[K,{List,Blank,BlankSequence,RepeatedNull,Repeated}],m},
+DefineElement[A_Symbol,T_Symbol, P_, D_, K_] :=
+  Module[{i,k=Union[K,{List,Blank,BlankSequence,BlankNullSequence,RepeatedNull,Repeated}],m},
 (*
     Print["BEGIN: ",T];
 *)
+    Usage[A,DataQ,{T},_,"returns a test-function for the data in a "<>SymbolName[T]<>"."];
     DataQ[T] = MatchQ[#, P]&;
 
+    Usage[A,Struct,{T},P,"returns the structure/pattern for "<>SymbolName[T]<>" as passed to CreateElement."];
     Struct[T] = P;
 
     (* get all members *)
+    Usage[A,Members,{T},M[T,P],"returns the symbols for all members of "<>SymbolName[T]<>"."];
     Members[T] = M[T,P];
+    Usage[A,Members,{_T},Members[T],"calls Members["<>SymbolName[T]<>"]."];
     Members[x_T] = Members[T];
 
     (* get the index for all members *)
     m = P /. {Pattern -> Function[{s, p}, s[Sequence @@ p]]};
     i = Drop[#, -1] & /@ Cases[Position[m, _?(! MatchQ[#, Alternatives @@ k] &)], {__, 0}];
-    MapThread[(Pos[T,#1] = #2)&,{Members[T],i}];
+    MapThread[(
+      Usage[A,Pos,{T,#1},#2,"returns the position for the member "<>SymbolName[#1]<>" in the data-portion of a "<>SymbolName[T]<>"-object."];
+      Pos[T,#1] = #2
+      )&,{Members[T],i}];
 
 (*
     Print["M ",Members[T]];
@@ -193,20 +220,27 @@ DefineElement[T_Symbol, P_, D_, K_] :=
     Print["p ",m[[Sequence@@#,0]]&/@i];
 *)
 
+    Usage[A,Part,{_T,_Symbol},_,"returns the value for a member in a "<>SymbolName[T]<>"-object."];
     T /: Part[x_T, s_Symbol] := Data[x][[Sequence @@ Pos[T,s]]];
+    Usage[A,Part,{_T,_Symbol,__Integer},_,"returns an element in the value for a member in a "<>SymbolName[T]<>"-object."];
     T /: Part[x_T, s_Symbol, n__Integer] := Part[x,s][[n]];
+    Usage[A,ReplacePart,{_T, _, _Symbol},_T,"changes the value for a member in a "<>SymbolName[T]<>"-object."];
     T /: ReplacePart[x_T, d_, s_Symbol] := Data[x, d, s, Pos[T,s]];
 
     Scan[(
+      Usage[A,#,{_T},_,"returns the value for the member "<>SymbolName[#]<>" in a "<>SymbolName[T]<>"-object."];
       T /: #[x_T] := x[[#]];
       )&,
       Members[T]
       ];
 
+    Usage[A,ContainerQ,{T},False,"todo"];
     ContainerQ[T] = False;
 
+    Usage[A,DataToRules,{_T},{___?OptionQ},"todo"];
     T /: DataToRules[x_T] := (# -> #[x]) & /@ Members[T];
 
+    Usage[A,OrderedQ,{_T, _T, {__}},(True|False),"todo"];
     T /: OrderedQ[x1_T, x2_T, s : {__}] :=
       Module[{f = s, y},
         While[0 < Length[f],
@@ -223,18 +257,11 @@ DefineElement[T_Symbol, P_, D_, K_] :=
         True
         ];
 
-    MessageName[T,"usage"] = T::usage <> SymbolName[T]<>" is an element (not a container).\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> SymbolName[T]<>"[d_?(DataQ["<>SymbolName[T]<>"]),opts___?OptionQ] is the standard constructor and returns an object of type "<>SymbolName[T]<>".\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "DataQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is valid data for "<>SymbolName[T]<>".\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Struct["<>SymbolName[T]<>"] returns the structure of the data of "<>SymbolName[T]<>" as "<>ToString[Struct[T]]<>", and is used by DataQ["<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Members["<>SymbolName[T]<>"] returns the names of the members of "<>SymbolName[T]<>" as a List of symbols: "<>ToString[Members[T]]<>".\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Members[x_"<>SymbolName[T]<>"] returns Members["<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "\[NewLine]";
-
-    DefineCommon[T];
+    DefineCommon[A,T];
 
     If[D =!= Null,
       Module[{d=T[D]},
+        Usage[A,T,{},_T,"todo"];
         T[] := T[D];
         Options[T] = Join[Options[T],(#->#[d])& /@ Members[T]];
         ];
@@ -248,22 +275,21 @@ DefineElement[T_Symbol, P_, D_, K_] :=
       TestCase[Data[T[Data[T[]], test->42]],Data[T[]]]
       }];
     
-    MessageName[T,"usage"] = T::usage <> "ContainerQ["<>SymbolName[T]<>"] returns False.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", s_Symbol] where s is a member of "<>ToString[Members[T]]<>" returns the value of member s in x.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", s_Symbol, n_Integer] where s is a member of "<>ToString[Members[T]]<>" returns the value of the n:th part of member s in x.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "ReplacePart[x_"<>SymbolName[T]<>", d_, s_Symbol] where s is a member of "<>ToString[Members[T]]<>" returns x with the value of member s replaced by d.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "s[x_"<>SymbolName[T]<>"] where s is a member of "<>ToString[Members[T]]<>" returns the value of that member in x.\[NewLine]";
 (*
     Print["END: ",T];
 *)
     ];
 
-DefineContainer[T_Symbol, ET_Symbol] :=
-  Module[{t,et},
+DefineContainer[A_Symbol,T_Symbol, ET_Symbol] :=
+  Module[{t,et,i},
+    Usage[A,Members,{T},Members[ET],"todo"];
     Members[T] = Members[ET];
+    
+    Usage[A,ElementType,{T},ET,"todo"];
     ElementType[T] = ET;
+    Usage[A,ElementType,{_T},ET,"todo"];
     T /: ElementType[x_T] := ET;
+    Usage[A,DataQ,{T},_,"todo"];
     DataQ[T] = MatchQ[#, {(_?(DataQ[ET])|{_?OptionQ,_?(DataQ[ET])})...}]&;
 
     (* outgoing and incoming element's *)
@@ -272,55 +298,95 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     UnPackOpts[T] = Function[{elements,opts},opts];
 
     (* constructors, container from element *)
+    Usage[A,T,{{__ET}},_T,"from a list of "<>SymbolName[ET]<>" create a "<>SymbolName[T]<>""];
     T[{y__?(ObjectTypeQ[ET])},opts___?OptionQ] := Function[o,T[(UnPack[T][#,o])& /@ {y}, Sequence @@ o]][UnPackOpts[T][{y},{opts}]];
+    Usage[A,T,{_ET},_T,"from a  "<>SymbolName[ET]<>" create a "<>SymbolName[T]<>""];
     T[y_?(ObjectTypeQ[ET]),opts___?OptionQ] := T[{y}, opts];
 
     (* constructor, element from container *)
+    Usage[A,ET,{_T},{___ET},"get all "<>SymbolName[ET]<>" from a "<>SymbolName[T]<>""];
     T /: ET[x_T] := (Pack[T][x,#]& /@ Data[x]);
+    i=1;
     For[t = ET,ContainerQ[t]===True,t=et,
       et = ElementType[t];
+      Usage[A,et,{_T},Nest[{#...}&, {___et},i],"get all "<>SymbolName[et]<>" from a "<>SymbolName[T]<>""];
       T /: et[x_T] := et /@ x;
+      i++;
       ];
 
     (* get member data *)
-    Scan[(T /: #[x_T] := # /@ ET[x])&,Members[T]];
+    i=1;
+    For[t = ET,ContainerQ[t]===True,t=et,
+      et = ElementType[t];
+      i++
+      ];
+    Scan[(
+      Usage[A,#,{_T},Nest[{#...}&, {___},i-1],"get all "<>SymbolName[#]<>" from a "<>SymbolName[T]<>""];
+      T /: #[x_T] := # /@ ET[x]
+      )&,Members[T]
+      ];
 
+    Usage[A,DataToRules,{_T},{___?OptionQ},"get all data as rules from a "<>SymbolName[T]<>""];
     T /: DataToRules[x_T] := (# -> #[x]) & /@ Members[T];
 
     (* T /: EmptyQ[x_T] := Length[x]==0; *)
 
     (* handy list-manipulation-functions *)
+    Usage[A,Append,{_T, _ET},_T,"append a new "<>SymbolName[ET]<>" to a "<>SymbolName[T]<>""];
     T /: Append[x_T, y_ET] := T[Append[ET[x],y], Sequence @@ Opts[x]];
+    Usage[A,Delete,{_T, __},_T,"delete "<>SymbolName[ET]<>"s from a "<>SymbolName[T]<>""];
     T /: Delete[x_T, n__] := T[Delete[Data[x],n], Sequence @@ Opts[x]];
+    Usage[A,Drop,{_T, _},_T,"drop "<>SymbolName[ET]<>"s from a "<>SymbolName[T]<>""];
     T /: Drop[x_T, n_] := T[Drop[Data[x],n], Sequence @@ Opts[x]];
+    Usage[A,Extract,{_T, _Integer},_ET,"extract an "<>SymbolName[ET]<>" from a "<>SymbolName[T]<>""];
     T /: Extract[x_T, n_Integer] := Part[x,n];
+    Usage[A,First,{_T},_ET,"get the first "<>SymbolName[ET]<>" from a "<>SymbolName[T]<>""];
     T /: First[x_T] := Part[x,1];
+    Usage[A,Insert,{_T, _ET, _Integer},_T,"insert an "<>SymbolName[ET]<>" into a "<>SymbolName[T]<>""];
     T /: Insert[x_T, y_ET, n_Integer] := T[Insert[ET[x],y,n], Sequence @@ Opts[x]];
+    Usage[A,Last,{_T},_ET,"get the last "<>SymbolName[ET]<>" from a "<>SymbolName[T]<>""];
     T /: Last[x_T] := Part[x,-1];
+    Usage[A,Length,{_T},_Integer,"get the number of "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: Length[x_T] := Length[Data[x]];
+    Usage[A,Map,{_, _T},(_T|_List),"apply a function on all "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: Map[f_, x_T] := Module[{r=Map[f, ET[x]]},If[MatchQ[r,{___ET}],T[r,Sequence@@Opts[x]],r]];
+    Usage[A,MapIndexed,{_, _T},(_T|_List),"apply a function on all "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: MapIndexed[f_, x_T] := Module[{r=MapIndexed[f, ET[x]]},If[MatchQ[r,{___ET}],T[r,Sequence@@Opts[x]],r]];
+    Usage[A,Most,{_T},_T,"get most "<>SymbolName[ET]<>"s from a "<>SymbolName[T]<>""];
     T /: Most[x_T] := T[Most[Data[x]], Sequence @@ Opts[x]];
+    Usage[A,Part,{_T,_Integer},_ET,"get a "<>SymbolName[ET]<>" from a "<>SymbolName[T]<>""];
     T /: Part[x_T, n_Integer] := Pack[T][x,#]&[Part[Data[x],n]] /; n!=0;
+    Usage[A,Part,{_T,_Integer,__Integer},_,"get an element from an "<>SymbolName[ET]<>" in a "<>SymbolName[T]<>""];
     T /: Part[x_T, n_Integer, m__Integer] := Part[x,n][[m]] /; n!=0;
+    Usage[A,Prepend,{_T, _ET},_T,"prepend a new "<>SymbolName[ET]<>" to a "<>SymbolName[T]<>""];
     T /: Prepend[x_T, y_ET] := T[Prepend[ET[x],y], Sequence @@ Opts[x]];
+    Usage[A,ReplacePart,{_T, _ET, _Integer},_T,"replace an "<>SymbolName[ET]<>" in a "<>SymbolName[T]<>""];
     T /: ReplacePart[x_T, y_ET, n_Integer] := T[ReplacePart[ET[x],y,n], Sequence @@ Opts[x]] /; n!=0;
+    Usage[A,Reverse,{_T},_T,"reverse a "<>SymbolName[T]<>""];
     T /: Reverse[x_T] := T[Reverse[ET[x]], Sequence @@ Opts[x]];
+    Usage[A,Rest,{_T},_T,"get rest "<>SymbolName[ET]<>"s from a "<>SymbolName[T]<>""];
     T /: Rest[x_T] := T[Rest[Data[x]], Sequence @@ Opts[x]];
+    Usage[A,Scan,{_,_T},Null,"scan the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: Scan[f_, x_T] := Scan[f, ET[x]];
+    Usage[A,Scan,{_T,_},_T,"select "<>SymbolName[ET]<>"s from a "<>SymbolName[T]<>""];
     T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]];
+    Usage[A,Take,{_T,_},_T,"take "<>SymbolName[ET]<>"s from a "<>SymbolName[T]<>""];
     T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]];
 
 
     (* extended list-manipulation-functions *)
+    Usage[A,Map,{_, _T, _Symbol},_T,"apply a function to a member in the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     If[ContainerQ[ET],
       T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x],
       T /: Map[f_, x_T, s_Symbol] := Map[ReplacePart[#,f[#[[s]]],s]&,x]
       ];
+    Usage[A,MapIndexed,{_, _T, _Symbol},_T,"apply a function to a member in the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     If[ContainerQ[ET],
       T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[Function[{y,i},MapIndexed[f[#,Join[i,#2]]&,y,s]],x],
       T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[ReplacePart[#,f[#[[s]],#2],s]&,x]
       ];
+    Usage[A,Sort,{_T, {__Symbol}},_T,"sort the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
+    Usage[A,Sort,{_T, _Symbol},_T,"sort the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     If[ContainerQ[ET],
       T /: Sort[x_T, s:{__Symbol}] := Sort[#,s]& /@ x;
       T /: Sort[x_T, s_Symbol] := Sort[#,s]& /@ x,
@@ -328,80 +394,41 @@ DefineContainer[T_Symbol, ET_Symbol] :=
       T /: Sort[x_T, s_Symbol] := T[Sort[ET[x],OrderedQ[#1, #2,{s}]&], Sequence @@ Opts[x]]
       ];
 
+    Usage[A,ReplacePart,{_T, _, _Symbol},_T,"replace the member(s) in the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: ReplacePart[x_T, y_, s_Symbol] :=
       If[ListQ[y] && Length[y]==Length[x],
         MapIndexed[ReplacePart[#,y[[#2[[1]]]],s]&,x],
         Map[ReplacePart[#,y,s]&,x]
         ];
+    Usage[A,ReplacePart,{_T, _, __Integer, _Symbol},_T,"replace the member(s) in the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: ReplacePart[x_T, y_, n__Integer, s_Symbol] :=
       ReplacePart[x,ReplacePart[x[[{n}[[1]]]],y,Sequence@@Drop[{n},1],s],{n}[[1]]];
     
+    Usage[A,Part,{_T, _Symbol},_,"get a member from the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: Part[x_T, s_Symbol] := #[[s]]&/@ x;
+    Usage[A,Part,{_T, _Integer, ___Integer, _Symbol},_ET,"get a member from the "<>SymbolName[ET]<>"s in a "<>SymbolName[T]<>""];
     T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0;
 
+    Usage[A,ContainerQ,{T},True,"todo"];
     ContainerQ[T] = True;
 
-    MessageName[T,"usage"] = T::usage <> SymbolName[T]<>" is a container of "<>SymbolName[ET]<>"'s.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> SymbolName[T]<>"[{y__"<>SymbolName[ET]<>"},opts___?OptionQ] is the standard constructor and returns an object of type "<>SymbolName[T]<>" containing the "<>SymbolName[ET]<>"'s {y}.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> SymbolName[T]<>"[y_"<>SymbolName[ET]<>",opts___?OptionQ] is another constructor and returns an object of type "<>SymbolName[T]<>" containing the "<>SymbolName[ET]<>" y.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "The data part of a "<>SymbolName[T]<>" is thus a list of the data parts of "<>SymbolName[ET]<>"'s, and their opts if any.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "DataQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is a List of data for "<>SymbolName[ET]<>"'s.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Members["<>SymbolName[T]<>"] returns the names of the members of the elements of "<>SymbolName[T]<>" as a List of symbols: "<>ToString[Members[T]]<>".\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "ElementType["<>SymbolName[T]<>"] returns "<>SymbolName[ET]<>".\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "ElementType[x_"<>SymbolName[T]<>"] returns "<>SymbolName[ET]<>".\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> SymbolName[ET]<>"[x_"<>SymbolName[T]<>"] returns a List of "<>SymbolName[ET]<>"'s contained in x.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "s[x_"<>SymbolName[T]<>"], where s is a member of "<>ToString[Members[T]]<>", returns a list of the values of the member s in the elements of x.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "\[NewLine]";
-
-    DefineCommon[T];
+    DefineCommon[A,T];
 
     T /: TestSuite[T] = Join[TestSuite[T],{
       TestCase[ContainerQ[T],True],
       TestCase[ElementType[T],ET]
       }];
     
+    Usage[A,Tidy,{T},_,"todo"];
     Tidy[T] = (Tidy /@ #)&;
 
     T /: DataDeep[T,d_] := DataDeep[ET,If[MatchQ[#,{_?OptionQ,_}],#[[2]],#]]& /@ d;
     DataDeep[T] = DataDeep[T,Data[#]]&;
-
-    MessageName[T,"usage"] = T::usage <> "ContainerQ["<>SymbolName[T]<>"] returns True.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "List-like functions for "<>SymbolName[T]<>"'s are:\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Append[x_"<>SymbolName[T]<>", y_"<>SymbolName[ET]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Delete[x_"<>SymbolName[T]<>", n__].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Drop[x_"<>SymbolName[T]<>", n_].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Extract[x_"<>SymbolName[T]<>", n_Integer].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "First[x_"<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Insert[x_"<>SymbolName[T]<>", y_"<>SymbolName[ET]<>", n_Integer].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Last[x_"<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Length[x_"<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Map[f_, x_"<>SymbolName[T]<>"] where f takes a "<>SymbolName[ET]<>" as argument.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "MapIndexed[f_, x_"<>SymbolName[T]<>"] where f takes a "<>SymbolName[ET]<>" as the first argument.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Most[x_"<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", n_Integer].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", n_Integer, m__Integer].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Prepend[x_"<>SymbolName[T]<>", y_"<>SymbolName[ET]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "ReplacePart[x_"<>SymbolName[T]<>", y_"<>SymbolName[ET]<>", n_Integer].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Reverse[x_"<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Rest[x_"<>SymbolName[T]<>"].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Scan[f_, x_"<>SymbolName[T]<>"] where f takes a "<>SymbolName[ET]<>" as argument.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Select[x_"<>SymbolName[T]<>", f_] where f takes a "<>SymbolName[ET]<>" as argument.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Take[x_"<>SymbolName[T]<>", n_].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Extended List-like functions for "<>SymbolName[T]<>"'s are:\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Map[f_, x_"<>SymbolName[T]<>", s_Symbol] where f takes member s as argument.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "MapIndexed[f_, x_"<>SymbolName[T]<>", s_Symbol] where f takes member s as the first argument.\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Sort[x_"<>SymbolName[T]<>", s_Symbol].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Sort[x_"<>SymbolName[T]<>", s:{__Symbol}].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", s_Symbol].\[NewLine]";
-    MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", n_Integer, m___Integer, s_Symbol].\[NewLine]";
   ];
 
-ObjectTypes = {}
+ObjectType[] = {}
 
-ObjectType /: TestSuite[ObjectType] := TestSuite /@ ObjectTypes
+ObjectType /: TestRun[ObjectType,opts___?OptionQ] := And @@ (TestRun[#,opts]& /@ ObjectType[])
 
 End[]
 

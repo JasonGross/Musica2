@@ -58,6 +58,7 @@ SetAttributes[TestCreate,HoldAll]
 TestCreate[t_List] := (TestCreate @@ #)& /@ t
 TestCreate[e_] := TestCase[e,Evaluate[e]]
 
+TestRun[x:(True|False),opts___?OptionQ] := x
 TestRun[t_List,opts___?OptionQ] := And @@ (TestRun[#,opts]& /@ t)
 TestRun[TestCase[t_List],opts___?OptionQ] := TestRun[t,opts]
 TestRun[TestCase[e_,r_],opts___?OptionQ] :=
@@ -69,7 +70,7 @@ TestRun[TestCase[e_,r_],opts___?OptionQ] :=
     Print["ERROR: ",Unevaluated[e]," === ",e," =!= ",r];
     False
     ]
-TestRun[s_Symbol,opts___?OptionQ] := TestRun[TestSuite[s],opts]
+TestRun[s_Symbol,opts___?OptionQ] := (Print["Testing: ",s];TestRun[TestSuite[s],opts])
 
 End[]
 

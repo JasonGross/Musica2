@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`PianoRoll` *)
 
 (* :History:
+  2005-02-16  bch :  initiated usage of Usage ;-)
   2005-01-15  bch :  added TestSuite
   2005-01-07  bch :  added conversions from Note and its Collections
                      converted TimeUnit in Midi to Tick
@@ -47,6 +48,7 @@ BeginPackage["Musica2`PianoRoll`",
     "Musica2`Note`",
     "Musica2`ObjectType`",
     "Musica2`Test`",
+    "Musica2`Usage`",
     "Musica2`Utils`"
     }
   ]
@@ -69,12 +71,22 @@ Begin["`Private`"]
 
 Options[PianoRoll] = {MinTime -> 0, MaxTime -> Infinity, MinNote -> Automatic, MaxNote -> Automatic}
 
-PianoRoll[x_Note,         opts___] := PianoRoll[Midi[x,opts],opts]
-PianoRoll[x_Melody,       opts___] := PianoRoll[Midi[x,opts],opts]
-PianoRoll[x_Chord,        opts___] := PianoRoll[Midi[x,opts],opts]
-PianoRoll[x_Counterpoint, opts___] := PianoRoll[Midi[x,opts],opts]
-PianoRoll[x_Progression,  opts___] := PianoRoll[Midi[x,opts],opts]
+Usage[Musica2,PianoRoll,{_Note, ___},_Graphics,"todo"]
+PianoRoll[x_Note, opts___] := PianoRoll[Midi[x,opts],opts]
 
+Usage[Musica2,PianoRoll,{_Melody, ___},_Graphics,"todo"]
+PianoRoll[x_Melody, opts___] := PianoRoll[Midi[x,opts],opts]
+
+Usage[Musica2,PianoRoll,{_Chord, ___},_Graphics,"todo"]
+PianoRoll[x_Chord, opts___] := PianoRoll[Midi[x,opts],opts]
+
+Usage[Musica2,PianoRoll,{_Counterpoint, ___},_Graphics,"todo"]
+PianoRoll[x_Counterpoint, opts___] := PianoRoll[Midi[x,opts],opts]
+
+Usage[Musica2,PianoRoll,{_Progression, ___},_Graphics,"todo"]
+PianoRoll[x_Progression, opts___] := PianoRoll[Midi[x,opts],opts]
+
+Usage[Musica2,PianoRoll,{_Midi, ___},_Graphics,"todo"]
 PianoRoll[mx_Midi, opts___] :=
   Module[{m = Midi[mx, TimeUnit->Tick],duration},
     duration = TotalDuration[m];
