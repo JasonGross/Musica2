@@ -247,7 +247,7 @@ Track /: Counterpoint[x_Track,rtf_:((0)&)] := (* todo: parameters of rtf are not
 Midi /: Duration[x_Midi] := Max[Duration /@ x]
 Track /: Duration[x_Track] := Max[EventTime /@ x]
 
-Tempo /: Event[x_Tempo, opts___?OptionQ] := Event[{#[[1]],{EventTypeTempo,{IntegerPart[#/65536],Mod[IntegerPart[#/256],256],Mod[#,256]}&[60000000/#[[2]]]}},opts]&[Data[x]]
+Event[x_Tempo, opts___?OptionQ] := Event[{#[[1]],{EventTypeTempo,{IntegerPart[#/65536],Mod[IntegerPart[#/256],256],Mod[#,256]}&[60000000/#[[2]]]}},opts]&[Data[x]]
 
 EventTypeEOT = {EventTypeMeta,16^^2F};
 EventTypeMeta = 16^^FF;
@@ -261,7 +261,6 @@ EOT = {EventTypeEOT,{}};
 
 Midi /: Export[fn_String,mx_Midi] :=
   Module[{m=Midi[Tidy[mx],TimeUnit->Tick],f=Null},
-    (*m = MidiFixEOT[m,True];*)
     (* get the data and change timing to delta *)
     t = (Transpose[{ValuesToDeltas[Prepend[#[[1]],0]],#[[2]]}]&[Transpose[Data/@#]])&/@m;
     f = OpenWriteBinary[fn];
@@ -353,11 +352,29 @@ TempoTrack[x_?TrackQ, opts___?OptionQ] :=
     TempoTrack[u,opts]
     ]
 
-Midi /: TimeUnit[x_Midi] := (TimeUnit /. Opts[x] /. Options[Midi])
+TimeUnit[x_Midi] := (TimeUnit /. Opts[x] /. Options[Midi])
 
-Midi /: TPQ[x_Midi] := (TPQ /. Opts[x] /. Options[Midi])
+TPQ[x_Midi] := (TPQ /. Opts[x] /. Options[Midi])
 
-TempoTrack /: Track[x_TempoTrack, opts___?OptionQ] := Track[Event/@x]
+Track[x_Melody, opts___?OptionQ] :=
+  Module[{d,t=0},
+    If[#==={},Track[{},opts],Track[#[[1]],opts]]&[Reap[
+      Scan[(
+        d = NoteDuration[#];
+        p = PitchCode[#];
+        v = Velocity[#];
+        If[!(DataNoValueQ[p] || DataNoValueQ[v]),
+          Sow[Event[{t  ,{EventTypeNoteOn, {0,p,v}}}]];
+          Sow[Event[{t+d,{EventTypeNoteOff,{0,p,v}}}]];
+          ];
+        t += d;
+        )&,
+        x
+        ];
+      ][[2]]]
+    ]
+
+Track[x_TempoTrack, opts___?OptionQ] := Track[Event/@x]
 
 Midi /: Show[x_Midi,opts___?OptionQ] := Show[Mix[Sound[x,opts],2]]
 
@@ -384,7 +401,7 @@ ReadVarLen[f_]:=
 
 ListVarLen[i_]:=
   Module[{r={}},
-    r=IntegerDigits[i,16^^80];
+    r=IntegerDigits[Round[i],16^^80];
     Join[16^^80+Drop[r,-1],Take[r,-1]]
     ]
 

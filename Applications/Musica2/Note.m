@@ -87,13 +87,15 @@ Melody /: Duration[x_Melody] := Total[Duration /@ x]
 Note /: Duration[x_Note] := NoteDuration[x]
 Progression /: Duration[x_Progression] := Total[Duration /@ x]
 
+Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[{NoteDuration/.{opts}/.Options[Melody],{#,Velocity/.{opts}/.Options[Melody]}}&/@p,opts]
+
 Note[p_, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
+
+Melody /: Show[x_Melody] := Show[Snippet[x]]
 
 p2f = Function[p, 220*2^((p - 57)/12)];
 v2a = Function[v, v/127];
 zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]] &];
-
-Melody /: Show[x_Melody] := Show[Snippet[x]]
 
 Melody /: Snippet[x_Melody, opts___?OptionQ] :=
   Module[{d,p,v,f,a,sr=SampleRate/.{opts}/.Options[Snippet]},

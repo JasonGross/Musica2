@@ -41,9 +41,9 @@ Wolfram Research.
 
 (*NotebookFileLineBreakTest
 NotebookFileLineBreakTest*)
-(*NotebookOptionsPosition[     15303,        548]*)
-(*NotebookOutlinePosition[     16018,        573]*)
-(*  CellTagsIndexPosition[     15974,        569]*)
+(*NotebookOptionsPosition[     16059,        579]*)
+(*NotebookOutlinePosition[     16774,        604]*)
+(*  CellTagsIndexPosition[     16730,        600]*)
 (*WindowFrame->Normal*)
 
 
@@ -198,18 +198,18 @@ Cell["Mini-tour of Musica2", "Subtitle"],
 Cell["Read from a SMF (StandardMidiFile).", "Text"],
 
 Cell[BoxData[
-    \(m = Import[MidiTestFile, Midi]\)], "Input"],
+    \(mid = Import[MidiTestFile, Midi]\)], "Input"],
 
 Cell["Play it.", "Text"],
 
 Cell[BoxData[
-    \(Timing[Show[m]]\)], "Input"],
+    \(Timing[Show[mid]]\)], "Input"],
 
 Cell["Write to a SMF.", "Text"],
 
 Cell[BoxData[
-    \(Export["\<tmp.mid\>", m]\)], "Input"]
-}, Open  ]],
+    \(Export["\<tmp.mid\>", mid]\)], "Input"]
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -218,53 +218,78 @@ Cell["Mini-tour of Musica2 (directors cut)", "Subtitle"],
 Cell["Read from a SMF.", "Text"],
 
 Cell[BoxData[
-    \(m = Import[MidiTestFile, Midi]\)], "Input"],
+    \(mid = Import[MidiTestFile, Midi]\)], "Input"],
 
 Cell["Set time-unit to second instead of tick.", "Text"],
 
 Cell[BoxData[
-    \(m = Midi[m, TimeUnit \[Rule] Second]\)], "Input"],
+    \(mid = Midi[mid, TimeUnit \[Rule] Second]\)], "Input"],
 
 Cell["Get all tracks.", "Text"],
 
 Cell[BoxData[
-    \(t = Track[m]\)], "Input"],
+    \(trk = Track[mid]\)], "Input"],
 
 Cell["Convert each track to counterpoint.", "Text"],
 
 Cell[BoxData[
-    \(c = Counterpoint /@ t\)], "Input"],
+    \(cpt = Counterpoint /@ trk\)], "Input"],
 
 Cell["Get the melodies in each counterpoint.", "Text"],
 
 Cell[BoxData[
-    \(md = Melody /@ c\)], "Input"],
+    \(mel = Melody /@ cpt\)], "Input"],
 
 Cell["Flatten it and get the ones that are non-empty.", "Text"],
 
 Cell[BoxData[
-    \(md = Select[Flatten[md], \((0 < Length[#])\) &]\)], "Input"],
+    \(mel = Select[Flatten[mel], \((0 < Length[#])\) &]\)], "Input"],
 
 Cell["Convert each melody to a snippet.", "Text"],
 
 Cell[BoxData[
-    \(sn = Snippet /@ md\)], "Input"],
+    \(spt = Snippet /@ mel\)], "Input"],
 
 Cell["Make a 4ch sound of them.", "Text"],
 
 Cell[BoxData[
-    \(Length[s = Sound[sn]]\)], "Input"],
+    \(Length[snd = Sound[spt]]\)], "Input"],
 
 Cell["Mix it to two channels.", "Text"],
 
 Cell[BoxData[
-    \(s = Mix[s, 2]\)], "Input"],
+    \(snd = Mix[snd, 2]\)], "Input"],
 
 Cell["Play it.", "Text"],
 
 Cell[BoxData[
-    \(Show[s]\)], "Input"]
-}, Open  ]],
+    \(Show[snd]\)], "Input"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["The return of the Mini-tour of Musica2", "Subtitle"],
+
+Cell["Create a melody.", "Text"],
+
+Cell[BoxData[
+    \(mel = Melody[Table[p + 60, {p, 0, 12}]]\)], "Input"],
+
+Cell["Play it.", "Text"],
+
+Cell[BoxData[
+    \(Show[mel]\)], "Input"],
+
+Cell["Convert to midi.", "Text"],
+
+Cell[BoxData[
+    \(mid = Midi[Track[mel], TimeUnit \[Rule] Second]\)], "Input"],
+
+Cell["Write to a SMF.", "Text"],
+
+Cell[BoxData[
+    \(Export["\<tmp.mid\>", mid]\)], "Input"]
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -452,7 +477,7 @@ Cell["\<\
 Until I write more documentation the best way to find out about all \
 List-functions for Containers is to look inside Type.m\
 \>", "Text"]
-}, Open  ]],
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -473,6 +498,7 @@ Conversion- and extra- constructors:
   Sound[_Midi]
   Tempo[_Event]
   TempoTrack[_Track]
+  Track[_Melody]
   Track[_TempoTrack]\
 \>", "Text"],
 
@@ -486,11 +512,13 @@ Cell["\<\
 Show functions:
   Duration[_Midi]\
 \>", "Text"]
-}, Open  ]],
+}, Closed]],
 
 Cell[CellGroupData[{
 
 Cell["Notes on Note.m", "Subtitle"],
+
+Cell["NoteDuration is a member of Note, not Duration.", "Text"],
 
 Cell["Member PcV for a note is the list {PitchCode, Velocity}.", "Text"],
 
@@ -500,13 +528,16 @@ Duration functions:
 Data-part.
   Duration[_Counterpoint] is the max of the melodies duration.
   Duration[_Melody] is the sum of the notes duration.
+  Duration[_Note] is the same as NoteDuration.
   Duration[_Progression] is the sum of the chords duration.\
 \>", "Text"],
 
 Cell["\<\
 Conversion-and extra-constructors:
-  Note[_] takes only PitchCode and uses Duration and Velocity from \
-Options[Note]  
+  Melody[{__}] takes only PitchCodes and uses NoteDuration and Velocity from \
+Options[Melody]  
+  Note[_] takes only PitchCode and uses NoteDuration and Velocity from \
+Options[Note]
   Snippet[_Melody]
   Sound[_Counterpoint]\
 \>", "Text"],
@@ -515,7 +546,7 @@ Cell["\<\
 Show functions:
   Show[_Melody]\
 \>", "Text"]
-}, Open  ]],
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -543,7 +574,7 @@ Show functions:
   Show[_Snippet]
   Show[_Sound] (by the guys at Wolfram)\
 \>", "Text"]
-}, Open  ]]
+}, Closed]]
 }, Open  ]]
 },
 FrontEndVersion->"5.0 for X",
@@ -616,110 +647,123 @@ Cell[6656, 187, 166, 3, 43, "Input",
 Cell[CellGroupData[{
 Cell[6859, 195, 40, 0, 53, "Subtitle"],
 Cell[6902, 197, 51, 0, 32, "Text"],
-Cell[6956, 199, 63, 1, 27, "Input"],
-Cell[7022, 202, 24, 0, 32, "Text"],
-Cell[7049, 204, 48, 1, 27, "Input"],
-Cell[7100, 207, 31, 0, 32, "Text"],
-Cell[7134, 209, 57, 1, 27, "Input"]
-}, Open  ]],
+Cell[6956, 199, 65, 1, 27, "Input"],
+Cell[7024, 202, 24, 0, 32, "Text"],
+Cell[7051, 204, 50, 1, 27, "Input"],
+Cell[7104, 207, 31, 0, 32, "Text"],
+Cell[7138, 209, 59, 1, 27, "Input"]
+}, Closed]],
 
 Cell[CellGroupData[{
-Cell[7228, 215, 56, 0, 51, "Subtitle"],
-Cell[7287, 217, 32, 0, 32, "Text"],
-Cell[7322, 219, 63, 1, 27, "Input"],
-Cell[7388, 222, 56, 0, 32, "Text"],
-Cell[7447, 224, 69, 1, 27, "Input"],
-Cell[7519, 227, 31, 0, 32, "Text"],
-Cell[7553, 229, 45, 1, 27, "Input"],
-Cell[7601, 232, 51, 0, 32, "Text"],
-Cell[7655, 234, 54, 1, 27, "Input"],
-Cell[7712, 237, 54, 0, 32, "Text"],
-Cell[7769, 239, 49, 1, 27, "Input"],
-Cell[7821, 242, 63, 0, 32, "Text"],
-Cell[7887, 244, 80, 1, 27, "Input"],
-Cell[7970, 247, 49, 0, 32, "Text"],
-Cell[8022, 249, 51, 1, 27, "Input"],
-Cell[8076, 252, 41, 0, 32, "Text"],
-Cell[8120, 254, 54, 1, 27, "Input"],
-Cell[8177, 257, 39, 0, 32, "Text"],
-Cell[8219, 259, 46, 1, 27, "Input"],
-Cell[8268, 262, 24, 0, 32, "Text"],
-Cell[8295, 264, 40, 1, 27, "Input"]
-}, Open  ]],
+Cell[7234, 215, 56, 0, 53, "Subtitle"],
+Cell[7293, 217, 32, 0, 32, "Text"],
+Cell[7328, 219, 65, 1, 27, "Input"],
+Cell[7396, 222, 56, 0, 32, "Text"],
+Cell[7455, 224, 73, 1, 27, "Input"],
+Cell[7531, 227, 31, 0, 32, "Text"],
+Cell[7565, 229, 49, 1, 27, "Input"],
+Cell[7617, 232, 51, 0, 32, "Text"],
+Cell[7671, 234, 58, 1, 27, "Input"],
+Cell[7732, 237, 54, 0, 32, "Text"],
+Cell[7789, 239, 52, 1, 27, "Input"],
+Cell[7844, 242, 63, 0, 32, "Text"],
+Cell[7910, 244, 82, 1, 27, "Input"],
+Cell[7995, 247, 49, 0, 32, "Text"],
+Cell[8047, 249, 53, 1, 27, "Input"],
+Cell[8103, 252, 41, 0, 32, "Text"],
+Cell[8147, 254, 57, 1, 27, "Input"],
+Cell[8207, 257, 39, 0, 32, "Text"],
+Cell[8249, 259, 50, 1, 27, "Input"],
+Cell[8302, 262, 24, 0, 32, "Text"],
+Cell[8329, 264, 42, 1, 27, "Input"]
+}, Closed]],
 
 Cell[CellGroupData[{
-Cell[8372, 270, 42, 0, 51, "Subtitle"],
-Cell[8417, 272, 130, 3, 32, "Text"],
-Cell[8550, 277, 379, 8, 122, "Text"],
-Cell[8932, 287, 385, 7, 50, "Text"],
-Cell[9320, 296, 149, 3, 32, "Text"],
-Cell[9472, 301, 562, 9, 68, "Text"],
-Cell[10037, 312, 293, 6, 50, "Text"],
-Cell[10333, 320, 62, 0, 32, "Text"],
-Cell[10398, 322, 92, 3, 32, "Text"],
-Cell[10493, 327, 110, 2, 27, "Input"],
-Cell[10606, 331, 166, 5, 32, "Text"],
-Cell[10775, 338, 64, 1, 27, "Input"],
-Cell[10842, 341, 59, 1, 27, "Input"],
-Cell[10904, 344, 121, 3, 32, "Text"],
-Cell[11028, 349, 40, 0, 32, "Text"],
-Cell[11071, 351, 51, 1, 27, "Input"],
-Cell[11125, 354, 61, 1, 27, "Input"],
-Cell[11189, 357, 69, 1, 27, "Input"],
-Cell[11261, 360, 59, 1, 27, "Input"],
-Cell[11323, 363, 60, 0, 32, "Text"],
-Cell[11386, 365, 109, 2, 27, "Input"],
-Cell[11498, 369, 44, 1, 27, "Input"],
-Cell[11545, 372, 62, 1, 27, "Input"],
-Cell[11610, 375, 39, 1, 27, "Input"],
-Cell[11652, 378, 45, 1, 27, "Input"],
-Cell[11700, 381, 45, 1, 27, "Input"],
-Cell[11748, 384, 91, 3, 32, "Text"],
-Cell[11842, 389, 84, 1, 27, "Input"],
-Cell[11929, 392, 65, 0, 32, "Text"],
-Cell[11997, 394, 105, 2, 27, "Input"],
-Cell[12105, 398, 128, 3, 32, "Text"],
-Cell[12236, 403, 65, 1, 27, "Input"],
-Cell[12304, 406, 47, 1, 27, "Input"],
-Cell[12354, 409, 50, 1, 27, "Input"],
-Cell[12407, 412, 53, 1, 27, "Input"],
-Cell[12463, 415, 22, 0, 32, "Text"],
-Cell[12488, 417, 107, 2, 27, "Input"],
-Cell[12598, 421, 95, 3, 32, "Text"],
-Cell[12696, 426, 170, 3, 27, "Input"],
-Cell[12869, 431, 75, 0, 32, "Text"],
-Cell[12947, 433, 43, 1, 27, "Input"],
-Cell[12993, 436, 45, 1, 27, "Input"],
-Cell[13041, 439, 42, 1, 27, "Input"],
-Cell[13086, 442, 45, 0, 32, "Text"],
-Cell[13134, 444, 55, 1, 27, "Input"],
-Cell[13192, 447, 43, 1, 27, "Input"],
-Cell[13238, 450, 148, 3, 32, "Text"]
-}, Open  ]],
+Cell[8408, 270, 58, 0, 53, "Subtitle"],
+Cell[8469, 272, 32, 0, 32, "Text"],
+Cell[8504, 274, 72, 1, 27, "Input"],
+Cell[8579, 277, 24, 0, 32, "Text"],
+Cell[8606, 279, 42, 1, 27, "Input"],
+Cell[8651, 282, 32, 0, 32, "Text"],
+Cell[8686, 284, 80, 1, 27, "Input"],
+Cell[8769, 287, 31, 0, 32, "Text"],
+Cell[8803, 289, 59, 1, 27, "Input"]
+}, Closed]],
 
 Cell[CellGroupData[{
-Cell[13423, 458, 35, 0, 51, "Subtitle"],
-Cell[13461, 460, 183, 4, 68, "Text"],
-Cell[13647, 466, 245, 10, 176, "Text"],
-Cell[13895, 478, 80, 4, 68, "Text"],
-Cell[13978, 484, 57, 3, 50, "Text"]
-}, Open  ]],
+Cell[8899, 295, 42, 0, 53, "Subtitle"],
+Cell[8944, 297, 130, 3, 32, "Text"],
+Cell[9077, 302, 379, 8, 122, "Text"],
+Cell[9459, 312, 385, 7, 50, "Text"],
+Cell[9847, 321, 149, 3, 32, "Text"],
+Cell[9999, 326, 562, 9, 68, "Text"],
+Cell[10564, 337, 293, 6, 50, "Text"],
+Cell[10860, 345, 62, 0, 32, "Text"],
+Cell[10925, 347, 92, 3, 32, "Text"],
+Cell[11020, 352, 110, 2, 27, "Input"],
+Cell[11133, 356, 166, 5, 32, "Text"],
+Cell[11302, 363, 64, 1, 27, "Input"],
+Cell[11369, 366, 59, 1, 27, "Input"],
+Cell[11431, 369, 121, 3, 32, "Text"],
+Cell[11555, 374, 40, 0, 32, "Text"],
+Cell[11598, 376, 51, 1, 27, "Input"],
+Cell[11652, 379, 61, 1, 27, "Input"],
+Cell[11716, 382, 69, 1, 27, "Input"],
+Cell[11788, 385, 59, 1, 27, "Input"],
+Cell[11850, 388, 60, 0, 32, "Text"],
+Cell[11913, 390, 109, 2, 27, "Input"],
+Cell[12025, 394, 44, 1, 27, "Input"],
+Cell[12072, 397, 62, 1, 27, "Input"],
+Cell[12137, 400, 39, 1, 27, "Input"],
+Cell[12179, 403, 45, 1, 27, "Input"],
+Cell[12227, 406, 45, 1, 27, "Input"],
+Cell[12275, 409, 91, 3, 32, "Text"],
+Cell[12369, 414, 84, 1, 27, "Input"],
+Cell[12456, 417, 65, 0, 32, "Text"],
+Cell[12524, 419, 105, 2, 27, "Input"],
+Cell[12632, 423, 128, 3, 32, "Text"],
+Cell[12763, 428, 65, 1, 27, "Input"],
+Cell[12831, 431, 47, 1, 27, "Input"],
+Cell[12881, 434, 50, 1, 27, "Input"],
+Cell[12934, 437, 53, 1, 27, "Input"],
+Cell[12990, 440, 22, 0, 32, "Text"],
+Cell[13015, 442, 107, 2, 27, "Input"],
+Cell[13125, 446, 95, 3, 32, "Text"],
+Cell[13223, 451, 170, 3, 27, "Input"],
+Cell[13396, 456, 75, 0, 32, "Text"],
+Cell[13474, 458, 43, 1, 27, "Input"],
+Cell[13520, 461, 45, 1, 27, "Input"],
+Cell[13568, 464, 42, 1, 27, "Input"],
+Cell[13613, 467, 45, 0, 32, "Text"],
+Cell[13661, 469, 55, 1, 27, "Input"],
+Cell[13719, 472, 43, 1, 27, "Input"],
+Cell[13765, 475, 148, 3, 32, "Text"]
+}, Closed]],
 
 Cell[CellGroupData[{
-Cell[14072, 492, 35, 0, 51, "Subtitle"],
-Cell[14110, 494, 72, 0, 32, "Text"],
-Cell[14185, 496, 307, 7, 104, "Text"],
-Cell[14495, 505, 185, 6, 86, "Text"],
-Cell[14683, 513, 55, 3, 50, "Text"]
-}, Open  ]],
+Cell[13950, 483, 35, 0, 53, "Subtitle"],
+Cell[13988, 485, 183, 4, 68, "Text"],
+Cell[14174, 491, 262, 11, 194, "Text"],
+Cell[14439, 504, 80, 4, 68, "Text"],
+Cell[14522, 510, 57, 3, 50, "Text"]
+}, Closed]],
 
 Cell[CellGroupData[{
-Cell[14775, 521, 36, 0, 51, "Subtitle"],
-Cell[14814, 523, 177, 4, 32, "Text"],
-Cell[14994, 529, 96, 3, 32, "Text"],
-Cell[15093, 534, 83, 4, 68, "Text"],
-Cell[15179, 540, 96, 4, 68, "Text"]
-}, Open  ]]
+Cell[14616, 518, 35, 0, 53, "Subtitle"],
+Cell[14654, 520, 63, 0, 32, "Text"],
+Cell[14720, 522, 72, 0, 32, "Text"],
+Cell[14795, 524, 354, 8, 122, "Text"],
+Cell[15152, 534, 284, 8, 104, "Text"],
+Cell[15439, 544, 55, 3, 50, "Text"]
+}, Closed]],
+
+Cell[CellGroupData[{
+Cell[15531, 552, 36, 0, 53, "Subtitle"],
+Cell[15570, 554, 177, 4, 32, "Text"],
+Cell[15750, 560, 96, 3, 32, "Text"],
+Cell[15849, 565, 83, 4, 68, "Text"],
+Cell[15935, 571, 96, 4, 68, "Text"]
+}, Closed]]
 }, Open  ]]
 }
 ]
