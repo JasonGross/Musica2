@@ -81,11 +81,11 @@ Options[Progression] = {NoteDuration:>(NoteDuration/.Options[Note]),Velocity:>(V
 
 (*****************)
 
-Chord /: Duration[x_Chord] := Duration /. Opts[x] /; TypeQ[Chord][x]
-Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x] /; TypeQ[Counterpoint][x]
-Melody /: Duration[x_Melody] := Total[Duration /@ x] /; TypeQ[Melody][x]
-Note /: Duration[x_Note] := NoteDuration[x] /; TypeQ[Note][x]
-Progression /: Duration[x_Progression] := Total[Duration /@ x] /; TypeQ[Progression][x]
+Chord /: Duration[x_Chord] := Duration /. Opts[x]
+Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x]
+Melody /: Duration[x_Melody] := Total[Duration /@ x]
+Note /: Duration[x_Note] := NoteDuration[x]
+Progression /: Duration[x_Progression] := Total[Duration /@ x]
 
 Note[p_, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
 
@@ -93,19 +93,19 @@ p2f = Function[p, 220*2^((p - 57)/12)];
 v2a = Function[v, v/127];
 zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]] &];
 
-Melody /: Show[x_Melody] := Show[Snippet[x]] /; MelodyQ[x]
+Melody /: Show[x_Melody] := Show[Snippet[x]]
 
 Melody /: Snippet[x_Melody, opts___?OptionQ] :=
-  Module[{d,p,v,f,a,sr=SnippetRate/.{opts}/.Options[Snippet]},
+  Module[{d,p,v,f,a,sr=SampleRate/.{opts}/.Options[Snippet]},
     d = (Duration /@ x) * sr;
     p = PitchCode /@ x /. {DataNoValue -> 0};
     v = Velocity /@ x /. {DataNoValue -> 0};
     f = MakeNestedIfs[Transpose[{d,p2f /@ p}]];
     a = MakeNestedIfs[Transpose[{d,v2a /@ v}]];
     Snippet[{SampledSoundFunction,Function[t, zin[f[t], a[t], sr][t]],Round[sr],Round[Duration[x]sr]}]
-    ] /; MelodyQ[x]
+    ]
 
-Counterpoint /: Sound[x_Counterpoint, opts___?OptionQ] := Sound[Snippet[#,opts]& /@ x] /; CounterpointQ[x]
+Counterpoint /: Sound[x_Counterpoint, opts___?OptionQ] := Sound[Snippet[#,opts]& /@ x]
 
 End[]
 

@@ -118,7 +118,7 @@ DefineCommon[T_Symbol] := (
   Tidy[T] = #&;
   Tidy[x_T] := Tidy[T][x];
 
-  T /: ContainerQ[x_T] := ContainerQ[T] /; TypeQ[T][x];
+  T /: ContainerQ[x_T] := ContainerQ[T];
   );
 
 DefineElement[T_Symbol, P_] :=
@@ -132,11 +132,11 @@ DefineElement[T_Symbol, P_] :=
     i = Drop[#, -1] & /@ Cases[Position[P /. {Pattern -> Function[{s, p}, s[Sequence @@ p]]}, _?(! MatchQ[#, List | Blank] &)], {__, 0}];
     MapThread[(Pos[T,#1] = #2)&,{Members[T],i}];
 
-    T /: Part[x_T, s_Symbol] := Data[x][[Sequence @@ Pos[T,s]]] /; TypeQ[T][x];
-    T /: ReplacePart[x_T, d_, s_Symbol] := T[ReplacePart[Data[x], d, Pos[T,s]],Sequence @@ Opts[x]] /; TypeQ[T][x];
+    T /: Part[x_T, s_Symbol] := Data[x][[Sequence @@ Pos[T,s]]];
+    T /: ReplacePart[x_T, d_, s_Symbol] := T[ReplacePart[Data[x], d, Pos[T,s]],Sequence @@ Opts[x]];
 
     Scan[(
-      T /: #[x_T] := x[[#]] /; TypeQ[T][x];
+      T /: #[x_T] := x[[#]];
       )&,
       Members[T]
       ];
@@ -163,47 +163,47 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     T[y_?(TypeQ[ET]),opts___?OptionQ] := T[{y}, opts];
 
     (* constructor, element from container *)
-    T /: ET[x_T] := (Pack[T][x,#]& /@ Data[x]) /; TypeQ[T][x];
+    T /: ET[x_T] := (Pack[T][x,#]& /@ Data[x]);
     For[t = ET,ContainerQ[t]===True,t=et,
       et = ElementType[t];
-      T /: et[x_T] := et /@ x /; TypeQ[T][x];
+      T /: et[x_T] := et /@ x;
       ];
 
     (* get member data *)
-    (T /: #[x_T] := # /@ x /; TypeQ[T][x];)& /@ Members[T];
+    (T /: #[x_T] := # /@ x;)& /@ Members[T];
 
     (* handy list-manipulation-functions *)
-    T /: Append[x_T, y_?(TypeQ[ET])] := T[Append[Data[x],UnPack[T][y,Opts[x]]], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Delete[x_T, n__] := T[Delete[Data[x],n], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Drop[x_T, n_] := T[Drop[Data[x],n], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Extract[x_T, n_Integer] := Part[x,n] /; TypeQ[T][x];
-    T /: First[x_T] := Pack[T][x,#]&[First[Data[x]]] /; TypeQ[T][x];
-    T /: Insert[x_T, y_?(TypeQ[ET]), n_Integer] := T[Insert[Data[x],UnPack[T][y,Opts[x]],n], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Last[x_T] := Pack[T][x,#]&[Last[Data[x]]] /; TypeQ[T][x];
-    T /: Length[x_T] := Length[Data[x]] /; TypeQ[T][x];
-    T /: Map[f_, x_T] := Module[{r=Map[f, ET[x]]},If[MatchQ[r,{y__?(TypeQ[ET])}],T[r,Sequence@@Opts[x]],r]] /; TypeQ[T][x];
-    T /: MapIndexed[f_, x_T] := Module[{r=MapIndexed[f, ET[x]]},If[MatchQ[r,{y__?(TypeQ[ET])}],T[r,Sequence@@Opts[x]],r]] /; TypeQ[T][x];
-    T /: Most[x_T] := T[Most[Data[x]], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Part[x_T, n_Integer] := Pack[T][x,#]&[Part[Data[x],n]] /; n!=0 && TypeQ[T][x];
-    T /: Part[x_T, n_Integer, m__Integer] := Part[x,n][[m]] /; n!=0 && TypeQ[T][x];
-    T /: Prepend[x_T, y_?(TypeQ[ET])] := T[Prepend[Data[x],UnPack[T][y,Opts[x]]], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: ReplacePart[x_T, y_?(TypeQ[ET]), n_Integer] := T[ReplacePart[Data[x],UnPack[T][y,Opts[x]],n], Sequence @@ Opts[x]] /; n!=0 && TypeQ[T][x];
-    T /: Rest[x_T] := T[Rest[Data[x]], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Scan[f_, x_T] := Scan[f, ET[x]] /; TypeQ[T][x];
-    T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]] /; TypeQ[T][x];
-    T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]] /; TypeQ[T][x];
+    T /: Append[x_T, y_?(TypeQ[ET])] := T[Append[Data[x],UnPack[T][y,Opts[x]]], Sequence @@ Opts[x]];
+    T /: Delete[x_T, n__] := T[Delete[Data[x],n], Sequence @@ Opts[x]];
+    T /: Drop[x_T, n_] := T[Drop[Data[x],n], Sequence @@ Opts[x]];
+    T /: Extract[x_T, n_Integer] := Part[x,n];
+    T /: First[x_T] := Pack[T][x,#]&[First[Data[x]]];
+    T /: Insert[x_T, y_?(TypeQ[ET]), n_Integer] := T[Insert[Data[x],UnPack[T][y,Opts[x]],n], Sequence @@ Opts[x]];
+    T /: Last[x_T] := Pack[T][x,#]&[Last[Data[x]]];
+    T /: Length[x_T] := Length[Data[x]];
+    T /: Map[f_, x_T] := Module[{r=Map[f, ET[x]]},If[MatchQ[r,{y__?(TypeQ[ET])}],T[r,Sequence@@Opts[x]],r]];
+    T /: MapIndexed[f_, x_T] := Module[{r=MapIndexed[f, ET[x]]},If[MatchQ[r,{y__?(TypeQ[ET])}],T[r,Sequence@@Opts[x]],r]];
+    T /: Most[x_T] := T[Most[Data[x]], Sequence @@ Opts[x]];
+    T /: Part[x_T, n_Integer] := Pack[T][x,#]&[Part[Data[x],n]] /; n!=0;
+    T /: Part[x_T, n_Integer, m__Integer] := Part[x,n][[m]] /; n!=0;
+    T /: Prepend[x_T, y_?(TypeQ[ET])] := T[Prepend[Data[x],UnPack[T][y,Opts[x]]], Sequence @@ Opts[x]];
+    T /: ReplacePart[x_T, y_?(TypeQ[ET]), n_Integer] := T[ReplacePart[Data[x],UnPack[T][y,Opts[x]],n], Sequence @@ Opts[x]] /; n!=0;
+    T /: Rest[x_T] := T[Rest[Data[x]], Sequence @@ Opts[x]];
+    T /: Scan[f_, x_T] := Scan[f, ET[x]];
+    T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]];
+    T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]];
 
     (* extended list-manipulation-functions *)
     If[ContainerQ[ET],
-      T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[Function[{y,i},MapIndexed[f[#,Join[i,#2]]&,y,s]],x] /; TypeQ[T][x],
-      T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[ReplacePart[#,f[#[[s]],#2],s]&,x] /; TypeQ[T][x]
+      T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[Function[{y,i},MapIndexed[f[#,Join[i,#2]]&,y,s]],x],
+      T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[ReplacePart[#,f[#[[s]],#2],s]&,x]
       ];
     If[ContainerQ[ET],
-      T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x] /; TypeQ[T][x],
-      T /: Map[f_, x_T, s_Symbol] := Map[ReplacePart[#,f[#[[s]]],s]&,x] /; TypeQ[T][x]
+      T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x],
+      T /: Map[f_, x_T, s_Symbol] := Map[ReplacePart[#,f[#[[s]]],s]&,x]
       ];
-    T /: Part[x_T, s_Symbol] := #[[s]]&/@ x /; TypeQ[T][x];
-    T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0 && TypeQ[T][x];
+    T /: Part[x_T, s_Symbol] := #[[s]]&/@ x;
+    T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0;
 
 
     ContainerQ[T] = True;

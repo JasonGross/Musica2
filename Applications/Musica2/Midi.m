@@ -175,7 +175,7 @@ Convert[m_?MidiQ, Tick, MilliSecond] := Convert[Convert[m, Tick, Second], Second
 
 Convert[m_?MidiQ, MilliSecond, Tick] := Convert[Convert[m, MilliSecond, Second], Second, Tick]
 
-Midi /: Counterpoint[x_Midi,rtf_:((0)&)] := Counterpoint[Select[Flatten[Melody[Counterpoint[#]]& /@ x],(0<Length[#])&]] /; MidiQ[x]
+Midi /: Counterpoint[x_Midi,rtf_:((0)&)] := Counterpoint[Select[Flatten[Melody[Counterpoint[#]]& /@ x],(0<Length[#])&]]
 
 Track /: Counterpoint[x_Track,rtf_:((0)&)] := (* todo: parameters of rtf are not set yet *)
   Module[{on,off,n},
@@ -242,12 +242,12 @@ Track /: Counterpoint[x_Track,rtf_:((0)&)] := (* todo: parameters of rtf are not
     n = Select[n, (#[[2]] =!= {}) &];
 
     Counterpoint[Melody[#[[2]],MidiChannel->#[[1]]]& /@ n]
-    ] /; TrackQ[x]
+    ]
 
-Midi /: Duration[x_Midi] := Max[Duration /@ x] /; MidiQ[x]
-Track /: Duration[x_Track] := Max[EventTime /@ x] /; TrackQ[x]
+Midi /: Duration[x_Midi] := Max[Duration /@ x]
+Track /: Duration[x_Track] := Max[EventTime /@ x]
 
-Tempo /: Event[x_Tempo, opts___?OptionQ] := Event[{#[[1]],{EventTypeTempo,{IntegerPart[#/65536],Mod[IntegerPart[#/256],256],Mod[#,256]}&[60000000/#[[2]]]}},opts]&[Data[x]] /; TempoQ[x]
+Tempo /: Event[x_Tempo, opts___?OptionQ] := Event[{#[[1]],{EventTypeTempo,{IntegerPart[#/65536],Mod[IntegerPart[#/256],256],Mod[#,256]}&[60000000/#[[2]]]}},opts]&[Data[x]]
 
 EventTypeEOT = {EventTypeMeta,16^^2F};
 EventTypeMeta = 16^^FF;
@@ -353,15 +353,15 @@ TempoTrack[x_?TrackQ, opts___?OptionQ] :=
     TempoTrack[u,opts]
     ]
 
-Midi /: TimeUnit[x_Midi] := (TimeUnit /. Opts[x] /. Options[Midi]) /; MidiQ[x]
+Midi /: TimeUnit[x_Midi] := (TimeUnit /. Opts[x] /. Options[Midi])
 
-Midi /: TPQ[x_Midi] := (TPQ /. Opts[x] /. Options[Midi]) /; MidiQ[x]
+Midi /: TPQ[x_Midi] := (TPQ /. Opts[x] /. Options[Midi])
 
-TempoTrack /: Track[x_TempoTrack, opts___?OptionQ] := Track[Event/@x] /; TempoTrackQ[x]
+TempoTrack /: Track[x_TempoTrack, opts___?OptionQ] := Track[Event/@x]
 
-Midi /: Show[x_Midi,opts___?OptionQ] := Show[Mix[Sound[x,opts],2]] /; MidiQ[x]
+Midi /: Show[x_Midi,opts___?OptionQ] := Show[Mix[Sound[x,opts],2]]
 
-Midi /: Sound[x_Midi,opts___?OptionQ] := Sound[Counterpoint[Midi[x,TimeUnit->Second]],opts] /; MidiQ[x]
+Midi /: Sound[x_Midi,opts___?OptionQ] := Sound[Counterpoint[Midi[x,TimeUnit->Second]],opts]
 
 (******** private functions used by ImportSMF and ExportSMF ********)
 
