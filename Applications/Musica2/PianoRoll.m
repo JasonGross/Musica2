@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`PianoRoll` *)
 
 (* :History:
+  2005-01-07  bch :  added conversions from Note and its Collections
+                     converted TimeUnit in Midi to Tick
   2004-11-29  bch :  bugfix
   2004-10-26  bch :  created
 *)
@@ -65,8 +67,15 @@ Begin["`Private`"]
 
 Options[PianoRoll] = {MinTime -> 0, MaxTime -> Infinity, MinNote -> Automatic, MaxNote -> Automatic}
 
-PianoRoll[m_Midi, opts___] :=
-  Module[{duration = Duration[m]},
+PianoRoll[x_Note,         opts___] := PianoRoll[Midi[x,opts],opts]
+PianoRoll[x_Melody,       opts___] := PianoRoll[Midi[x,opts],opts]
+PianoRoll[x_Chord,        opts___] := PianoRoll[Midi[x,opts],opts]
+PianoRoll[x_Counterpoint, opts___] := PianoRoll[Midi[x,opts],opts]
+PianoRoll[x_Progression,  opts___] := PianoRoll[Midi[x,opts],opts]
+
+PianoRoll[mx_Midi, opts___] :=
+  Module[{m = Midi[mx, TimeUnit->Tick],duration},
+    duration = Duration[m];
     Module[{
         n = Note[m],
         p,

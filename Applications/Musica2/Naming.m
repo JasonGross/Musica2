@@ -66,14 +66,14 @@ CreateElement[HelixNoteNaming,{
   NoteNames:{__String},
   Helix:{PitchCodeStart_Integer,PitchCodeInterval_Integer,NameCodeStart_Integer},
   FlatsCount_Integer
-  },"todo\[NewLine]"]
+  },Null,"todo"]
 
 CreateElement[HelixChordNaming,{
   RootNaming:Struct[HelixNoteNaming],
   ChordNames:{
     {{__String},{__Integer}}..
     }
-  },"todo\[NewLine]"]
+  },Null,"todo"]
 
 ChordNaming::usage = "todo"
 ChordNamingFunction::usage = "todo" (* to be removed *)

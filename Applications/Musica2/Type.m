@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Type` *)
 
 (* :History:
+  2005-01-08  bch :  added default-values to elements
   2004-12-21  bch :  added OrderedQ and Sort[x_T,s:{__Symbol}]
   2004-12-19  bch :  changed DataAsRules to DataToRules and added RulesToData
   2004-12-13  bch :  added DataAsRules
@@ -75,11 +76,11 @@ UnPackOpts::usage = "todo"
 
 Begin["`Private`"]
 
-CreateElement[T_Symbol, P_, U_String] := CreateElement[T, P, U, {}]
-CreateElement[T_Symbol, P_, U_String, K_] := (
-  DeclareElement[T, P, U, K];
+CreateElement[T_Symbol, P_, D_, U_String] := CreateElement[T, P, D, U, {}]
+CreateElement[T_Symbol, P_, D_, U_String, K_] := (
+  DeclareElement[T, P, D, U, K];
   Begin["`Private`"];
-  DefineElement[T, P, K];
+  DefineElement[T, P, D, K];
   End[];
   );
 
@@ -108,7 +109,7 @@ DeclareCommon[T_Symbol, U_String] := (
   SetAttributes[T,ReadProtected];
   );
 
-DeclareElement[T_Symbol, P_, U_String, K_] := (
+DeclareElement[T_Symbol, P_, D_, U_String, K_] := (
   DeclareCommon[T,U];
   );
 
@@ -149,7 +150,7 @@ DefineCommon[T_Symbol] := (
   MessageName[T,"usage"] = T::usage <> "ContainerQ[x_"<>SymbolName[T]<>"] returns ContainerQ["<>SymbolName[T]<>"].\[NewLine]";
   );
 
-DefineElement[T_Symbol, P_, K_] :=
+DefineElement[T_Symbol, P_, D_, K_] :=
   Module[{i,k=Union[K,{List,Blank,BlankSequence,RepeatedNull,Repeated}],m},
 (*
     Print["BEGIN: ",T];
@@ -205,6 +206,8 @@ DefineElement[T_Symbol, P_, K_] :=
           ];
         True
         ];
+
+    If[D =!= Null, T[] := T[D]];
 
     MessageName[T,"usage"] = T::usage <> SymbolName[T]<>" is an element (not a container).\[NewLine]";
     MessageName[T,"usage"] = T::usage <> SymbolName[T]<>"[d_?(DataQ["<>SymbolName[T]<>"]),opts___?OptionQ] is the standard constructor and returns an object of type "<>SymbolName[T]<>".\[NewLine]";

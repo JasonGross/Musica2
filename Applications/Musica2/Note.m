@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2005-01-07  bch :  made Melody[c_Chord] return a list of melodies
   2004-12-13  bch :  removed PcV from Note
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
                      added ScaleStep
@@ -116,16 +117,16 @@ Unprotect[
   Velocity
   ];
 
-CreateElement[Note, {NoteDuration_, {PitchCode_,Velocity_}},"todo\[NewLine]"];
-CreateContainer[Chord,Note,"todo\[NewLine]"];
-CreateContainer[Melody,Note,"todo\[NewLine]"];
-CreateContainer[Progression,Chord,"todo\[NewLine]"];
-CreateContainer[Counterpoint,Melody,"todo\[NewLine]"];
+CreateElement[Note, {NoteDuration_, {PitchCode_,Velocity_}},{1,{60,64}},"todo"];
+CreateContainer[Chord,Note,"todo"];
+CreateContainer[Melody,Note,"todo"];
+CreateContainer[Progression,Chord,"todo"];
+CreateContainer[Counterpoint,Melody,"todo"];
 
-CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},"todo\[NewLine]",{DirectedInfinity}];
-CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},"todo\[NewLine]",{DirectedInfinity}];
-CreateElement[Scale, {Octave_Integer, Content:{__}},"todo\[NewLine]"];
-CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}},"todo\[NewLine]"];
+CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},{12,{{0},1}},"todo",{DirectedInfinity}];
+CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},{12,{0,0,0,0,0,0,0}},"todo",{DirectedInfinity}];
+CreateElement[Scale, {Octave_Integer, Content:{__}},Null,"todo"];
+CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}},{{3,4},{0,1}},"todo"];
 
 ModeAeolian::usage = "todo"
 ModeDorian::usage = "todo"
@@ -178,7 +179,7 @@ Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
 Chord[x_Counterpoint]                   := Chord[Progression[x]]
 Chord[x_FigBass,       opts___?OptionQ] := Chord[PitchCode[x],opts]
 Chord[x_Intervals,     opts___?OptionQ] := Chord[PitchCode[x],opts]
-Chord[x_Melody,        opts___?OptionQ] := Chord[Note[x],opts]
+Chord[x_Melody,        opts___?OptionQ] := Chord[#,opts]& /@ Note[x]
 Chord[p:{__?AtomQ},    opts___?OptionQ] := Chord[Note[#,opts]& /@ p,opts]
 Chord[x_ThirdStack,    opts___?OptionQ] := Chord[PitchCode[x],opts]
 
@@ -265,7 +266,7 @@ Intervals[x:{__Integer},y:{__Integer}, opts___?OptionQ] :=
 
 Scale /: Length[x_Scale] := Length[Content[x]]
 
-Melody[x_Chord,opts___?OptionQ]       := Melody[Note[x],opts]
+Melody[x_Chord,opts___?OptionQ]       := Melody[#,opts]& /@ Note[x]
 Melody[x_Intervals,opts___?OptionQ]   := Melody[PitchCode[x],opts]
 Melody[x_FigBass,opts___?OptionQ]     := Melody[PitchCode[x],opts]
 Melody[x_Progression]                 := Melody[Counterpoint[x]]
@@ -304,8 +305,8 @@ Par[x:{__Progression}]  := Progression[Par[Counterpoint /@ x]]
 
 PitchCode[x_FigBass] :=
   If[Octave[x]=!=Infinity,Mod[#,Octave[x]],#]&[
-    ((#[[1]]-1)&/@Position[Reverse[IntegerDigits[Code[x],2]],1])+Bass[x][[1]]
-    ]
+    ((#[[1]]-1)&/@Position[Reverse[IntegerDigits[Code[x],2]],1])
+    ]+Bass[x][[1]]
 
 PitchCode[x_Intervals] :=
   Module[{n = (1 + Sqrt[1 + 8*Total[Content[x]]])/2,t},
@@ -375,9 +376,8 @@ Counterpoint /: Snippet[x_Counterpoint, opts___?OptionQ] := Snippet[#,opts]& /@ 
 Melody       /: Snippet[x_Melody, opts___?OptionQ] :=
   Module[{d,p,v,f,a,sr=SampleRate/.{opts}/.Options[Sound]},
     (* todo: use NoteFunction here *)
-    d = (Duration /@ x) * sr;
-    p = PitchCode /@ x /. {DataNoValue -> 0};
-    v = Velocity /@ x /. {DataNoValue -> 0};
+    d = NoteDuration[x] * sr;
+    {p,v}=Transpose[MapThread[If[DataPlainValueQ[{#1,#2}],{#1,#2},{0,0}]&,{PitchCode[x],Velocity[x]}]];
     f = MakeNestedIfs[Transpose[{d,Tuning /@ p}]];
     a = MakeNestedIfs[Transpose[{d,v2a /@ v}]];
     Snippet[{SampledSoundFunction,Function[t, zin[f[t], a[t], sr][t]],Round[sr],Round[Duration[x]sr]},Sequence@@RemOpts[{opts},SampleRate]]

@@ -133,12 +133,12 @@ Unprotect[
   TrackQ
   ];
 
-CreateElement[Event,{EventTime_,{EventType_,EventData_}},"todo\[NewLine]"];
-CreateContainer[Track,Event,"todo\[NewLine]"];
-CreateContainer[Midi,Track,"todo\[NewLine]"];
+CreateElement[Event,{EventTime_,{EventType_,EventData_}},{0,EOT},"todo"];
+CreateContainer[Track,Event,"todo"];
+CreateContainer[Midi,Track,"todo"];
 
-CreateElement[Tempo,{TempoTime_,QPM_},"todo\[NewLine]"];
-CreateContainer[TempoTrack,Tempo,"todo\[NewLine]"];
+CreateElement[Tempo,{TempoTime_,QPM_},{0,120},"todo"];
+CreateContainer[TempoTrack,Tempo,"todo"];
 
 EventData::usage = "todo"
 EventTime::usage = "todo"

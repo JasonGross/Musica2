@@ -80,8 +80,12 @@ Unprotect[
   SoundType
   ];
 
-CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},"todo\[NewLine]"];
-CreateContainer[Sound,Snippet,"todo\[NewLine]"];
+CreateElement[Snippet,
+  {SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},
+  {SampledSoundFunction,Sin[2 PI 440 #]&,2^13,2^13},
+  "todo"
+  ];
+CreateContainer[Sound,Snippet,"todo"];
 
 SampleCount::usage = "todo"
 SoundType::usage = "todo"

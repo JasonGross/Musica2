@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-12-25 at 14:19 *)
+(* :History: File created 2005-1-9 at 16:10 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -19,12 +19,12 @@ DeclarePackage["Musica2`Common`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"Event", "EventData", "EventQ", "EventTime", "EventType", "EventTypeEOT", 
- "EventTypeKeySignature", "EventTypeMeta", "EventTypeNoteOff", 
- "EventTypeNoteOn", "EventTypeSysX0", "EventTypeSysX7", "EventTypeTempo", 
- "EventTypeTimeSignature", "Midi", "MidiChannel", "MidiQ", "MilliSecond", 
- "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", "TempoTrack", 
- "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
+{"EOT", "Event", "EventData", "EventQ", "EventTime", "EventType", 
+ "EventTypeEOT", "EventTypeKeySignature", "EventTypeMeta", 
+ "EventTypeNoteOff", "EventTypeNoteOn", "EventTypeSysX0", "EventTypeSysX7", 
+ "EventTypeTempo", "EventTypeTimeSignature", "Midi", "MidiChannel", "MidiQ", 
+ "MilliSecond", "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", 
+ "TempoTrack", "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
 ];
 
 DeclarePackage["Musica2`Naming`",
@@ -54,7 +54,7 @@ DeclarePackage["Musica2`Setup`",
 ];
 
 DeclarePackage["Musica2`Sound`",
-{"SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
+{"PI", "SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
 ];
 
 DeclarePackage["Musica2`Spectrum`",
@@ -62,8 +62,9 @@ DeclarePackage["Musica2`Spectrum`",
 ];
 
 DeclarePackage["Musica2`Tuning`",
-{"EqualTemperament", "EqualTemperamentQ", "FrequencyOctave", "FrequencyRef", 
- "PitchCodeOctave", "PitchCodeRef", "Tuning", "TuningFunction"}
+{"CustomTuning", "CustomTuningQ", "EqualTemperament", "EqualTemperamentQ", 
+ "FrequencyOctave", "FrequencyRatios", "FrequencyRef", "PitchCodeOctave", 
+ "PitchCodeRef", "Tuning"}
 ];
 
 DeclarePackage["Musica2`Type`",
@@ -76,8 +77,8 @@ DeclarePackage["Musica2`Utils`",
 {"AddOpts", "Circular", "DataAnyValue", "DataAnyValueQ", "DataApply", 
  "DataNoValue", "DataNoValueQ", "DataPlainValueQ", "DataTie", "DataTieQ", 
  "DataUnTie", "DeltasToValues", "FunctionQ", "MakeNestedIfs", 
- "NormalizeList", "ParOfSeqToSeqOfPar", "RemOpts", "SeqOfParToParOfSeq", 
- "UnCompile", "ValuesToDeltas"}
+ "NormalizeList", "ParOfSeqToSeqOfPar", "RatiosToValues", "RemOpts", 
+ "SeqOfParToParOfSeq", "UnCompile", "ValuesToDeltas", "ValuesToRatios"}
 ];
 
 Null

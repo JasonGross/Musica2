@@ -57,8 +57,8 @@ Unprotect[
   ToneQ
   ];
 
-CreateElement[Tone, {Frequency_, {Amplitude_, Phase_}},"todo\[NewLine]"];
-CreateContainer[Spectrum,Tone,"todo\[NewLine]"];
+CreateElement[Tone, {Frequency_, {Amplitude_, Phase_}},{440,{1,0}},"todo"];
+CreateContainer[Spectrum,Tone,"todo"];
 
 Begin["`Private`"]
 

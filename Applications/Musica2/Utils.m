@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2005-01-02  bch :  added ValuesToRatios and RatiosToValues
   2004-10-06  bch :  added DataNoValue functions, used in ParOfSeqToSeqOfPar
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-27  bch :  DataTie of numbers dont get negative anymore
@@ -76,10 +77,12 @@ Unprotect[
   MakeNestedIfs,
   NormalizeList,
   ParOfSeqToSeqOfPar,
+  RatiosToValues,
   RemOpts,
   SeqOfParToParOfSeq,
   UnCompile,
-  ValuesToDeltas
+  ValuesToDeltas,
+  ValuesToRatios
   ];
 
 AddOpts::usage = "AddOpts[x:{___?OptionQ},opts__?OptionQ] adds opts to x, no duplicate lhs returned."
@@ -97,9 +100,11 @@ FunctionQ::usage = "FunctionQ[expr_] tests if expr is a function."
 MakeNestedIfs::usage = "MakeNestedIfs[de$:{{_,_}...}, default$_] and MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] creates a function containing nested if's. The de-argument is a list of {delta,expr} which describes the function to return. The default-argument is the expr the function returned will return when called whith a parameter outside the normal range and defaults to 0 (zero)."
 NormalizeList::usage = "NormalizeList[d_,opts___] takes a list of numbers and normalize them to range from -1 to 1. opts can take PlayRange->{lo,hi} as an argument which otherwise will be calculated."
 ParOfSeqToSeqOfPar::usage = "todo"
+RatiosToValues::usage = "todo"
 SeqOfParToParOfSeq::usage = "todo"
 UnCompile::usage = "UnCompile[f_] returns f in an uncompiled version."
 ValuesToDeltas::usage = "ValuesToDeltas[v_List] is the opposite to DeltasToValues and calculates the deltas between the values in the list.";
+ValuesToRatios::usage = "todo"
 
 Begin["`Private`"]
 
@@ -126,24 +131,19 @@ DataNoValueQ[expr_] := If[AtomQ[expr],expr===DataNoValue||expr===DataTie[DataNoV
 DataPlainValueQ[x_] := !(DataAnyValueQ[x]||DataNoValueQ[x]||DataTieQ[x])
 
 DataTie[d_DataTie] := d
-
 (*DataTie[d_?NumberQ] := If[DataTieQ[d],d,-d-1]*)
-
 DataTie[d_List] := DataTie /@ d
 
 DataTieQ[d_] := MatchQ[d,_DataTie] (*|| (NumberQ[d]&&d<0)*) || (!AtomQ[d]&&Or@@(DataTieQ/@d))
 
 DataUnTie[d_DataTie] := d[[1]]
-
 (*DataUnTie[d_?NumberQ] := If[DataTieQ[d],-d-1,d]*)
-
 DataUnTie[d_List] := DataUnTie /@ d
-
 DataUnTie[d_] := d
 
-DeltasToValues[d_List, c_Integer:0] :=
-  Module[{k = 0},
-    Prepend[Table[k += d[[i]], {i, Length[d]}], 0] + c
+DeltasToValues[d_List, c_:0] :=
+  Module[{z = c},
+    Prepend[(z += #)& /@ d, c]
     ]
 
 FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition | _InterpolatingFunction]
@@ -228,6 +228,11 @@ ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to
     Transpose[{ut,sd}]
     ]
 
+RatiosToValues[r_List,c_:1] :=
+  Module[{z = c},
+    Prepend[(z *= #)& /@ r, c]
+    ]
+    
 RemOpts[x:{___?OptionQ},opts__Symbol] := Cases[x,(n$_->_)/;(!MemberQ[{opts},n$])]
 
 SeqOfParToParOfSeq[sop:{{_,{__}},{_,{__}}...}] := (* chords to melodies *)
@@ -236,7 +241,7 @@ SeqOfParToParOfSeq[sop:{{_,{__}},{_,{__}}...}] := (* chords to melodies *)
       Do[
         p = {0,DataNoValue};
         Scan[(
-          v = If[i<=Length[#[[2]]],#[[2,i]],DataNoValue];
+          v = If[i<=Length[#[[2]]],#[[2,i]],DataNoValue[#[[2,1]]]];
           If[DataTieQ[v],
             p[[1]] += #[[1]],
             If[0<p[[1]],Sow[p,i]];
@@ -257,6 +262,7 @@ UnCompile[f_Composition] := Function[x,Evaluate[f[x]]]
 UnCompile[f_InterpolatingFunction] := f
 
 ValuesToDeltas[v_List] := Drop[v, 1] - Drop[v, -1]
+ValuesToRatios[v_List] := Drop[v, 1] / Drop[v, -1]
 
 End[]
 
@@ -277,10 +283,12 @@ Protect[
   MakeNestedIfs,
   NormalizeList,
   ParOfSeqToSeqOfPar,
+  RatiosToValues,
   RemOpts,
   SeqOfParToParOfSeq,
   UnCompile,
-  ValuesToDeltas
+  ValuesToDeltas,
+  ValuesToRatios
   ];
 
 EndPackage[]
