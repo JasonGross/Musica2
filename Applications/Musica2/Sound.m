@@ -80,11 +80,11 @@ Unprotect[
   SoundType
   ];
 
-CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer}];
-CreateContainer[Sound,Snippet];
+CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},"todo\[NewLine]"];
+CreateContainer[Sound,Snippet,"todo\[NewLine]"];
 
-SampleCount::usage = ""
-SoundType::usage = ""
+SampleCount::usage = "todo"
+SoundType::usage = "todo"
 
 Begin["`Private`"]
 

@@ -98,7 +98,7 @@ Unprotect[
   ModePhrygian,
   Note,
   NoteDuration,
-  NoteFunction,
+  NoteFunction, (* to be removed *)
   NotePlot,
   NoteRestQ,
   NoteTieQ,
@@ -107,7 +107,7 @@ Unprotect[
   Progression,
   ProgressionQ,
   Scale,
-  ScaleFunction,
+  ScaleFunction, (* to be removed *)
   ScaleQ,
   ScaleStep,
   ThirdStack,
@@ -115,16 +115,16 @@ Unprotect[
   Velocity
   ];
 
-CreateElement[Note, {NoteDuration_, PcV:{PitchCode_,Velocity_}}];
-CreateContainer[Chord,Note];
-CreateContainer[Melody,Note];
-CreateContainer[Progression,Chord];
-CreateContainer[Counterpoint,Melody];
+CreateElement[Note, {NoteDuration_, PcV:{PitchCode_,Velocity_}},"todo\[NewLine]"];
+CreateContainer[Chord,Note,"todo\[NewLine]"];
+CreateContainer[Melody,Note,"todo\[NewLine]"];
+CreateContainer[Progression,Chord,"todo\[NewLine]"];
+CreateContainer[Counterpoint,Melody,"todo\[NewLine]"];
 
-CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},{DirectedInfinity}];
-CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},{DirectedInfinity}];
-CreateElement[Scale, {Octave_Integer, Content:{__}}];
-CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}}];
+CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},"todo\[NewLine]",{DirectedInfinity}];
+CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},"todo\[NewLine]",{DirectedInfinity}];
+CreateElement[Scale, {Octave_Integer, Content:{__}},"todo\[NewLine]"];
+CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}},"todo\[NewLine]"];
 
 ModeAeolian::usage = "todo"
 ModeDorian::usage = "todo"
@@ -135,7 +135,7 @@ ModeMajor::usage = "todo"
 ModeMinor::usage = "todo"
 ModeMixolydian::usage = "todo"
 ModePhrygian::usage = "todo"
-NoteFunction::usage = "todo"
+NoteFunction::usage = "todo" (* to be removed *)
 NotePlot::usage = "todo"
 NoteRestQ::usage = "todo"
 NoteTieQ::usage = "todo"

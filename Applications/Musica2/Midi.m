@@ -120,7 +120,7 @@ Unprotect[
   MilliSecond,
   QPM,
   Tempo,
-  TempoFunction,
+  TempoFunction, (* to be removed *)
   TempoQ,
   TempoTime,
   TempoTrack,
@@ -132,32 +132,32 @@ Unprotect[
   TrackQ
   ];
 
-CreateElement[Event,{EventTime_,{EventType_,EventData_}}];
-CreateContainer[Track,Event];
-CreateContainer[Midi,Track];
+CreateElement[Event,{EventTime_,{EventType_,EventData_}},"todo\[NewLine]"];
+CreateContainer[Track,Event,"todo\[NewLine]"];
+CreateContainer[Midi,Track,"todo\[NewLine]"];
 
-CreateElement[Tempo,{TempoTime_,QPM_}];
-CreateContainer[TempoTrack,Tempo];
+CreateElement[Tempo,{TempoTime_,QPM_},"todo\[NewLine]"];
+CreateContainer[TempoTrack,Tempo,"todo\[NewLine]"];
 
-EventData::usage = ""
-EventTime::usage = ""
-EventType::usage = ""
-EventTypeEOT::usage = ""
-EventTypeMeta::usage = ""
-EventTypeNoteOff::usage = ""
-EventTypeNoteOn::usage = ""
-EventTypeSysX0::usage = ""
-EventTypeSysX7::usage = ""
-EventTypeKeySignature::usage = ""
-EventTypeTempo::usage = ""
-EventTypeTimeSignature::usage = ""
-FileFormat::usage = ""
-MidiChannel::usage = ""
-MilliSecond::usage = ""
-TempoFunction::usage = ""
-Tick::usage = ""
-TimeUnit::usage = ""
-TPQ::usage = ""
+EventData::usage = "todo"
+EventTime::usage = "todo"
+EventType::usage = "todo"
+EventTypeEOT::usage = "todo"
+EventTypeMeta::usage = "todo"
+EventTypeNoteOff::usage = "todo"
+EventTypeNoteOn::usage = "todo"
+EventTypeSysX0::usage = "todo"
+EventTypeSysX7::usage = "todo"
+EventTypeKeySignature::usage = "todo"
+EventTypeTempo::usage = "todo"
+EventTypeTimeSignature::usage = "todo"
+FileFormat::usage = "todo"
+MidiChannel::usage = "todo"
+MilliSecond::usage = "todo"
+TempoFunction::usage = "" (* to be removed *)
+Tick::usage = "todo"
+TimeUnit::usage = "todo"
+TPQ::usage = "todo"
 
 Begin["`Private`"]
 

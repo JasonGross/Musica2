@@ -30,6 +30,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 (* :History:
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
+                     added Convert[{PitchCode,Overtone},PitchCode]
   2004-10-09  bch :  created
 *)
 
@@ -53,28 +54,31 @@ Unprotect[
   EqualTemperament,
   EqualTemperamentQ,
   Tuning,
-  TuningFunction
+  TuningFunction (* to be removed *)
   ];
 
-CreateElement[EqualTemperament, {{FrequencyRef_,FrequencyOctave_},{PitchCodeRef_, PitchCodeOctave_}}];
+CreateElement[EqualTemperament, {{FrequencyRef_,FrequencyOctave_},{PitchCodeRef_, PitchCodeOctave_}},"todo\[NewLine]"];
+
 (* todo: just intonation, meantone, ...
 
-   for each type of tuning there must be a TuningFunction
+   for each type of tuning there must be two Convert-functions
    so if you write a new tuning called (with head) Meantone you must provide
-    TuningFunction[x_Meantone, False] := Function[p,...]
-    TuningFunction[x_Meantone, True ] := Function[f,...]
+    Convert[PitchCode,Frequency,x_Meantone] := Function[p,...]
+    Convert[Frequency,PitchCode,x_Meantone] := Function[f,...]
 *)
 
 Tuning::usage = "todo"
-TuningFunction::usage = "todo"
+TuningFunction::usage = "todo" (* to be removed *)
 
 Begin["`Private`"]
 
 Convert[PitchCode,Frequency] := Convert[PitchCode,Frequency,Tuning]
 Convert[Frequency,PitchCode] := Convert[Frequency,PitchCode,Tuning]
+Convert[{PitchCode,Overtone},PitchCode] := Convert[{PitchCode,Overtone},PitchCode,Tuning]
 
 Convert[PitchCode,Frequency,x_EqualTemperament] := Function[p,FrequencyRef[x]*FrequencyOctave[x]^((p - PitchCodeRef[x])/PitchCodeOctave[x])]
 Convert[Frequency,PitchCode,x_EqualTemperament] := Function[f,PitchCodeOctave[x]*Log[FrequencyOctave[x],f/FrequencyRef[x]]+PitchCodeRef[x]]
+Convert[{PitchCode,Overtone},PitchCode,x_EqualTemperament] := Function[{p,o},Evaluate[Convert[Frequency,PitchCode,x][o Convert[PitchCode,Frequency,x][p]]]]
 
 EqualTemperament[] := EqualTemperament[{{440,2},{69,12}}]
 EqualTemperament[o_?OptionQ, d_?(DataQ[EqualTemperament])][p_] := TuningFunction[EqualTemperament[o,d]][p]

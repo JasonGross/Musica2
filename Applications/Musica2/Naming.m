@@ -52,11 +52,11 @@ Unprotect[
 
 Unprotect[
   ChordNaming,
-  ChordNamingFunction,
+  ChordNamingFunction, (* to be removed *)
   FlatSymbols,
   Naming,
   NoteNaming,
-  NoteNamingFunction,
+  NoteNamingFunction, (* to be removed *)
   PrepareString,
   SharpSymbols
   ];
@@ -66,21 +66,21 @@ CreateElement[HelixNoteNaming,{
   NoteNames:{__String},
   Helix:{PitchCodeStart_Integer,PitchCodeInterval_Integer,NameCodeStart_Integer},
   FlatsCount_Integer
-  }]
+  },"todo\[NewLine]"]
 
 CreateElement[HelixChordNaming,{
   RootNaming:Struct[HelixNoteNaming],
   ChordNames:{
     {{__String},{__Integer}}..
     }
-  }]
+  },"todo\[NewLine]"]
 
 ChordNaming::usage = "todo"
-ChordNamingFunction::usage = "todo"
+ChordNamingFunction::usage = "todo" (* to be removed *)
 FlatSymbols::usage = "todo"
 Naming::usage = "todo"
 NoteNaming::usage = "todo"
-NoteNamingFunction::usage = "todo"
+NoteNamingFunction::usage = "todo" (* to be removed *)
 PrepareString::usage = "todo"
 SharpSymbols::usage = "todo"
 
