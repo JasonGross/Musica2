@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`EventList` *)
 
 (* :History:
+  2005-01-16  bch :  rewrote EventListToMidi as Midi[...], deleted MidiToEventList
   2004-09-13  bch :  Musica and Musica2 dont seem to get along very well.
   2004-08-27  bch :  added message ToDo
   2004-08-26  bch :  added some help/usage-text
@@ -42,68 +43,48 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`EventList`",
   {
-    "Musica2`Midi`",
-    "Musica2`Utils`",
     "Musica`",
     "Musica`EventLists`MIDI`IO`",
     "Musica`EventLists`MIDI`Messages`",
-    "Musica`EventLists`MIDI`Transformations`"
+    "Musica`EventLists`MIDI`Transformations`",
+    "Musica2`Midi`",
+    "Musica2`Utils`"
     }
   ]
 
 Unprotect[
-  EventListToMidi,
-  MidiToEventList
+  Musica2`Midi`Event,
+  Musica2`Midi`Midi,
+  Musica2`Midi`Track
   ];
-
-EventList::usage = ""
-EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object."
-MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object."
 
 Begin["`Private`"]
 
-EventListToMidi[e_] := (* todo: handle all channel events, not just notes *)
-  Module[{x = ConvertEventList[e, EventList[MIDI, Tick, {}, Null]]},
-    Midi[{MidiFileFormat -> (MIDIFileFormat /. x[[0, 4]]), MidiTPQ -> (TPQ /. x[[0, 4]]), MidiShape -> MidiFile, MidiTimeUnit -> MidiTick, MidiTiming -> MidiAbsolute},
-      ReplacePart[{#[[1]],
-        If[MatchQ[#[[2]], _NoteOn], {MidiNoteOn, {#[[2, 3]]-1, #[[2, 1]], #[[2, 2]]}},
-          If[MatchQ[#[[2]], _NoteOff], {MidiNoteOff, {#[[2, 3]]-1, #[[2, 1]], #[[2, 2]]}},
-            If[MatchQ[#[[2]], _Sysex], {#[[2, 1, 1]], Drop[#[[2, 1]], 1]},
-              If[MatchQ[#[[2]], _MetaEvent], {{MidiMeta, #[[2, 1]]}, #[[2, 2]]},
-                Null (* this is just a starting point since we will miss all channel-events but notes *)
-                ]
-              ]
-            ]
-          ]
-        }& /@ #, List, {0}]& /@ ReplacePart[x, List, {0}]
-      ]
-    ]
+(* todo: handle all channel events, not just notes and meta *)
+Musica2`Midi`Event[Musica`Event[tick_,MetaEvent[t_,d_]]] := Musica2`Midi`Event[{tick,{{EventTypeMeta,t},d}}]
+Musica2`Midi`Event[Musica`Event[tick_,NoteOn[p_,v_,c_]]] := Musica2`Midi`Event[{tick,{EventTypeNoteOn,{c-1,p,v}}}]
+Musica2`Midi`Event[Musica`Event[tick_,NoteOff[p_,v_,c_]]] := Musica2`Midi`Event[{tick,{EventTypeNoteOff,{c-1,p,v}}}]
 
-MidiToEventList[m_Midi] := (* todo: handle all channel events, not just notes *)
-  Module[{},
-    EventList[MIDI, Tick, {},Evaluate[{MIDIFileFormat -> (MidiFileFormat /. m[[1]] /. Options[Midi]), TPQ -> (MidiTPQ /. m[[1]] /. Options[Midi])}]] @@ (
-      (Musica`Track @@ (Musica`Event[#[[1]],
-        If[#[[2, 1]] === MidiNoteOn, NoteOn[#[[2, 2, 2]], #[[2, 2, 3]], #[[2, 2, 1]]+1],
-          If[#[[2, 1]] === MidiNoteOff,NoteOff[#[[2, 2, 2]], #[[2, 2, 3]], #[[2, 2, 1]]+1],
-            If[#[[2, 1]] === MidiSysX0, Sysex[Prepend[#[[2, 2]],MidiSysX0]],
-              If[#[[2, 1]] === MidiSysX7, Sysex[Prepend[#[[2, 2]],MidiSysX7]],
-                If[ListQ[#[[2]]] && #[[2, 1, 1]] === MidiMeta, MetaEvent[#[[2, 1, 2]], #[[2, 2]]],
-                  Null (* this is just a starting point since we will miss all channel-events but notes *)
-                  ]
-                ]
-              ]
-            ]
-          ]
-        ] & /@ #)) & /@
-        MidiSetState[m, {MidiShape->MidiFile, MidiTiming->MidiAbsolute, MidiTimeUnit->MidiTick}][[2]]
-      )
-    ]
+Musica2`Midi`Track[Musica`Track[e__Musica`Event]] := Musica2`Midi`Track[Musica2`Midi`Event /@ {e}]
 
+Midi[e_?EventListQ] := 
+  Module[{x = ConvertEventList[e,EventList[MIDI, Musica`EventLists`MIDI`Messages`Tick, {}, Null]], o},
+    (* get all opts to pass to the Midi object *)
+    o = {
+        FileFormat -> (MIDIFileFormat /. x[[0, 4]]),
+        Musica2`Midi`TPQ -> (Musica`EventLists`MIDI`Messages`TPQ /. x[[0, 4]]),
+        TimeUnit -> Musica2`Midi`Tick
+        };
+    (* get rid of the Head and convert each Track *)
+    Midi[Musica2`Midi`Track /@ ReplacePart[x,List,0], Sequence @@ o]
+    ]
+  
 End[]
 
 Protect[
-  EventListToMidi,
-  MidiToEventList
+  Musica2`Midi`Event,
+  Musica2`Midi`Midi,
+  Musica2`Midi`Track
   ];
 
 EndPackage[]

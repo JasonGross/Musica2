@@ -40,6 +40,7 @@ BeginPackage["Musica2`Spectrum`",
   {
     "Musica2`Common`",
     "Musica2`Sound`",
+    "Musica2`Test`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }

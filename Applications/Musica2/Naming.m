@@ -41,6 +41,7 @@ BeginPackage["Musica2`Naming`",
   {
     "Musica2`Common`",
     "Musica2`Note`",
+    "Musica2`Test`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }
@@ -69,7 +70,7 @@ CreateElement[HelixNoteNaming,{
   },Null,"todo"]
 
 CreateElement[HelixChordNaming,{
-  RootNaming:Struct[HelixNoteNaming],
+  RootNaming_,
   ChordNames:{
     {{__String},{__Integer}}..
     }
@@ -98,7 +99,7 @@ Convert[String,{PitchCode},x_HelixChordNaming] := ChordNamingFunction[x, True]
 Convert[PitchCode,String,x_HelixNoteNaming] := NoteNamingFunction[x, False]
 Convert[String,PitchCode,x_HelixNoteNaming] := NoteNamingFunction[x, True]
 
-HelixChordNaming[] := HelixChordNaming[{Data[HelixNoteNaming[]], {
+HelixChordNaming[] := HelixChordNaming[{NoteNaming, {
   {{"m-5"},      {0, 3, 6}},
   {{"sus2"},     {0, 2, 7}},
   {{"m", "min"}, {0, 3, 7}},
@@ -119,9 +120,9 @@ HelixChordNaming[o_?OptionQ, d_?(DataQ[HelixChordNaming])][s_String] := ChordNam
 
 ChordNamingFunction[x_HelixChordNaming, False] :=
   Module[{
-      pcc = Octave[x],
+      pcc = Octave[RootNaming[x]],
       cn = ChordNames[x],
-      rnf = NoteNamingFunction[HelixNoteNaming[RootNaming[x]], False, False],
+      rnf = NoteNamingFunction[RootNaming[x], False, False],
       cnf
       },
     cn = {#[[1, 1]], Data[FigBass[#[[2]], Octave -> pcc]][[2]]} & /@ cn;
@@ -171,9 +172,9 @@ ChordNamingFunction[x_HelixChordNaming, False] :=
 
 ChordNamingFunction[x_HelixChordNaming, True] :=
   Module[{
-      pcc = Octave[x],
+      pcc = Octave[RootNaming[x]],
       cn = ChordNames[x],
-      rnf = NoteNamingFunction[HelixNoteNaming[RootNaming[x]], True]
+      rnf = NoteNamingFunction[RootNaming[x], True]
       },
     Function[s,
       Module[{q = StringPosition[s, "/"], cs, bs, cp, bp, r, b, mp, m},

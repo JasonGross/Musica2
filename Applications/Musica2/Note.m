@@ -63,6 +63,7 @@ BeginPackage["Musica2`Note`",
   {
     "Musica2`Common`",
     "Musica2`Sound`",
+    "Musica2`Test`",
     "Musica2`Tuning`",
     "Musica2`Type`",
     "Musica2`Utils`"

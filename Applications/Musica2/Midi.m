@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2005-01-12  bch :  bugfix in Tidy[Track]
   2004-12-21  bch :  Tidy[Track] now much slower, but handles opts, i think...
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-11-28  bch :  added EventTypeKeySignature and EventTypeTimeSignature
@@ -87,6 +88,7 @@ BeginPackage["Musica2`Midi`",
     "Musica2`Common`",
     "Musica2`Note`",
     "Musica2`Sound`",
+    "Musica2`Test`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }
@@ -180,7 +182,7 @@ Tidy[Track] = Module[{r = #,eot},
   eot = EventTime[r[[-1]]];
   r = Select[r,(EventType[#]=!=EventTypeEOT)&];
   r = Append[r,Event[{eot,EOT}]];
-  r = If[EventType[#]===EventTypeNoteOn&&Velocity[#]===0,ReplacePart[#,EventTypeNoteOff,EventType],#]& /@ r;
+  r = (If[EventType[#]===EventTypeNoteOn && EventData[#][[3]]===0,ReplacePart[#,EventTypeNoteOff,EventType],#])& /@ r;
   r = Track[r, Sequence @@ Opts[#]];
   r
   ]&

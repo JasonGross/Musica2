@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2005-01-15  bch :  added TestSuite
   2005-01-02  bch :  added ValuesToRatios and RatiosToValues
   2004-10-06  bch :  added DataNoValue functions, used in ParOfSeqToSeqOfPar
   2004-10-04  bch :  not much, lost track... sorry
@@ -56,7 +57,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Utils`",
   {
-    "DiscreteMath`Tree`"
+    "DiscreteMath`Tree`",
+    "Musica2`Test`"
     }
   ]
 
@@ -103,6 +105,7 @@ ParOfSeqToSeqOfPar::usage = "todo"
 RatiosToValues::usage = "todo"
 SeqOfParToParOfSeq::usage = "todo"
 UnCompile::usage = "UnCompile[f_] returns f in an uncompiled version."
+Utils::usage = "todo"
 ValuesToDeltas::usage = "ValuesToDeltas[v_List] is the opposite to DeltasToValues and calculates the deltas between the values in the list.";
 ValuesToRatios::usage = "todo"
 
@@ -119,25 +122,31 @@ AddOpts[x:{___?OptionQ},opts__?OptionQ] :=
 
 Circular[x_List,n_Integer] := x[[Mod[n, Length[x], 1]]]
 
-DataAnyValueQ[expr_] := If[AtomQ[expr],expr===DataAnyValue||expr===DataTie[DataAnyValue],Or@@(DataAnyValueQ/@expr)]
+DataAnyValueQ[expr_] :=
+  If[AtomQ[expr],
+    expr === DataAnyValue || expr === DataTie[DataAnyValue],
+    Or @@ (DataAnyValueQ /@ ReplacePart[expr,List,0])
+    ]
 
 DataApply[f_,d_] := If[DataAnyValueQ[d] || DataNoValueQ[d],d,If[DataTieQ[d],DataTie[#],#]&[f[DataUnTie[d]]]]
 
 DataNoValue[expr_List] := DataNoValue /@ expr
 DataNoValue[expr_] := DataNoValue
 
-DataNoValueQ[expr_] := If[AtomQ[expr],expr===DataNoValue||expr===DataTie[DataNoValue],Or@@(DataNoValueQ/@expr)]
+DataNoValueQ[expr_] :=
+  If[AtomQ[expr],
+    expr === DataNoValue || expr === DataTie[DataNoValue],
+    Or @@ (DataNoValueQ /@ ReplacePart[expr,List,0])
+    ]
 
 DataPlainValueQ[x_] := !(DataAnyValueQ[x]||DataNoValueQ[x]||DataTieQ[x])
 
 DataTie[d_DataTie] := d
-(*DataTie[d_?NumberQ] := If[DataTieQ[d],d,-d-1]*)
 DataTie[d_List] := DataTie /@ d
 
-DataTieQ[d_] := MatchQ[d,_DataTie] (*|| (NumberQ[d]&&d<0)*) || (!AtomQ[d]&&Or@@(DataTieQ/@d))
+DataTieQ[d_] := MatchQ[d,_DataTie] || (ListQ[d] && Or @@ (DataTieQ /@ d))
 
 DataUnTie[d_DataTie] := d[[1]]
-(*DataUnTie[d_?NumberQ] := If[DataTieQ[d],-d-1,d]*)
 DataUnTie[d_List] := DataUnTie /@ d
 DataUnTie[d_] := d
 
@@ -185,7 +194,7 @@ NormalizeList[d_,opts___] :=
     If[pr === PlayRange, pr = {Min[d],Max[d]}];
     md = (pr[[1]]+pr[[2]])/2;
     sp = (pr[[2]]-pr[[1]])/2;
-    N[(d-md)/sp]
+    (d-md)/sp
     ]
 
 ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to chords *)
@@ -263,6 +272,117 @@ UnCompile[f_InterpolatingFunction] := f
 
 ValuesToDeltas[v_List] := Drop[v, 1] - Drop[v, -1]
 ValuesToRatios[v_List] := Drop[v, 1] / Drop[v, -1]
+
+Utils /: TestSuite[Utils] := {
+  TestCase[Circular[{1, 2}, 0], 2],
+  TestCase[Circular[{1, 2}, 1], 1],
+  TestCase[Circular[{1, 2}, 2], 2],
+  TestCase[Circular[{1, 2}, 3], 1],
+  TestCase[DataAnyValueQ[0], False], 
+  TestCase[DataAnyValueQ[DataAnyValue], True], 
+  TestCase[DataAnyValueQ[DataNoValue], False], 
+  TestCase[DataAnyValueQ[\[Pi]], False], 
+  TestCase[DataAnyValueQ[2 + DataAnyValue], True], 
+  TestCase[DataAnyValueQ[2 + DataNoValue], False], 
+  TestCase[DataAnyValueQ[2 + \[Pi]], False], 
+  TestCase[DataAnyValueQ[DataTie[0]], False], 
+  TestCase[DataAnyValueQ[DataTie[DataAnyValue]], True], 
+  TestCase[DataAnyValueQ[DataTie[DataNoValue]], False], 
+  TestCase[DataAnyValueQ[DataTie[2 + DataAnyValue]], True], 
+  TestCase[DataAnyValueQ[DataTie[2 + DataNoValue]], False], 
+  TestCase[DataAnyValueQ[{DataTie[0]}], False], 
+  TestCase[DataAnyValueQ[{DataTie[DataAnyValue]}], True], 
+  TestCase[DataAnyValueQ[{DataTie[DataNoValue]}], False], 
+  TestCase[DataNoValueQ[0], False], 
+  TestCase[DataNoValueQ[DataAnyValue], False], 
+  TestCase[DataNoValueQ[DataNoValue], True], 
+  TestCase[DataNoValueQ[\[Pi]], False], 
+  TestCase[DataNoValueQ[2 + DataAnyValue], False], 
+  TestCase[DataNoValueQ[2 + DataNoValue], True], 
+  TestCase[DataNoValueQ[2 + \[Pi]], False], 
+  TestCase[DataNoValueQ[DataTie[0]], False], 
+  TestCase[DataNoValueQ[DataTie[DataAnyValue]], False], 
+  TestCase[DataNoValueQ[DataTie[DataNoValue]], True], 
+  TestCase[DataNoValueQ[DataTie[2 + DataAnyValue]], False], 
+  TestCase[DataNoValueQ[DataTie[2 + DataNoValue]], True], 
+  TestCase[DataNoValueQ[{DataTie[0]}], False], 
+  TestCase[DataNoValueQ[{DataTie[DataAnyValue]}], False], 
+  TestCase[DataNoValueQ[{DataTie[DataNoValue]}], True], 
+  TestCase[DataPlainValueQ[0], True], 
+  TestCase[DataPlainValueQ[DataAnyValue], False], 
+  TestCase[DataPlainValueQ[DataNoValue], False], 
+  TestCase[DataPlainValueQ[\[Pi]], True], 
+  TestCase[DataPlainValueQ[2 + DataAnyValue], False], 
+  TestCase[DataPlainValueQ[2 + DataNoValue], False], 
+  TestCase[DataPlainValueQ[2 + \[Pi]], True], 
+  TestCase[DataPlainValueQ[DataTie[0]], False], 
+  TestCase[DataPlainValueQ[DataTie[DataAnyValue]], False], 
+  TestCase[DataPlainValueQ[DataTie[DataNoValue]], False], 
+  TestCase[DataPlainValueQ[DataTie[2 + DataAnyValue]], False], 
+  TestCase[DataPlainValueQ[DataTie[2 + DataNoValue]], False], 
+  TestCase[DataPlainValueQ[{DataTie[0]}], False], 
+  TestCase[DataPlainValueQ[{DataTie[DataAnyValue]}], False], 
+  TestCase[DataPlainValueQ[{DataTie[DataNoValue]}], False], 
+  TestCase[DataTieQ[0], False],
+  TestCase[DataTieQ[DataAnyValue], False], 
+  TestCase[DataTieQ[DataNoValue], False],
+  TestCase[DataTieQ[\[Pi]], False], 
+  TestCase[DataTieQ[2 + DataAnyValue], False], 
+  TestCase[DataTieQ[2 + DataNoValue], False], 
+  TestCase[DataTieQ[2 + \[Pi]], False],
+  TestCase[DataTieQ[DataTie[0]], True], 
+  TestCase[DataTieQ[DataTie[DataAnyValue]], True], 
+  TestCase[DataTieQ[DataTie[DataNoValue]], True], 
+  TestCase[DataTieQ[DataTie[2 + DataAnyValue]], True], 
+  TestCase[DataTieQ[DataTie[2 + DataNoValue]], True], 
+  TestCase[DataTieQ[{DataTie[0]}], True], 
+  TestCase[DataTieQ[{DataTie[DataAnyValue]}], True], 
+  TestCase[DataTieQ[{DataTie[DataNoValue]}], True], 
+  TestCase[DataTie[0], DataTie[0]], 
+  TestCase[DataTie[DataAnyValue], DataTie[DataAnyValue]], 
+  TestCase[DataTie[DataNoValue], DataTie[DataNoValue]], 
+  TestCase[DataTie[\[Pi]], DataTie[\[Pi]]], 
+  TestCase[DataTie[2 + DataAnyValue], DataTie[2 + DataAnyValue]], 
+  TestCase[DataTie[2 + DataNoValue], DataTie[2 + DataNoValue]], 
+  TestCase[DataTie[2 + \[Pi]], DataTie[2 + \[Pi]]], 
+  TestCase[DataTie[DataTie[0]], DataTie[0]], 
+  TestCase[DataTie[DataTie[DataAnyValue]], DataTie[DataAnyValue]], 
+  TestCase[DataTie[DataTie[DataNoValue]], DataTie[DataNoValue]], 
+  TestCase[DataTie[DataTie[2 + DataAnyValue]], DataTie[2 + DataAnyValue]], 
+  TestCase[DataTie[DataTie[2 + DataNoValue]], DataTie[2 + DataNoValue]], 
+  TestCase[DataTie[{DataTie[0]}], {DataTie[0]}], 
+  TestCase[DataTie[{DataTie[DataAnyValue]}], {DataTie[DataAnyValue]}], 
+  TestCase[DataTie[{DataTie[DataNoValue]}], {DataTie[DataNoValue]}], 
+  TestCase[DataUnTie[0], 0], TestCase[DataUnTie[DataAnyValue], DataAnyValue], 
+  TestCase[DataUnTie[DataNoValue], DataNoValue], 
+  TestCase[DataUnTie[\[Pi]], \[Pi]], 
+  TestCase[DataUnTie[2 + DataAnyValue], 2 + DataAnyValue], 
+  TestCase[DataUnTie[2 + DataNoValue], 2 + DataNoValue], 
+  TestCase[DataUnTie[2 + \[Pi]], 2 + \[Pi]], 
+  TestCase[DataUnTie[DataTie[0]], 0], 
+  TestCase[DataUnTie[DataTie[DataAnyValue]], DataAnyValue], 
+  TestCase[DataUnTie[DataTie[DataNoValue]], DataNoValue], 
+  TestCase[DataUnTie[DataTie[2 + DataAnyValue]], 2 + DataAnyValue], 
+  TestCase[DataUnTie[DataTie[2 + DataNoValue]], 2 + DataNoValue], 
+  TestCase[DataUnTie[{DataTie[0]}], {0}], 
+  TestCase[DataUnTie[{DataTie[DataAnyValue]}], {DataAnyValue}], 
+  TestCase[DataUnTie[{DataTie[DataNoValue]}], {DataNoValue}], 
+  TestCase[(DataApply[f, #1] &)[0], f[0]],
+  TestCase[(DataApply[f, #1] &)[DataAnyValue], DataAnyValue],
+  TestCase[(DataApply[f, #1] &)[DataNoValue], DataNoValue],
+  TestCase[(DataApply[f, #1] &)[\[Pi]], f[\[Pi]]],
+  TestCase[(DataApply[f, #1] &)[2 + DataAnyValue], 2 + DataAnyValue],
+  TestCase[(DataApply[f, #1] &)[2 + DataNoValue], 2 + DataNoValue],
+  TestCase[(DataApply[f, #1] &)[2 + \[Pi]], f[2 + \[Pi]]],
+  TestCase[(DataApply[f, #1] &)[DataTie[0]], DataTie[f[0]]],
+  TestCase[(DataApply[f, #1] &)[DataTie[DataAnyValue]], DataTie[DataAnyValue]],
+  TestCase[(DataApply[f, #1] &)[DataTie[DataNoValue]], DataTie[DataNoValue]],
+  TestCase[(DataApply[f, #1] &)[DataTie[2 + DataAnyValue]], DataTie[2 + DataAnyValue]],
+  TestCase[(DataApply[f, #1] &)[DataTie[2 + DataNoValue]], DataTie[2 + DataNoValue]],
+  TestCase[(DataApply[f, #1] &)[{DataTie[0]}], DataTie[f[{0}]]],
+  TestCase[(DataApply[f, #1] &)[{DataTie[DataAnyValue]}], {DataTie[DataAnyValue]}],
+  TestCase[(DataApply[f, #1] &)[{DataTie[DataNoValue]}], {DataTie[DataNoValue]}]
+  }
 
 End[]
 

@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-1-9 at 16:10 *)
+(* :History: File created 2005-1-17 at 8:37 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -16,6 +16,10 @@ If[!MemberQ[$Packages,"Musica2`"],
 DeclarePackage["Musica2`Common`",
 {"Content", "Convert", "Duration", "Frequency", "Mix", "Octave", "Overtone", 
  "Par", "PitchCode", "Play2", "Seq", "Time"}
+];
+
+DeclarePackage["Musica2`Instrument`",
+{"Instrument", "SimpleSine", "SimpleSineQ", "Tuner"}
 ];
 
 DeclarePackage["Musica2`Midi`",
@@ -50,15 +54,19 @@ DeclarePackage["Musica2`PianoRoll`",
 ];
 
 DeclarePackage["Musica2`Setup`",
-{"ClearInitDotEm", "MakeInitDotEm"}
+{"ClearInitDotEm", "MakeInitDotEm", "Setup"}
 ];
 
 DeclarePackage["Musica2`Sound`",
-{"PI", "SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
+{"SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
 ];
 
 DeclarePackage["Musica2`Spectrum`",
 {"Amplitude", "Phase", "Spectrum", "SpectrumQ", "Tone", "ToneQ"}
+];
+
+DeclarePackage["Musica2`Test`",
+{"TestCase", "TestCreate", "TestRun", "TestSuite"}
 ];
 
 DeclarePackage["Musica2`Tuning`",
@@ -70,7 +78,8 @@ DeclarePackage["Musica2`Tuning`",
 DeclarePackage["Musica2`Type`",
 {"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
  "DataToRules", "ElementType", "Members", "Opts", "Pack", "Pos", 
- "RulesToData", "Struct", "Tidy", "TypeQ", "UnPack", "UnPackOpts"}
+ "RulesToData", "Struct", "Tidy", "Type", "TypeQ", "Types", "UnPack", 
+ "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",
@@ -78,7 +87,8 @@ DeclarePackage["Musica2`Utils`",
  "DataNoValue", "DataNoValueQ", "DataPlainValueQ", "DataTie", "DataTieQ", 
  "DataUnTie", "DeltasToValues", "FunctionQ", "MakeNestedIfs", 
  "NormalizeList", "ParOfSeqToSeqOfPar", "RatiosToValues", "RemOpts", 
- "SeqOfParToParOfSeq", "UnCompile", "ValuesToDeltas", "ValuesToRatios"}
+ "SeqOfParToParOfSeq", "UnCompile", "Utils", "ValuesToDeltas", 
+ "ValuesToRatios"}
 ];
 
 Null

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`PianoRoll` *)
 
 (* :History:
+  2005-01-15  bch :  added TestSuite
   2005-01-07  bch :  added conversions from Note and its Collections
                      converted TimeUnit in Midi to Tick
   2004-11-29  bch :  bugfix
@@ -44,6 +45,7 @@ BeginPackage["Musica2`PianoRoll`",
     "Musica2`Common`",
     "Musica2`Midi`",
     "Musica2`Note`",
+    "Musica2`Test`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }
@@ -249,6 +251,8 @@ PianoRollPiano[minnote_, maxnote_] :=
       }
     ]
 
+PianoRoll /: TestSuite[PianoRoll] := {}
+    
 End[]
 
 Protect[

@@ -44,6 +44,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Tuning`",
   {
     "Musica2`Common`",
+    "Musica2`Test`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }
@@ -56,8 +57,7 @@ Unprotect[
 Unprotect[
   EqualTemperament,
   EqualTemperamentQ,
-  FrequencyRatios,
-  Tuning
+  FrequencyRatios
   ];
 
 CreateElement[EqualTemperament, {{PitchCodeRef_,FrequencyRef_},{PitchCodeOctave_,FrequencyOctave_}},{{69,440},{12,2}},"todo"];
@@ -128,6 +128,32 @@ PitchCodeOctave[x_CustomTuning] := Length[FrequencyRatios[x]]
 
 Tuning := EqualTemperament[]
 
+EqualTemperament /: TestSuite[EqualTemperament] = Join[TestSuite[EqualTemperament],{
+ TestCase[Convert[PitchCode, Frequency, EqualTemperament[{{69, 440}, {12, 2}}]][60], 220*2^(1/4)],
+ TestCase[Convert[PitchCode, Frequency, EqualTemperament[{{69, 440}, {12, 2}}]][121/2], 220*2^(7/24)],
+ TestCase[Convert[PitchCode, Frequency, EqualTemperament[{{69, 440}, {12, 2}}]][61], 220*2^(1/3)],
+ TestCase[Convert[PitchCode, Frequency, EqualTemperament[{{69, 440}, {12, 2}}]][123/2], 220*2^(3/8)],
+ TestCase[Convert[PitchCode, Frequency, EqualTemperament[{{69, 440}, {12, 2}}]][62], 220*2^(5/12)],
+ TestCase[Convert[Frequency, PitchCode, EqualTemperament[{{69, 440}, {12, 2}}]][60], 69 - (12*Log[22/3])/Log[2]],
+ TestCase[Convert[Frequency, PitchCode, EqualTemperament[{{69, 440}, {12, 2}}]][61], 69 - (12*Log[440/61])/Log[2]],
+ TestCase[Convert[Frequency, PitchCode, EqualTemperament[{{69, 440}, {12, 2}}]][62], 69 - (12*Log[220/31])/Log[2]],
+ TestCase[Convert[Frequency, PitchCode, EqualTemperament[{{69, 440}, {12, 2}}]][63], 69 - (12*Log[440/63])/Log[2]],
+ TestCase[Convert[Frequency, PitchCode, EqualTemperament[{{69, 440}, {12, 2}}]][64], 69 - (12*Log[55/8])/Log[2]]
+  }]
+
+CustomTuning /: TestSuite[CustomTuning] = Join[TestSuite[CustomTuning],{
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][60], 264],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24,16/15}}]][121/2], 539/2],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][61], 275],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24,16/15}}]][123/2], 1705/6],
+ TestCase[Convert[PitchCode, Frequency, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][62], 880/3],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][60], 1909/55],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25,25/24, 16/15}}]][61], 9617/275],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][62], 387/11],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25,25/24, 16/15}}]][63], 1557/44],
+ TestCase[Convert[Frequency, PitchCode, CustomTuning[{{69, 440}, {25/24, 16/15, 27/25, 25/24, 16/15, 25/24, 27/25, 25/24, 16/15, 27/25, 25/24, 16/15}}]][64], 783/22]
+ }]
+  
 End[]
 
 Protect[
@@ -137,8 +163,7 @@ Protect[
 Protect[
   EqualTemperament,
   EqualTemperamentQ,
-  FrequencyRatios,
-  Tuning
+  FrequencyRatios
   ];
 
 EndPackage[]

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Type` *)
 
 (* :History:
+  2005-01-15  bch :  added TestSuite, Type and Types
   2005-01-08  bch :  added default-values to elements
   2004-12-21  bch :  added OrderedQ and Sort[x_T,s:{__Symbol}]
   2004-12-19  bch :  changed DataAsRules to DataToRules and added RulesToData
@@ -48,6 +49,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Type`",
   {
     "Musica2`Common`",
+    "Musica2`Test`",
     "Musica2`Utils`"
     }
   ]
@@ -69,6 +71,8 @@ Pack::usage = "todo"
 Pos::usage = "todo"
 RulesToData::usage = "todo"
 Struct::usage = "todo"
+Type::usage = "todo"
+Types::usage = "todo"
 TypeQ::usage = "todo"
 Tidy::usage = "todo"
 UnPack::usage = "todo"
@@ -118,6 +122,8 @@ DeclareContainer[T_Symbol, ET_Symbol, U_String] := (
   );
 
 DefineCommon[T_Symbol] := (
+  Types = Prepend[Types,T];
+
   (* no options *)
   Options[T] = {};
 
@@ -141,6 +147,8 @@ DefineCommon[T_Symbol] := (
   Tidy[x_T] := Tidy[T][x];
 
   T /: ContainerQ[x_T] := ContainerQ[T];
+
+  T /: TestSuite[T] := {};
 
   MessageName[T,"usage"] = T::usage <> "TypeQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is of type "<>SymbolName[T]<>" by checking both Head and data.\[NewLine]";
   MessageName[T,"usage"] = T::usage <> "Opts[x_"<>SymbolName[T]<>"] returns the opts part of an object of type "<>SymbolName[T]<>".\[NewLine]";
@@ -219,6 +227,14 @@ DefineElement[T_Symbol, P_, D_, K_] :=
 
     DefineCommon[T];
 
+    T /: TestSuite[T] = Join[TestSuite[T],{
+      TestCase[ContainerQ[T],False],
+      TestCase[Struct[T],P],
+      TestCase[DataQ[T][Data[T[]]],True],
+      TestCase[Opts[T[Data[T[]], test->42]],{test->42}],
+      TestCase[Data[T[Data[T[]], test->42]],Data[T[]]]
+      }];
+    
     MessageName[T,"usage"] = T::usage <> "ContainerQ["<>SymbolName[T]<>"] returns False.\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", s_Symbol] where s is a member of "<>ToString[Members[T]]<>" returns the value of member s in x.\[NewLine]";
@@ -320,6 +336,11 @@ DefineContainer[T_Symbol, ET_Symbol] :=
 
     DefineCommon[T];
 
+    T /: TestSuite[T] = Join[TestSuite[T],{
+      TestCase[ContainerQ[T],True],
+      TestCase[ElementType[T],ET]
+      }];
+    
     Tidy[T] = (Tidy /@ #)&;
 
     MessageName[T,"usage"] = T::usage <> "ContainerQ["<>SymbolName[T]<>"] returns True.\[NewLine]";
@@ -354,6 +375,10 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", s_Symbol].\[NewLine]";
     MessageName[T,"usage"] = T::usage <> "Part[x_"<>SymbolName[T]<>", n_Integer, m___Integer, s_Symbol].\[NewLine]";
   ];
+
+Types = {}
+
+Type /: TestSuite[Type] := TestSuite /@ Types
 
 End[]
 

@@ -58,6 +58,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Sound`",
   {
     "Musica2`Common`",
+    "Musica2`Test`",
     "Musica2`Type`",
     "Musica2`Utils`"
     }
@@ -82,7 +83,7 @@ Unprotect[
 
 CreateElement[Snippet,
   {SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},
-  {SampledSoundFunction,Sin[2 PI 440 #]&,2^13,2^13},
+  {SampledSoundFunction,Sin[2 Pi 440 #]&,2^13,2^13},
   "todo"
   ];
 CreateContainer[Sound,Snippet,"todo"];
@@ -252,7 +253,7 @@ Snippet[x_Snippet, opts___?OptionQ] :=
       d
       },
       d = Convert[Content[s],stin,scin,stout,scout];
-      Snippet[{stout,d,srout,scout},Sequence@@Opts[x]]
+      Snippet[{stout,d,srout,scout},Sequence @@ Opts[x]]
     ]
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
