@@ -60,6 +60,7 @@ Members::usage = ""
 Opts::usage = ""
 Pack::usage = ""
 Pos::usage = ""
+Struct::usage = ""
 TypeQ::usage = ""
 Tidy::usage = ""
 UnPack::usage = ""
@@ -126,8 +127,12 @@ DefineCommon[T_Symbol] := (
   );
 
 DefineElement[T_Symbol, P_, K_] :=
-  Module[{i,k=Union[K,{List,Blank,BlankSequence}],m},
+  Module[{i,k=Union[K,{List,Blank,BlankSequence,RepeatedNull,Repeated}],m},
+(*
+    Print["BEGIN: ",T];
+*)
     DataQ[T] = MatchQ[#, P]&;
+    Struct[T] = P;
 
     (* get all members *)
     Members[T] = M[T,P];
@@ -137,12 +142,12 @@ DefineElement[T_Symbol, P_, K_] :=
     i = Drop[#, -1] & /@ Cases[Position[m, _?(! MatchQ[#, Alternatives @@ k] &)], {__, 0}];
     MapThread[(Pos[T,#1] = #2)&,{Members[T],i}];
 
-    (*
+(*
     Print["M ",Members[T]];
     Print["m ",m];
     Print["i ",i];
     Print["p ",m[[Sequence@@#,0]]&/@i];
-    *)
+*)
 
     T /: Part[x_T, s_Symbol] := Data[x][[Sequence @@ Pos[T,s]]];
     T /: Part[x_T, s_Symbol, n__Integer] := Part[x,s][[n]];
@@ -157,6 +162,9 @@ DefineElement[T_Symbol, P_, K_] :=
     ContainerQ[T] = False;
 
     DefineCommon[T];
+(*
+    Print["END: ",T];
+*)
     ];
 
 DefineContainer[T_Symbol, ET_Symbol] :=

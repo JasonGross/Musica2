@@ -98,15 +98,17 @@ Spectrum[x:{__?AtomQ}, opts___?OptionQ] := Spectrum[Tone /@ x,opts]
 
 Tidy[Spectrum] = Module[{r = #,i,c},
   r = Tidy /@ r;
-  r = Select[r, 0 =!= Frequency[#]&];
-
+  r = Select[r, 0 =!= Amplitude[#]&];
   r = Sort[r, Frequency];
   r = Tone[r];
   For[i = 1, i < Length[r], i++,
     If[Frequency[r[[i]]] === Frequency[r[[i+1]]],
       c = Complex[r[[i]]] + Complex[r[[i+1]]];
-      r[[i]] = Tidy[Tone[{Frequency[r[[i]]],c},Sequence @@ Opts[r[[i]]]]];
       r = Delete[r,i+1];
+      If[c!=0,
+        r[[i]] = Tidy[Tone[{Frequency[r[[i]]],c},Sequence @@ Opts[r[[i]]]]],
+        r = Delete[r,i];
+        ];
       i--;
       ];
     ];
@@ -129,9 +131,30 @@ Tidy[Tone] = Module[{r = #},
   r
   ]&
 
+Spectrum /: Plus[a_Spectrum,b_Spectrum] := Spectrum[Join[Tone[a],Tone[b]]]
+Spectrum /: Plus[a_Spectrum,b_Tone] := Spectrum[Append[Tone[a],b]]
+Spectrum /: Plus[b_Tone,a_Spectrum] := Spectrum[Append[Tone[a],b]]
+Tone /: Plus[a_Tone,b_Tone] := Spectrum[{a,b}]
+
+Spectrum /: Power[a_Spectrum,2] := a*a
+Tone /: Power[a_Tone,2] := a*a
+
+Spectrum /: Times[a_Spectrum,b_Spectrum] := Spectrum[Flatten[Tone /@ (a*Tone[b])]]
+Spectrum /: Times[a_Spectrum,b_Tone] := Spectrum[Flatten[Tone /@ (Tone[a] * b)]]
+Spectrum /: Times[b_Tone,a_Spectrum] := Spectrum[Flatten[Tone /@ (Tone[a] * b)]]
+Tone /: Times[a_Tone,b_Tone] :=
+  Module[{af,aa,ap,bf,ba,bp},
+    {af,{aa,ap}}=Data[Tidy[a]];
+    {bf,{ba,bp}}=Data[Tidy[b]];
+    Spectrum[{
+      Tone[{Abs[af-bf],{ aa*ba/2,ap-bp+Pi/2}}],
+      Tone[{Abs[af+bf],{-aa*ba/2,ap+bp+Pi/2}}]
+      }]
+    ]
+
 complex[a_,p_] := a(Cos[p] + I Sin[p])
 Tone /: Complex[x_Tone] := complex[Amplitude[x],Phase[x]]
-Tone[{f_,c_?AtomQ}, opts___?OptionQ] := Tone[{f,{Abs[c],Arg[c]}},opts]
+Tone[{f_,c_?NumberQ}, opts___?OptionQ] := Tone[{f,{Abs[c],Arg[c]}},opts]
 Tone[f_, opts___?OptionQ] := Tone[{f,1},opts]
 
 End[]

@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-10-20 at 10:30 *)
+(* :History: File created 2004-11-28 at 12:43 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -19,10 +19,19 @@ DeclarePackage["Musica2`Common`",
 
 DeclarePackage["Musica2`Midi`",
 {"Event", "EventData", "EventQ", "EventTime", "EventType", "EventTypeEOT", 
- "EventTypeMeta", "EventTypeNoteOff", "EventTypeNoteOn", "EventTypeSysX0", 
- "EventTypeSysX7", "EventTypeTempo", "Midi", "MidiChannel", "MidiQ", 
- "MilliSecond", "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", 
- "TempoTrack", "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
+ "EventTypeKeySignature", "EventTypeMeta", "EventTypeNoteOff", 
+ "EventTypeNoteOn", "EventTypeSysX0", "EventTypeSysX7", "EventTypeTempo", 
+ "EventTypeTimeSignature", "Midi", "MidiChannel", "MidiQ", "MilliSecond", 
+ "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", "TempoTrack", 
+ "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
+];
+
+DeclarePackage["Musica2`Naming`",
+{"ChordNames", "ChordNaming", "ChordNamingFunction", "FlatsCount", 
+ "FlatSymbols", "Helix", "HelixChordNaming", "HelixChordNamingQ", 
+ "HelixNoteNaming", "HelixNoteNamingQ", "NameCodeStart", "Naming", 
+ "NoteNames", "NoteNaming", "NoteNamingFunction", "PitchCodeInterval", 
+ "PitchCodeStart", "PrepareString", "RootNaming", "SharpSymbols"}
 ];
 
 DeclarePackage["Musica2`Note`",
@@ -33,6 +42,10 @@ DeclarePackage["Musica2`Note`",
  "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "NoteRestQ", 
  "NoteTieQ", "PcV", "PitchCode", "Progression", "ProgressionQ", "Scale", 
  "ScaleFunction", "ScaleQ", "ThirdStack", "ThirdStackQ", "Velocity"}
+];
+
+DeclarePackage["Musica2`PianoRoll`",
+{"MaxNote", "MaxTime", "MinNote", "MinTime", "PianoRoll"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -54,8 +67,8 @@ DeclarePackage["Musica2`Tuning`",
 
 DeclarePackage["Musica2`Type`",
 {"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
- "ElementType", "Members", "Opts", "Pack", "Pos", "Tidy", "TypeQ", "UnPack", 
- "UnPackOpts"}
+ "ElementType", "Members", "Opts", "Pack", "Pos", "Struct", "Tidy", "TypeQ", 
+ "UnPack", "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",

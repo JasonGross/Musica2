@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2004-11-27  bch :  changed Bass in FigBass to be a list of integers
   2004-11-20  bch :  added FigBass,Intervals and ThirdStack
                      added use of Tuning
                      changed conversion between Chord and Melody to be more useful (?)
@@ -115,7 +116,7 @@ CreateContainer[Melody,Note];
 CreateContainer[Progression,Chord];
 CreateContainer[Counterpoint,Melody];
 
-CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass_Integer, Code_Integer}},{DirectedInfinity}];
+CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},{DirectedInfinity}];
 CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},{DirectedInfinity}];
 CreateElement[Scale, {Octave_Integer, Content:{__}}];
 CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}}];
@@ -189,22 +190,26 @@ FigBass[x_Melody,     opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_Scale,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_ThirdStack, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
-FigBass[x_Integer, opts___?OptionQ] := FigBass[{Octave/.{opts}/.{Octave->Infinity},{0,x}}, Sequence @@ RemOpts[{opts},Octave]]
+FigBass[x_Integer, opts___?OptionQ] := FigBass[{Octave/.{opts}/.{Octave->Infinity},{{0},x}}, Sequence @@ RemOpts[{opts},Octave]]
 
 FigBass[x:{__Integer}, opts___?OptionQ] :=
   Module[{o=Octave/.{opts}/.{Octave->Infinity},p=Select[x,DataPlainValueQ],r,c,s,t},
     If[o =!= Infinity, p = Mod[p,o]];
     p = Union[p];
-    r = p[[1]];
-    c = Total[2^(p-r)];
     If[o =!= Infinity,
-      t = c;
+      r = {0};
+      t = c = Total[2^p];
       For[s = 1, s < o, s++,
         t = BitAnd[2t,2^o-1] + If[BitAnd[t,2^(o-1)]!=0, 1, 0];
-        If[t < c, c = t; r = o - s + p[[1]]];
-        ];
+        If[t < c, c = t; r = {o-s},
+          If[t == c, r = Append[r,o-s]]
+          ]
+        ],
+      r = p[[1]];
+      c = Total[2^(p-r)];
+      r = {r};
       ];
-    FigBass[{o,{r,c}}, Sequence @@ RemOpts[{opts},Octave]]
+    FigBass[{o,{Sort[r],c}}, Sequence @@ RemOpts[{opts},Octave]]
     ]
 
 Scale /: Inverse[x_Scale] :=
@@ -284,7 +289,7 @@ Par[x:{__Progression}]  := Progression[Par[Counterpoint /@ x]]
 
 PitchCode[x_FigBass] :=
   If[Octave[x]=!=Infinity,Mod[#,Octave[x]],#]&[
-    ((#[[1]]-1)&/@Position[Reverse[IntegerDigits[Code[x],2]],1])+Bass[x]
+    ((#[[1]]-1)&/@Position[Reverse[IntegerDigits[Code[x],2]],1])+Bass[x][[1]]
     ]
 
 PitchCode[x_Intervals] :=

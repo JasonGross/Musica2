@@ -32,11 +32,11 @@ Musica is an open source project that aims at the creation of a complete Mathema
 
 History:
 
-The original Musica was first created by Costis Merziotis and placed at Wolfram:
+The original musica was first created by Costis Merziotis and placed at Wolfram:
 http://library.wolfram.com/infocenter/MathSource/4945/
-I contacted Costis and we decided to place Musica at SourceForge so that we could both contribute to it.
-Being new to Mathematica I too often couldnt quite get Costis ideas, so when he got too busy at his daytime job and decided to hand Musica over to me I took the liberty to make some changes.
-Musica2 is an attempt to rewrite Musica into something that I find easier to understand so that I can extend it without getting lost.
+I contacted Costis and we decided to place musica at SourceForge so that we could both contribute to it.
+When he got too busy at his daytime job and decided to hand musica over to me I took the liberty to make some changes.
+Musica2 is an attempt to rewrite musica using a kind of generic programming for elements and lists so that extending it would be easy.
 While this might not be achieved I have left the original Musica untouched at SourceForge, both the released package and the code in the CVS.
 
 Download:

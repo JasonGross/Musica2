@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-11-28  bch :  added EventTypeKeySignature and EventTypeTimeSignature
   2004-10-06  bch :  Tidy[Track] now also converts all NoteOn's with zero velocity till NoteOff's
                      Counterpoint[Track] calls Tidy[Track]
   2004-10-04  bch :  not much, lost track... sorry
@@ -108,7 +109,9 @@ Unprotect[
   EventTypeNoteOn,
   EventTypeSysX0,
   EventTypeSysX7,
+  EventTypeKeySignature,
   EventTypeTempo,
+  EventTypeTimeSignature,
   FileFormat,
   Midi,
   MidiChannel,
@@ -144,7 +147,9 @@ EventTypeNoteOff::usage = ""
 EventTypeNoteOn::usage = ""
 EventTypeSysX0::usage = ""
 EventTypeSysX7::usage = ""
+EventTypeKeySignature::usage = ""
 EventTypeTempo::usage = ""
+EventTypeTimeSignature::usage = ""
 FileFormat::usage = ""
 MidiChannel::usage = ""
 MilliSecond::usage = ""
@@ -314,7 +319,9 @@ EventTypeNoteOff = 0;
 EventTypeNoteOn = 1;
 EventTypeSysX0 = 16^^F0;
 EventTypeSysX7 = 16^^F7;
+EventTypeKeySignature = {EventTypeMeta,16^^59};
 EventTypeTempo = {EventTypeMeta,16^^51};
+EventTypeTimeSignature = {EventTypeMeta,16^^58};
 
 EOT = {EventTypeEOT,{}};
 
@@ -656,7 +663,9 @@ Protect[
   EventTypeNoteOn,
   EventTypeSysX0,
   EventTypeSysX7,
+  EventTypeKeySignature,
   EventTypeTempo,
+  EventTypeTimeSignature,
   FileFormat,
   Midi,
   MidiChannel,
