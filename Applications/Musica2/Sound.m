@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-08-11  bch :  added SoundSetDuration and some SoundMake*[*]
   2004-08-10  bch :  added SoundPitchShift
                      added opts to many make-functions
                      removed SoundSmooth in favor of InterpolationOrder
@@ -69,6 +70,7 @@ Unprotect[
   SoundPar,
   SoundPitchShift,
   SoundSampleCount,
+  SoundSetDuration,
   SoundSeq,
   SoundType,
   SoundUnPar,
@@ -95,6 +97,7 @@ SoundMix::usage = "SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?F
 SoundOfSilence::usage = "SoundOfSilence[opts___]"
 SoundPar::usage = "SoundPar[sl:SFLP, opts___]"
 SoundPitchShift::usage = ""
+SoundSetDuration::usage = "SoundSetDuration[s_Sound,sd_,opts___]"
 SoundSampleCount::usage = ""
 SoundSeq::usage = "SoundSeq[sl:SFLP, opts___]"
 SoundType::usage = ""
@@ -158,7 +161,7 @@ SoundGetInfo[s_Sound] :=
     {SoundSampleCount->sc, SampleRate->sr, SoundDuration->sd, SoundChannelCount->scc, SoundType->st}
     ]
 
-SoundGetList[s_?SoundFuncQ] :=
+SoundGetList[s_?SoundFuncQ, opts___] :=
   Module[{
       sr = SoundGetSampleRate[s],
       sd = SoundGetDuration[s],
@@ -167,7 +170,7 @@ SoundGetList[s_?SoundFuncQ] :=
     FuncToList[#, sr, sd]& /@ fl
     ]
 
-SoundGetList[s_?SoundListQ] := If[Depth[s[[1, 1]]] == 3, s[[1, 1]], {s[[1, 1]]}]
+SoundGetList[s_?SoundListQ, opts___] := If[Depth[s[[1, 1]]] == 3, s[[1, 1]], {s[[1, 1]]}]
 
 SoundGetSampleCount[s_?SoundFuncQ] := s[[1, 2]]
 
@@ -181,73 +184,81 @@ SoundImportWav[fn_String] := Import[fn,"WAV"]
 
 SoundListQ[expr_] := MatchQ[expr, Sound[SampledSoundList[_, _]]]
 
-SoundMakeFunc[f:FP, opts___] := (SoundMakeFunc[{f}, opts])
+SoundMakeFunc[p:FP, opts___] := SoundMakeFunc[{p}, opts]
 
-SoundMakeFunc[fl:FLP, opts___] :=
-  (Module[
+SoundMakeFunc[p:FLP, opts___] :=
+  Module[
     {
       sr = SampleRate /. {opts} /. Options[Zound],
       sd = SoundDuration /. {opts} /. Options[Zound]
       },
     Sound[
       SampledSoundFunction[
-        Evaluate[Compile[{{n,_Integer}},Evaluate[UnCompile[#][(n - 1.0)/sr]]]& /@ fl],
+        Evaluate[Compile[{{n,_Integer}},Evaluate[UnCompile[#][(n - 1.0)/sr]]]& /@ p],
         Evaluate[IntegerPart[sr*sd]],
         Evaluate[IntegerPart[sr]]
         ]
       ]
-    ])
+    ]
 
 SoundMakeFunc[s:SFP, opts___] :=
-  (Module[
+  Module[
     {
       sr = SampleRate /. {opts} /. {SampleRate->SoundGetSampleRate[s]},
       sd = SoundDuration /. {opts} /. {SoundDuration->SoundGetDuration[s]}
       },
     SoundMakeFunc[SoundGetFunc[s, opts], SoundDuration->sd, SampleRate -> sr, opts]
-    ])
+    ]
+
+SoundMakeFunc[p:LP, opts___] := SoundMakeFunc[{p}, opts]
+
+SoundMakeFunc[p:LLP, opts___] :=
+  SoundMakeFunc[SoundMakeList[p,opts],opts]
 
 SoundMakeFunc[s:SLP, opts___] :=
-  (Module[
+  Module[
     {
       sr = SampleRate /. {opts} /. {SampleRate->SoundGetSampleRate[s]},
-      sd = SoundDuration /. {opts} /. {SoundDuration->SoundGetDuration[s]},
-      f
+      sd = SoundDuration /. {opts} /. {SoundDuration->SoundGetDuration[s]}
       },
-    f=SoundGetFunc[s, opts];
-    SoundMakeFunc[f, SoundDuration->sd, SampleRate->sr, opts]
-  ])
+    SoundMakeFunc[SoundGetFunc[s, opts], SoundDuration->sd, SampleRate->sr, opts]
+  ]
 
-SoundMakeList[f:LP, opts___] := (SoundMakeList[{f}, opts])
+SoundMakeList[p:FP, opts___] := SoundMakeList[{p}, opts]
 
-SoundMakeList[fl:LLP, opts___] :=
-  (Module[
+SoundMakeList[p:FLP, opts___] :=
+  SoundMakeList[SoundMakeFunc[p,opts],opts]
+
+SoundMakeList[s:SFP, opts___] :=
+  Module[
+    {
+      sr = SampleRate /. {opts} /. {SampleRate->SoundGetSampleRate[s]}
+      },
+    SoundMakeList[SoundGetList[s,opts],SampleRate->sr, opts]
+    ]
+
+SoundMakeList[p:LP, opts___] := SoundMakeList[{p}, opts]
+
+SoundMakeList[p:LLP, opts___] :=
+  Module[
     {
       sr = SampleRate /. {opts} /. Options[Zound],
       pr = PlayRange /. {opts},
       md,sp
       },
-    If[pr === PlayRange, pr = {Min[fl],Max[fl]}];
+    If[pr === PlayRange, pr = {Min[p],Max[p]}];
     md = (pr[[1]]+pr[[2]])/2;
     sp = (pr[[2]]-pr[[1]])/2;
-    Sound[SampledSoundList[N[(fl-md)/sp],sr]]
-    ])
-
-SoundMakeList[s:SFP, opts___] :=
-  (Module[
-    {
-      sr = SampleRate /. {opts} /. {SampleRate->SoundGetSampleRate[s]}
-      },
-    SoundMakeList[SoundGetList[s],SampleRate->sr, opts]
-    ])
+    Sound[SampledSoundList[N[(p-md)/sp],sr]]
+    ]
 
 SoundMakeList[s:SLP, opts___] :=
-  (Module[
+  Module[
     {
       sr = SampleRate /. {opts} /. {SampleRate->SoundGetSampleRate[s]}
       },
-    SoundMakeList[SoundMakeFunc[s, SampleRate->sr, opts],SampleRate->sr, opts]
-    ])
+    SoundMakeList[SoundGetList[s, opts], SampleRate->sr, opts]
+    ]
 
 SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?FunctionQ ...} ...}, opts___] :=
   Module[
@@ -311,6 +322,15 @@ SoundPitchShift[s_Sound,r_,opts___] :=
       f = Function[t,Evaluate[#[t*r]]]&/@SoundGetFunc[s,opts]
       },
     sd = N[sc/(r*sr)];
+    SoundMakeFunc[f, SoundDuration->sd, SampleRate->sr,opts]
+    ]
+
+SoundSetDuration[s_Sound,sd_,opts___] :=
+  Module[
+    {
+      f = SoundGetFunc[s,SoundLoop->True],
+      sr = SoundGetSampleRate[s]
+      },
     SoundMakeFunc[f, SoundDuration->sd, SampleRate->sr,opts]
     ]
 
@@ -414,6 +434,7 @@ Protect[
   SoundPar,
   SoundPitchShift,
   SoundSampleCount,
+  SoundSetDuration,
   SoundSeq,
   SoundType,
   SoundUnPar,
