@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`EventList` *)
 
 (* :History:
+  2004-08-26  bch :  added some help/usage-text
   2004-08-10  bch :  changed MidiToEventList to call MidiSetState
   2004-08-06  bch :  created
 *)
@@ -52,8 +53,10 @@ Unprotect[
   MidiToEventList
   ];
 
-EventListToMidi::usage = "EventListToMidi[e]"
-MidiToEventList::usage = "MidiToEventList[m]"
+EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object.\[NewLine]
+TODO: currently the only channel-events processed are NoteOn's and NoteOff's."
+MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object.\[NewLine]
+TODO: currently the only channel-events processed are NoteOn's and NoteOff's."
 
 Begin["`Private`"]
 

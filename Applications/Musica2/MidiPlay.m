@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`MidiPlay` *)
 
 (* :History:
+  2004-08-26  bch :  added some help/usage-text
+  2004-08-23  bch :  added MidiExportWav
   2004-08-19  bch :  created
 *)
 
@@ -45,22 +47,26 @@ BeginPackage["Musica2`MidiPlay`",
   ]
 
 Unprotect[
+  MidiExportWav,
   MidiPlay,
   MidiToSound,
   SoundBySample,
   SoundBySine
   ];
 
-MidiPlay::usage = ""
-MidiToSound::usage = ""
-SoundBySample::usage = ""
-SoundBySine::usage = ""
+MidiExportWav::usage = "MidiExportWav[fn_String, m_Midi] writes a WAV file out of the Midi-object using sine-waves, just as MidiPlay."
+MidiPlay::usage = "MidiPlay[m_Midi] plays the Midi-object using sine.waves."
+MidiToSound::usage = "MidiToSound[m_Midi, f_, opts___] creates a Sound-object from a Midi-object. The f-argument must be a function taking duration, pitch, velocity and mean-pitch as arguments and returning a Sound-object. MidiToSound the uses SoundSeq and SoundPar to assemble the Sound-object returned."
+SoundBySample::usage = "SoundBySample[s_Sound, opts___] returns a possible f-argument to MidiToSound and uses SoundPitchShift and SoundSetDuration."
+SoundBySine::usage = "SoundBySine[opts___] returns a possible f-argument to MidiToSound."
 
 Begin["`Private`"]
 
-MidiPlay[m : Midi[_, _]] := Show[MidiToSound[m, SoundBySine[]]]
+MidiExportWav[fn_String, m_Midi] := SoundExportWav[fn, MidiToSound[m, SoundBySine[]]]
 
-MidiToSound[m : Midi[_, _], f_, opts___] :=
+MidiPlay[m_Midi] := Show[MidiToSound[m, SoundBySine[]]]
+
+MidiToSound[m_Midi, f_, opts___] :=
   Module[
     {mp,r, c, mix},
     (* get the music as {{{timing, {p, v}} ...} ...} *)
@@ -100,6 +106,7 @@ SoundBySine[opts___] := Function[{d, p, v, mp}, SoundMakeFunc[osc[p2f[p], v2a[v]
 End[]
 
 Protect[
+  MidiExportWav,
   MidiPlay,
   MidiToSound,
   SoundBySample,

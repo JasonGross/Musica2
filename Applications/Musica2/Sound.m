@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-08-26  bch :  added some help/usage-text
+  2004-08-23  bch :  added SoundExportWav
   2004-08-11  bch :  added SoundSetDuration and some SoundMake*[*]
                      moved FuncToList & ListToFunc from Utils.m to Sound.m
                      added RDC's
@@ -56,6 +58,7 @@ Unprotect[
   ListToFunc,
   SoundChannelCount,
   SoundDuration,
+  SoundExportWav,
   SoundFuncQ,
   SoundGetChannelCount,
   SoundGetDuration,
@@ -82,34 +85,35 @@ Unprotect[
   Zound
   ];
 
-FuncToList::usage = "FuncToList[f_, opts___]"
-ListToFunc::usage = "ListToFunc[d_, opts___]"
-SoundChannelCount::usage = ""
-SoundDuration::usage = ""
-SoundFuncQ::usage = "SoundFuncQ[expr_]"
-SoundGetChannelCount::usage = "SoundGetChannelCount[s_Sound]"
-SoundGetDuration::usage = "SoundGetDuration[s_Sound]"
-SoundGetFunc::usage = "SoundGetFunc[s_?SoundFuncQ, opts___]"
-SoundGetInfo::usage = "SoundGetInfo[s_Sound]"
-SoundGetList::usage = "SoundGetList[s_?SoundListQ]"
-SoundGetSampleCount::usage = "SoundGetSampleCount[s_Sound]"
-SoundGetSampleRate::usage = "SoundGetSampleRate[s_Sound]"
-SoundImportWav::usage = "SoundImportWav[fn_String]"
-SoundListQ::usage = "SoundListQ[expr_]"
-SoundLoop::usage = ""
-SoundMakeFunc::usage = "SoundMakeFunc[fl_, opts___]"
-SoundMakeList::usage = "SoundMakeList[ll_, opts___]"
-SoundMix::usage = "SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?FunctionQ ...} ...}, opts___]"
-SoundOfSilence::usage = "SoundOfSilence[opts___]"
-SoundPar::usage = "SoundPar[sl:SFLP, opts___]"
-SoundPitchShift::usage = ""
-SoundSetDuration::usage = "SoundSetDuration[s_Sound,sd_,opts___]"
-SoundSampleCount::usage = ""
-SoundSeq::usage = "SoundSeq[sl:SFLP, opts___]"
-SoundType::usage = ""
-SoundUnPar::usage = "SoundUnPar[s_?SoundFuncQ]"
-SoundUnSeq::usage = "SoundUnSeq[s_?SoundFuncQ, c_List]"
-Zound::usage = ""
+FuncToList::usage = "FuncToList[f_, opts___] takes a function and samples it. The function is supposed to be a function of time (sec). The opts-argument takes SampleRate, SoundDuration and/or SoundSampleCount and defaults to Options[Zound] if required."
+ListToFunc::usage = "ListToFunc[d_, opts___] takes a list and makes a function out of it. The function returned is a function of time (sec). The opts-argument takes SampleRate, SoundDuration and/or SoundSampleCount and defaults to Options[Zound] if required. The opts-argument can also be PlayRange and InterpolationOrder. InterpolationOrder defaults to 0 (zero) and PlayRange defaults to whatever NormalizeList does."
+SoundChannelCount::usage = "SoundChannelCount is returned by the SoundGetInfo function and is also an opt to various functions."
+SoundDuration::usage = "SoundDuration is returned by the SoundGetInfo function and is also an opt to various functions."
+SoundExportWav::usage = "SoundExportWav[fn_String, s_Sound] simply calls Export[fn,s,"WAV"]."
+SoundFuncQ::usage = "SoundFuncQ[expr_] tests if expr is a Sound-object based on a list of function."
+SoundGetChannelCount::usage = "SoundGetChannelCount[s_Sound] returns the number of channels in the Sound-object."
+SoundGetDuration::usage = "SoundGetDuration[s_Sound] returns the duration in sec in the Sound-object."
+SoundGetFunc::usage = "SoundGetFunc[s_Sound, opts___] returns a list of functions. If the sound-object contains lists of sample-lists ListToFunc is called and opts can be InterpolationOrder. If opts is SoundLoop the returned functions will call Mod on its argument."
+SoundGetInfo::usage = "SoundGetInfo[s_Sound] returns various info about the Sound-object."
+SoundGetList::usage = "SoundGetList[s_Sound] returns a list of sample-lists. If the sound-object contains a list of functions FuncToList is called."
+SoundGetSampleCount::usage = "SoundGetSampleCount[s_Sound] returns the number of samples per channel in the sound-object."
+SoundGetSampleRate::usage = "SoundGetSampleRate[s_Sound] returns the sample-rate in the sound-object."
+SoundImportWav::usage = "SoundImportWav[fn_String] simply calls Import[fn,"WAV"]."
+SoundListQ::usage = "SoundListQ[expr_] tests if expr is a Sound-object based on a list of sample-lists."
+SoundLoop::usage = "Currently an option to SoundGetFunc and SoundSetDuration."
+SoundMakeFunc::usage = "SoundMakeFunc[p_, opts___] creates a sound-object based on a list of functions. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a sound-object. The opts-argument can be SampleRate, SoundDuration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."
+SoundMakeList::usage = "SoundMakeList[p_, opts___] creates a sound-object based on a list of sample-lists. The p-argument can be a function, a list of functions, a sample-list, a list of sample-lists or a sound-object. The opts-argument can be SampleRate, SoundDuration, SoundSampleCount and InterpolationOrder depending on the type of the p-argumnet and defaults to Options[Zound]."
+SoundMix::usage = "SoundMix[s_Sound, mix : {{_?FunctionQ, _?FunctionQ ...}, {_?FunctionQ, _?FunctionQ ...} ...}, opts___] creates a new sound-object by using a mix of the s-arguments channels. The mix-argument is a list of lists containing functions of time that determin the amplitude. The mix-argument must have the same length as the s-argument has channels. Each list in the mix-argument-list mus be of the same length and determines the number ocf channels in the resulting sound-object."
+SoundOfSilence::usage = "SoundOfSilence[opts___] returns an sound-less sound-object. The opts-argument may be SoundChannelCount and all the usual opts and defaults to Options[Zound]."
+SoundPar::usage = "SoundPar[sl:SFLP, opts___] takes a list of sound-function-objects and creates a new one with the supplied sound-objects in parallel."
+SoundPitchShift::usage = "SoundPitchShift[s_Sound,r_,opts___] changes the pitch of the s-argument by changing the duration and keeping the sample-rate."
+SoundSetDuration::usage = "SoundSetDuration[s_Sound,sd_,opts___] sets the duration by either chopping it or looping it."
+SoundSampleCount::usage = "SoundSampleCount is returned by the SoundGetInfo function and is also an opt to various functions."
+SoundSeq::usage = "SoundSeq[sl:SFLP, opts___] takes a list of sound-function-objects and creates a new one with the supplied sound-objects in sequence."
+SoundType::usage = "SoundSampleCount is returned by the SoundGetInfo function and WILL BE an opt to various functions."
+SoundUnPar::usage = "SoundUnPar[s_?SoundFuncQ] splits the sound-object to a list of sound-objects, one for each channel. The opposite to SoundPar."
+SoundUnSeq::usage = "SoundUnSeq[s_?SoundFuncQ, c_List] splits the sound-object to a list of sound-objects. The c-parameter is a list of points in time where to cut. The opposite to SoundSeq. Use this one with care as it probably WILL CHANGE."
+Zound::usage = "The holder of default values/options."
 
 Begin["`Private`"]
 
@@ -207,6 +211,8 @@ LLP = {LP,LP...}
 
 SLP = _?SoundListQ
 SLLP = {SLP,SLP...}
+
+SoundExportWav[fn_String, s_Sound] := Export[fn,s,"WAV"]
 
 SoundFuncQ[expr_] := MatchQ[expr, Sound[SampledSoundFunction[_, _, _]]]
 
@@ -489,6 +495,7 @@ Protect[
   ListToFunc,
   SoundChannelCount,
   SoundDuration,
+  SoundExportWav,
   SoundFuncQ,
   SoundGetDuration,
   SoundGetFunc,

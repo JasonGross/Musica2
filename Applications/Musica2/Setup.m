@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-08-26  bch :  added some help/usage-text
   2004-08-19  bch :  added MidiPlay to the list of pkg's
   2004-08-08  bch :  added CalcMidiStateRoutes
   2004-08-07  bch :  created
@@ -52,8 +53,11 @@ Unprotect[
   MakeInitDotEm
   ];
 
-CalcMidiStateRoutes::usage = "CalcMidiStateRoutes[m : Midi[_, _]]"
-MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_]";
+CalcMidiStateRoutes::usage = "CalcMidiStateRoutes[m_Midi, opts___] takes a Midi-object as an argument and recalculates MidiStateRoutes. The option Verbose->True plots a graph along with some timings. The result returned by CalcMidiStateRoutes is the average time it takes for a change of state for the Midi-object."
+MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m. The default-values for the arguments are:\[NewLine]
+pkg:  Musica2\[NewLine]
+pkgs: {EventList,Midi,MidiPlay,Setup,Sound,Utils}\[NewLine]
+fn:   Musica2/Applications/Musica2/Kernel/init.m";
 
 Begin["`Private`"]
 
@@ -76,7 +80,7 @@ COP[e_, p_] :=
     Total[Cases[e, {s$_, c$_} /; MemberQ[pe, s$] -> c$]]
     ]
 
-CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
+CalcMidiStateRoutes[m_Midi, opts___] :=
   Module[{e, g,c,p,sc,pr=Verbose/.{opts}/.{Verbose->False}},
     Unprotect[MidiStatesExpanded,MidiStatePathsExpanded,MidiStateRoutes];
     MidiStatesExpanded = MidiExpandStates[MidiStates];
@@ -101,7 +105,7 @@ CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
     c/(#^2-#)&[sc]
     ]
 
-MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m",opts___] :=
+MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","MidiPlay","Setup","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m"] :=
   Module[{fout = OpenWrite[fn],d=ToString/@Date[],pr=True},
     WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
     WriteString[fout, "\n"];

@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-19 at 14:18 *)
+(* :History: File created 2004-8-23 at 12:56 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -23,28 +23,31 @@ DeclarePackage["Musica2`Midi`",
  "MidiControlChange", "MidiDataAnyValue", "MidiDataAnyValueQ", 
  "MidiDataNoValue", "MidiDataNoValueQ", "MidiDelta", "MidiEmpty", "MidiEOT", 
  "MidiExpandStatePaths", "MidiExpandStates", "MidiExportSMF", "MidiFile", 
- "MidiFileFormat", "MidiFixEOT", "MidiFixNoteOff", "MidiGetChannels", 
- "MidiGetChords", "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", 
- "MidiGetNotes", "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", 
- "MidiGetState", "MidiGetTickToSecFunction", "MidiGetTimeUnit", 
- "MidiGetTiming", "MidiGetTPQ", "MidiGetVoices", "MidiImportSMF", 
- "MidiKeySignature", "MidiMeta", "MidiMilliSec", "MidiNormalizeNoteOff", 
- "MidiNoteOff", "MidiNoteOn", "MidiOfSilence", "MidiPar", "MidiPatternChord", 
+ "MidiFileFormat", "MidiFixEOT", "MidiFixNoteOff", "MidiFixTime", 
+ "MidiGetChannels", "MidiGetChords", "MidiGetDuration", "MidiGetDurations", 
+ "MidiGetInfo", "MidiGetNotes", "MidiGetPitchRange", "MidiGetPitchRanges", 
+ "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
+ "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
+ "MidiGetTPQ", "MidiGetVoices", "MidiImportSMF", "MidiKeySignature", 
+ "MidiMeta", "MidiMilliSec", "MidiNormalizeNoteOff", "MidiNoteOff", 
+ "MidiNoteOn", "MidiOfSilence", "MidiPar", "MidiPatternChord", 
  "MidiPatternData", "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", 
  "MidiPatternMusic", "MidiPatternTiming", "MidiPatternTrack", 
- "MidiPatternType", "MidiPatternVoice", "MidiPitchShift", "MidiQPM", 
- "MidiRemChords", "MidiRemEvents", "MidiRemNotes", "MidiRemQPM", 
- "MidiRemVoices", "MidiSec", "MidiSeq", "MidiSetChords", "MidiSetNotes", 
- "MidiSetQPM", "MidiSetState", "MidiSetStateLow", "MidiSetTPQ", 
+ "MidiPatternType", "MidiPatternVoice", "MidiPitchChange", "MidiPitchFlip", 
+ "MidiPitchShift", "MidiQPM", "MidiRemChords", "MidiRemEvents", 
+ "MidiRemNotes", "MidiRemQPM", "MidiRemVoices", "MidiSec", "MidiSeq", 
+ "MidiSetChords", "MidiSetNotes", "MidiSetPitch", "MidiSetQPM", 
+ "MidiSetState", "MidiSetStateLow", "MidiSetTime", "MidiSetTPQ", 
  "MidiSetVoices", "MidiShape", "MidiStatePaths", "MidiStatePathsExpanded", 
  "MidiStateRoutes", "MidiStates", "MidiStatesExpanded", "MidiSysX0", 
- "MidiSysX7", "MidiTempo", "MidiTick", "MidiTie", "MidiTieQ", 
- "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", "MidiTPQ", "MidiUnTie", 
- "MidiVoice", "MidiVoiceReleaseTimeFunction"}
+ "MidiSysX7", "MidiTempo", "MidiTick", "MidiTie", "MidiTieQ", "MidiTimeBend", 
+ "MidiTimeChange", "MidiTimeFlip", "MidiTimeShift", "MidiTimeSignature", 
+ "MidiTimeUnit", "MidiTiming", "MidiTPQ", "MidiUnTie", "MidiVoice", 
+ "MidiVoiceReleaseTimeFunction"}
 ];
 
 DeclarePackage["Musica2`MidiPlay`",
-{"MidiPlay", "MidiToSound", "SoundBySample", "SoundBySine"}
+{"MidiExportWav", "MidiPlay", "MidiToSound", "SoundBySample", "SoundBySine"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -53,10 +56,10 @@ DeclarePackage["Musica2`Setup`",
 
 DeclarePackage["Musica2`Sound`",
 {"FuncToList", "ListToFunc", "SoundChannelCount", "SoundDuration", 
- "SoundFuncQ", "SoundGetChannelCount", "SoundGetDuration", "SoundGetFunc", 
- "SoundGetInfo", "SoundGetList", "SoundGetSampleCount", "SoundGetSampleRate", 
- "SoundImportWav", "SoundListQ", "SoundLoop", "SoundMakeFunc", 
- "SoundMakeList", "SoundMix", "SoundOfSilence", "SoundPar", 
+ "SoundExportWav", "SoundFuncQ", "SoundGetChannelCount", "SoundGetDuration", 
+ "SoundGetFunc", "SoundGetInfo", "SoundGetList", "SoundGetSampleCount", 
+ "SoundGetSampleRate", "SoundImportWav", "SoundListQ", "SoundLoop", 
+ "SoundMakeFunc", "SoundMakeList", "SoundMix", "SoundOfSilence", "SoundPar", 
  "SoundPitchShift", "SoundSampleCount", "SoundSeq", "SoundSetDuration", 
  "SoundType", "SoundUnPar", "SoundUnSeq", "Zound"}
 ];
