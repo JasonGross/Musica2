@@ -39,8 +39,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`DurVal`",
   {
     "Musica2`Common`",
+    "Musica2`ObjectType`",
     "Musica2`Test`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -52,8 +52,12 @@ Unprotect[
   ];
 
 CreateElement[DurVal, {Duration_, Value_}, {1, Null}, "todo"]
-CreateContainer[DurValList, DurVal, "todo"]
-CreateElement[DurValType, {ValueType_, ValueList_DurValList}, {0, DurValList[{}]}, "todo"]
+CreateContainer[DurValList, DurVal,
+"todo.\[NewLine]"
+]
+CreateElement[DurValType, {ValueType_, ValueList_DurValList}, {0, DurValList[{}]},
+"todo.\[NewLine]"
+]
 
 Begin["`Private`"]
 
@@ -105,9 +109,9 @@ DurVal     /: TotalDuration[x_DurVal]     := Duration[x]
 DurValList /: TotalDuration[x_DurValList] := Total[Duration[x]]
 DurValType /: TotalDuration[x_DurValType] := TotalDuration[ValueList[x]]
 
-UnPar[x_DurVal]     := DurVal[{Duration[x], #}]& /@ Value[x]
-UnPar[x_DurValList] := DurValList[Transpose[{Duration[x],#}]]& /@ Transpose[Value[x]]
-UnSeq[x_DurValList] := DurVal[x]
+DurVal     /: UnPar[x_DurVal]     := DurVal[{Duration[x], #}]& /@ Value[x]
+DurValList /: UnPar[x_DurValList] := DurValList[Transpose[{Duration[x],#}]]& /@ Transpose[Value[x]]
+DurValList /: UnSeq[x_DurValList] := DurVal[x]
 
 End[]
 

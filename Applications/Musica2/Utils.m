@@ -88,7 +88,7 @@ Unprotect[
   ValuesToRatios
   ];
 
-AddOpts::usage = "AddOpts[x:{___?OptionQ},opts__?OptionQ] adds opts to x, no duplicate lhs returned."
+AddOpts::usage = "AddOpts[x:{___?OptionQ},opts__?OptionQ] adds opts to x, no duplicates returned."
 Circular::usage = "todo"
 DataAnyValue::usage = "The symbol indicating non-empty data. Will be handy..."
 DataAnyValueQ::usage = "DataAnyValueQ[expr_] tests if expr is/contains the symbol DataAnyValue, tied or not."

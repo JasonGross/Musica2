@@ -60,8 +60,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Sound`",
   {
     "Musica2`Common`",
+    "Musica2`ObjectType`",
     "Musica2`Test`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -84,11 +84,13 @@ Unprotect[
   ];
 
 CreateElement[Snippet,
-  {SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},
-  {SampledSoundFunction,Sin[2 Pi 440 #/2^13]&,2^13,2^13},
-  "todo"
-  ];
-CreateContainer[Sound,Snippet,"todo"];
+{SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer},
+{SampledSoundFunction,Sin[2 Pi 440 #/2^13]&,2^13,2^13},
+"todo.\[NewLine]"
+];
+CreateContainer[Sound,Snippet,
+"todo.\[NewLine]"
+];
 
 SampleCount::usage = "todo"
 SoundType::usage = "todo"
@@ -105,7 +107,7 @@ Options[Sound] = {
   SampleRate->2^13,
   SampleCount->2^13
   }
-TypeQ[Sound] = MatchQ[#, Sound[SampledSoundFunction[_,_Integer,_Integer]|SampledSoundList[_,_Integer]]]&;
+ObjectTypeQ[Sound] = MatchQ[#, Sound[SampledSoundFunction[_,_Integer,_Integer]|SampledSoundList[_,_Integer]]]&;
 Sound[d_?(DataQ[Sound]),opts___?OptionQ] :=
   Module[{st = SoundType /. {opts}, sr = SampleRate /. {opts}, sc = SampleCount /. {opts}},
   If[st === SampledSoundFunction,
@@ -128,8 +130,8 @@ Sound /: Opts[x_Sound] := ({
   SoundType->#[[1,0]],
   SampleRate->If[MatchQ[#[[1]],_SampledSoundFunction],#[[1,3]],#[[1,2]]],
   SampleCount->If[MatchQ[#[[1]],_SampledSoundFunction],#[[1,2]],Length[#[[1,1,1]]]]
-  }&[ReplacePart[Tidy[Sound][x],List,{0}]]) /; TypeQ[Sound][x];
-Sound /: Data[x_Sound] := (ReplacePart[Tidy[Sound][x],List,{0}][[1,1]]) /; TypeQ[Sound][x];
+  }&[ReplacePart[Tidy[Sound][x],List,{0}]]) /; ObjectTypeQ[Sound][x];
+Sound /: Data[x_Sound] := (ReplacePart[Tidy[Sound][x],List,{0}][[1,1]]) /; ObjectTypeQ[Sound][x];
 Tidy[Sound] = Function[s,
   Module[{q=s},
     q[[0]]=List;

@@ -41,10 +41,10 @@ BeginPackage["Musica2`Instrument`",
   {
     "Musica2`Common`",
     "Musica2`Note`",
+    "Musica2`ObjectType`",
     "Musica2`Sound`",
     "Musica2`Test`",
     "Musica2`Tuning`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -58,7 +58,9 @@ Unprotect[
 Unprotect[
   ];
 
-CreateElement[BasicInstrument, {PitchCodeToFrequency_,VelocityToAmplitude_,TimeToSample_},Null,"todo"];
+CreateElement[BasicInstrument, {PitchCodeToFrequency_,VelocityToAmplitude_,TimeToSample_},Null,
+"BasicInstrument can be used as a third parameter to Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ], the result is a function that converts a Melody to a Snippet.\[NewLine]"
+];
   
 Instrument::usage = "todo"
 

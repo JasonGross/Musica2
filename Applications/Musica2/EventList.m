@@ -62,8 +62,8 @@ Begin["`Private`"]
 
 (* todo: handle all channel events, not just notes and meta *)
 Musica2`Midi`Event[Musica`Event[tick_Integer,MetaEvent[t_Integer,d_]]] := Musica2`Midi`Event[{tick,{{EventTypeMeta,t},d}}]
-Musica2`Midi`Event[Musica`Event[tick_Integer,NoteOn[p_Integer,v_,c_]]] := Musica2`Midi`Event[{tick,{EventTypeNoteOn,{c-1,p,v}}}]
-Musica2`Midi`Event[Musica`Event[tick_Integer,NoteOff[p_Integer,v_,c_]]] := Musica2`Midi`Event[{tick,{EventTypeNoteOff,{c-1,p,v}}}]
+Musica2`Midi`Event[Musica`Event[tick_Integer,NoteOn[p_Integer,v_,c_]]] := Musica2`Midi`Event[{tick,{{EventTypeNoteOn,c-1},{p,v}}}]
+Musica2`Midi`Event[Musica`Event[tick_Integer,NoteOff[p_Integer,v_,c_]]] := Musica2`Midi`Event[{tick,{{EventTypeNoteOff,c-1},{p,v}}}]
 
 Musica2`Midi`Track[Musica`Track[e__Musica`Event]] := Musica2`Midi`Track[Musica2`Midi`Event /@ {e}]
 

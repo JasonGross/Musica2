@@ -44,8 +44,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Tuning`",
   {
     "Musica2`Common`",
+    "Musica2`ObjectType`",
     "Musica2`Test`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -60,8 +60,12 @@ Unprotect[
   FrequencyRatios
   ];
 
-CreateElement[EqualTemperament, {{PitchCodeRef_,FrequencyRef_},{PitchCodeOctave_,FrequencyOctave_}},{{69,440},{12,2}},"todo"];
-CreateElement[CustomTuning, {{PitchCodeRef_,FrequencyRef_},FrequencyRatios:{__}},{{69, 440}, {25/24,16/15,27/25,25/24,16/15,25/24,27/25,25/24,16/15,27/25,25/24,16/15}},"todo"];
+CreateElement[CustomTuning, {{PitchCodeRef_,FrequencyRef_},FrequencyRatios:{__}},{{69, 440}, {17/16, 18/17, 16/15, 25/24, 16/15, 21/20, 15/14, 16/15, 25/24, 27/25, 25/24, 16/15}},
+"todo.\[NewLine]"
+];
+CreateElement[EqualTemperament, {{PitchCodeRef_,FrequencyRef_},{PitchCodeOctave_,FrequencyOctave_}},{{69,440},{12,2}},
+"todo.\[NewLine]"
+];
 
 FrequencyRatios::usage = "todo"
 Tuning::usage = "todo"
@@ -119,6 +123,9 @@ Convert[{PitchCode,Overtone},PitchCode,x_EqualTemperament] := Function[{p,o},Eva
 
 CustomTuning[o_?OptionQ, d_?(DataQ[CustomTuning])][p_] := Convert[PitchCode,Frequency,CustomTuning[o,d]][p]
 EqualTemperament[o_?OptionQ, d_?(DataQ[EqualTemperament])][p_] := Convert[PitchCode,Frequency,EqualTemperament[o,d]][p]
+
+EqualTemperament[x_Integer,opts___?OptionQ] := EqualTemperament[{{69,440},{x,2}},opts]
+CustomTuning[x:{__?NumberQ},opts___?OptionQ] := CustomTuning[{{69,440},x},opts]
 
 FrequencyOctave[x_CustomTuning] := Times @@ FrequencyRatios[x]
 

@@ -63,7 +63,9 @@ Unprotect[
   Play2,
   Seq,
   Time,
-  TotalDuration
+  TotalDuration,
+  UnPar,
+  UnSeq
   ];
 
 Content::usage = "todo"
@@ -78,6 +80,8 @@ Play2::usage = "todo"
 Seq::usage = "todo"
 Time::usage = "todo"
 TotalDuration::usage = "todo"
+UnPar::usage = "todo"
+UnSeq::usage = "todo"
 
 Begin["`Private`"]
 
@@ -96,7 +100,9 @@ Protect[
   Play2,
   Seq,
   Time,
-  TotalDuration
+  TotalDuration,
+  UnPar,
+  UnSeq
   ];
 
 EndPackage[]

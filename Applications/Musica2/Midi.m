@@ -4,7 +4,7 @@
 
 (* :Author: Bo C. Herlin *)
 
-(* :Licence: GPL
+(* :License: GPL
 
 Copyright (C) 2004  Bo C. Herlin
 
@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2005-01-25  bch :  made Export work with both 5.0 and 5.1
+                     yet another bugfix in Tidy[Track]
   2005-01-23  bch :  changed how channel-events are stored as Event's
   2005-01-12  bch :  bugfix in Tidy[Track]
   2004-12-21  bch :  Tidy[Track] now much slower, but handles opts, i think...
@@ -83,18 +85,22 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 (* :Mathematica Version: 5.0 *)
 
-BeginPackage["Musica2`Midi`",
+Module[
   {
-    "Utilities`BinaryFiles`",
-    "Musica2`Common`",
-    "Musica2`DurVal`",
-    "Musica2`Note`",
-    "Musica2`Sound`",
-    "Musica2`Test`",
-    "Musica2`Type`",
-    "Musica2`Utils`"
-    }
-]
+    p = {
+      "Utilities`BinaryFiles`",
+      "Musica2`Common`",
+      "Musica2`DurVal`",
+      "Musica2`Note`",
+      "Musica2`ObjectType`",
+      "Musica2`Sound`",
+      "Musica2`Test`",
+      "Musica2`Utils`"
+      }
+    },
+    If[$VersionNumber <= 5.0,p = Prepend[p,"Utilities`BinaryFiles`"]];
+    BeginPackage["Musica2`Midi`",p]
+  ]
 
 Unprotect[
   Convert,
@@ -125,7 +131,6 @@ Unprotect[
   MilliSecond,
   QPM,
   Tempo,
-  TempoFunction, (* to be removed *)
   TempoQ,
   TempoTime,
   TempoTrack,
@@ -137,12 +142,22 @@ Unprotect[
   TrackQ
   ];
 
-CreateElement[Event,{EventTime_,{EventType_,EventData_}},{0,{EventTypeEOT,{}}},"todo"];
-CreateContainer[Track,Event,"todo"];
-CreateContainer[Midi,Track,"todo"];
+CreateElement[Event,{EventTime_,{EventType_,EventData_}},{0,{EventTypeEOT,{}}},
+"todo.\[NewLine]"
+];
+CreateContainer[Track,Event,
+"todo.\[NewLine]"
+];
+CreateContainer[Midi,Track,
+"todo.\[NewLine]"
+];
 
-CreateElement[Tempo,{TempoTime_,QPM_},{0,120},"todo"];
-CreateContainer[TempoTrack,Tempo,"todo"];
+CreateElement[Tempo,{TempoTime_,QPM_},{0,120},
+"todo.\[NewLine]"
+];
+CreateContainer[TempoTrack,Tempo,
+"todo.\[NewLine]"
+];
 
 EventData::usage = "todo"
 EventTime::usage = "todo"
@@ -160,7 +175,6 @@ FileFormat::usage = "todo"
 MidiChannel::usage = "todo"
 MilliSecond::usage = "todo"
 QPM::usage = "todo"
-TempoFunction::usage = "" (* to be removed *)
 TempoTime::usage = "todo"
 Tick::usage = "todo"
 TimeUnit::usage = "todo"
@@ -185,7 +199,12 @@ Tidy[Track] = Module[{r = #,eot},
   r = Select[r,(EventType[#]=!=EventTypeEOT)&];
   r = Append[r,Event[{eot,EOT}]];
   (* todo rewrite next line *)
-  r = (If[MatchQ[EventType[#],{EventTypeNoteOn,_}] && EventData[#][[2]]===0,ReplacePart[#,{EventTypeNoteOff,EventType[x][[2]]},EventType],#])& /@ r;
+  r = (
+    If[MatchQ[EventType[#],{EventTypeNoteOn,_}] && EventData[#][[2]]===0,
+      ReplacePart[#,{EventTypeNoteOff,EventType[#][[2]]},EventType],
+      #
+      ]
+    )& /@ r;
   r = Track[r, Sequence @@ Opts[#]];
   r
   ]&
@@ -300,7 +319,12 @@ Midi /: Export[fn_String,mx_Midi] :=
   Module[{m=Midi[Tidy[mx],TimeUnit->Tick],f=Null},
     (* get the data and change timing to delta *)
     t = (Transpose[{ValuesToDeltas[Prepend[#[[1]],0]],#[[2]]}]&[Transpose[Data/@#]])&/@m;
-    f = OpenWriteBinary[fn];
+
+    f = If[$VersionNumber <= 5.0,
+      OpenWriteBinary[fn],
+      OpenWrite[fn,BinaryFormat->True]
+      ];
+    
     Catch[
       WriteString[f,"MThd"];
       WriteInt[f,4,6];
@@ -328,7 +352,7 @@ Midi /: Import[fn_String,Midi]:=
       t={},
       n,tmp
       },
-    f=OpenReadBinary[fn];(*,DOSTextFormat->False];*)
+    f=OpenRead[fn];
     Catch[
       If[StringJoin@@ReadList[f,Character,4] =!= "MThd", Message[MidiImport::"error 1"]];
       If[(tmp=ReadInt[f,4]) =!= 6, Message[MidiImport::"error 2",tmp]];
@@ -552,15 +576,20 @@ Track[x_TempoTrack, opts___?OptionQ]   := Track[Event/@x]
 
 (******** private functions used by Import and Export ********)
 
-ReadInt[f_,n_]:=Total[ReadList[f,Byte,n] Table[256^i,{i,n-1,0,-1}]]
+If[$VersionNumber <= 5.0,
+  wrt[f_,b_]:=WriteBinary[f,b,ByteConversion->Identity],
+  wrt[f_,b_]:=BinaryWrite[f,b]
+  ];
 
-WriteInt[f_,n_,i_]:=
+ReadInt[f_,n_] := Total[ReadList[f,Byte,n] Table[256^i,{i,n-1,0,-1}]]
+
+WriteInt[f_,n_,i_] :=
   Module[{b=IntegerDigits[i,256]},
     b=Join[Table[0,{n-Length[b]}],b];
-    WriteBinary[f,b,ByteConversion->Identity]
+    wrt[f,b]
     ]
 
-ReadVarLen[f_]:=
+ReadVarLen[f_] :=
   Module[{r=0,b=16^^80},
     While[16^^80<=b,
       b=Read[f,Byte];
@@ -569,7 +598,7 @@ ReadVarLen[f_]:=
     r
     ]
 
-ListVarLen[i_]:=
+ListVarLen[i_] :=
   Module[{r={}},
     r=IntegerDigits[Round[i],16^^80];
     Join[16^^80+Drop[r,-1],Take[r,-1]]
@@ -603,7 +632,7 @@ ReadChannel[f_,r_] :=
     {{type,channel},Join[Drop[r,1],x]}
     ]
 
-ReadEvent[f_,rt_]:=
+ReadEvent[f_,rt_] :=
   Module[{d=ReadVarLen[f],b,r},
     b=Read[f,Byte];
     If[b==EventTypeSysX0||b==EventTypeSysX7,
@@ -616,7 +645,7 @@ ReadEvent[f_,rt_]:=
       ]
     ]
 
-ReadTrack[f_]:=
+ReadTrack[f_] :=
   Module[{e={0,{0,{}}},rt=0,ti=0,pos},
     If[StringJoin@@ReadList[f,Character,4]!="MTrk",error];
     pos=StreamPosition[f]+ReadInt[f,4]+4;
@@ -633,13 +662,13 @@ ReadTrack[f_]:=
       ]
     ]
 
-ListSysX[{type_,data_}]:=
+ListSysX[{type_,data_}] :=
   {type,Length[data],data}
 
-ListMeta[{type:{_,sybtype_},data_}]:=
+ListMeta[{type:{_,sybtype_},data_}] :=
   {type,Length[data],data}
 
-ListChannel[{{type_,channel_},{data__}}]:=
+ListChannel[{{type_,channel_},{data__}}] :=
   {16^^80+2^4type+channel,data}
 
 ListEvent[e_]:=
@@ -656,13 +685,13 @@ ListEvent[e_]:=
 
 ListTrack[t_]:= ListEvent /@ t
 
-WriteTrack[f_,t_]:=
+WriteTrack[f_,t_] :=
   Module[{w=t},
     w=ListTrack[w];
     w=Mod[#,256]&/@(Abs/@(Round/@Flatten[w]));
     WriteString[f,"MTrk"];
     WriteInt[f,4,Length[w]];
-    WriteBinary[f,w,ByteConversion->Identity]
+    wrt[f,w]
     ]
 
 Midi /: TestSuite[Midi] = Join[TestSuite[Midi],{

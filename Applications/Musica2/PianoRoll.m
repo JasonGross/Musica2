@@ -45,8 +45,8 @@ BeginPackage["Musica2`PianoRoll`",
     "Musica2`Common`",
     "Musica2`Midi`",
     "Musica2`Note`",
+    "Musica2`ObjectType`",
     "Musica2`Test`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]

@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2005-01-27  bch :  renamed Scale to KeyMode
   2005-01-24  bch :  added use of DurVal
   2005-01-22  bch :  added NoteRest and NoteTie
   2005-01-21  bch :  changed Duration to TotalDuration and NoteDuration to Duration
@@ -68,10 +69,10 @@ BeginPackage["Musica2`Note`",
     "Musica2`Common`",
     "Musica2`DurVal`",
     "Musica2`Instrument`",
+    "Musica2`ObjectType`",
     "Musica2`Sound`",
     "Musica2`Test`",
     "Musica2`Tuning`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -94,6 +95,8 @@ Unprotect[
   FigBassQ,
   Intervals,
   IntervalsQ,
+  KeyMode,
+  KeyModeQ,
   Melody,
   MelodyQ,
   ModeAeolian,
@@ -117,25 +120,47 @@ Unprotect[
   Octave,
   Progression,
   ProgressionQ,
-  Scale,
-  ScaleFunction, (* to be removed *)
-  ScaleQ,
   ScaleStep,
   ThirdStack,
   ThirdStackQ,
   Velocity
   ];
 
-CreateElement[Note, {Duration_, {PitchCode_,Velocity_}},{1,{60,64}},"todo"];
-CreateContainer[Chord,Note,"todo"];
-CreateContainer[Melody,Note,"todo"];
-CreateContainer[Progression,Chord,"todo"];
-CreateContainer[Counterpoint,Melody,"todo"];
+CreateElement[Note, {Duration_, {PitchCode_,Velocity_}},{1,{60,64}},
+"Note represents a note with a duration.\[NewLine]
+A rest is stored with PitchCode or Velocity as DataNoValue.\[NewLine]"
+];
+CreateContainer[Chord,Note,
+"Chord represents a list of Note's to be played in parallell and all whith the same duration.\[NewLine]
+The duration of the chord is stored as an opt.\[NewLine]"
+];
+CreateContainer[Melody,Note,
+"Melody represents a list of Note's to be played in sequence.\[NewLine]"
+];
+CreateContainer[Progression,Chord,
+"Progression represents a list of Chord's to be played in sequence.\[NewLine]"
+];
+CreateContainer[Counterpoint,Melody,
+"Chord represents a list of Chord's to be played in parallell.\[NewLine]"
+];
 
-CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},{12,{{0},1}},"todo",{DirectedInfinity}];
-CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},{12,{0,0,0,0,0,0,0}},"todo",{DirectedInfinity}];
-CreateElement[Scale, {Tonic_Integer, Steps:{__Integer}},{0,{2,2,1,2,2,2,1}},"todo"];
-CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}},{{3,4},{0,1}},"todo"];
+CreateElement[FigBass, {Octave:(Infinity|_Integer), {Bass:{__Integer}, Code_Integer}},{12,{{0},1}},
+"todo.\[NewLine]",
+{DirectedInfinity}
+];
+CreateElement[Intervals, {Octave:(Infinity|_Integer), Content:{__Integer}},{12,{0,0,0,0,0,0,0}},
+"todo.\[NewLine]",
+{DirectedInfinity}
+];
+CreateElement[KeyMode, {Tonic_Integer, Steps:{__Integer}},{0,{2,2,1,2,2,2,1}},
+"todo.\[NewLine]"
+];
+CreateElement[ThirdStack, {Base:{__Integer}, {Bass_Integer, Code_Integer}},{{3,4},{0,1}},
+"todo.\[NewLine]"
+];
+
+Base::usage = "Base is a member of ThirdStack."
+Bass::usage = "Base is a member of FigBass and ThirdStack."
 
 ModeAeolian::usage = "todo"
 ModeDorian::usage = "todo"
@@ -146,7 +171,6 @@ ModeMajor::usage = "todo"
 ModeMinor::usage = "todo"
 ModeMixolydian::usage = "todo"
 ModePhrygian::usage = "todo"
-NoteFunction::usage = "todo" (* to be removed *)
 NotePlot::usage = "todo"
 NoteRest::usage = "todo"
 NoteRestQ::usage = "todo"
@@ -232,7 +256,7 @@ Progression  /: TotalDuration[x_Progression]  := Total[TotalDuration /@ x]
 Convert[Time,PitchCode,x_Melody] := NoteFunction[x, PitchCode]
 Convert[Time,Velocity,x_Melody] := NoteFunction[x, Velocity]
 
-Convert[ScaleStep,PitchCode,x_Scale] :=
+Convert[ScaleStep,PitchCode,x_KeyMode] :=
   Module[
     {
       scalesize = Length[x],
@@ -244,7 +268,7 @@ Convert[ScaleStep,PitchCode,x_Scale] :=
     Function[ss,DataApply[f,ss]]
     ]
 
-Convert[PitchCode,ScaleStep,x_Scale] :=
+Convert[PitchCode,ScaleStep,x_KeyMode] :=
   Module[
     {
       scalesize = Length[x],
@@ -261,15 +285,15 @@ Convert[PitchCode,ScaleStep,x_Scale] :=
     Function[ss,DataApply[f,ss]]
     ]
 
-Convert[ScaleStep,PitchCode] := Convert[ScaleStep,PitchCode,Scale[]]
-Convert[PitchCode,ScaleStep] := Convert[PitchCode,ScaleStep,Scale[]]
+Convert[ScaleStep,PitchCode] := Convert[ScaleStep,PitchCode,KeyMode[]]
+Convert[PitchCode,ScaleStep] := Convert[PitchCode,ScaleStep,KeyMode[]]
 
 Note /: DataNoValue[x_Note]:=Note[{Duration[x],{DataNoValue,DataNoValue}},Sequence@@Opts[x]]
 
 FigBass[x_Chord,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_Intervals,  opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_Melody,     opts___?OptionQ] := FigBass[PitchCode[x],opts]
-FigBass[x_Scale,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
+FigBass[x_KeyMode,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_ThirdStack, opts___?OptionQ] := FigBass[PitchCode[x],opts]
 
 FigBass[x_Integer, opts___?OptionQ] := FigBass[{Octave/.{opts}/.{Octave->Infinity},{{0},x}}, Sequence @@ RemOpts[{opts},Octave]]
@@ -297,7 +321,7 @@ FigBass[x:{__Integer}, opts___?OptionQ] :=
 Intervals[x_Chord,      opts___?OptionQ] := Intervals[PitchCode[x],opts]
 Intervals[x_FigBass,    opts___?OptionQ] := Intervals[PitchCode[x],opts]
 Intervals[x_Melody,     opts___?OptionQ] := Intervals[PitchCode[x],opts]
-Intervals[x_Scale,      opts___?OptionQ] := Intervals[PitchCode[x],opts]
+Intervals[x_KeyMode,      opts___?OptionQ] := Intervals[PitchCode[x],opts]
 Intervals[x_ThirdStack, opts___?OptionQ] := Intervals[PitchCode[x],opts]
 
 Intervals[x:{__Integer}, opts___?OptionQ] :=
@@ -319,7 +343,7 @@ Intervals[x:{__Integer},y:{__Integer}, opts___?OptionQ] :=
     Intervals[{o,Table[Count[c,i],{i,0,m}]},Sequence@@RemOpts[{opts},Octave]]
     ]
 
-Scale /: Length[x_Scale] := Length[Steps[x]]
+KeyMode /: Length[x_KeyMode] := Length[Steps[x]]
 
 Melody[x_Chord,opts___?OptionQ]       := Melody[#,opts]& /@ Note[x]
 Melody[x_Intervals,opts___?OptionQ]   := Melody[PitchCode[x],opts]
@@ -354,7 +378,7 @@ NoteRestQ[x_Note] := DataNoValueQ[PitchCode[x]] || DataNoValueQ[Velocity[x]] || 
 NoteTie[x_Note] := Note[{Duration[x],{DataTie[PitchCode[x]],DataTie[Velocity[x]]}},Sequence@@Opts[x]]
 NoteTieQ[x_Note] := DataTieQ[PitchCode[x]] || DataTieQ[Velocity[x]]
 
-Scale /: Octave[x_Scale] := Total[Steps[x]]
+KeyMode /: Octave[x_KeyMode] := Total[Steps[x]]
 
 Par[x:{__Chord}]        := Chord[Flatten[Note /@ x]]
 Par[x:{__Counterpoint}] := Counterpoint[Flatten[Melody /@ x]]
@@ -381,7 +405,7 @@ PitchCode[x_Intervals] :=
       ]
     ]
 
-PitchCode[x_Scale] := DeltasToValues[Steps[x],Tonic[x]]
+PitchCode[x_KeyMode] := DeltasToValues[Steps[x],Tonic[x]]
 
 PitchCode[x_ThirdStack] :=
   Module[{b=Base[x]},
@@ -401,18 +425,18 @@ Progression[x_Melody]                        := Progression[Chord[x]]
 
 f712[x_] := Round[12/7(x-1)+2]
 f712[x_,k_,m_] := Module[{r=f712[x+m]+7k,z=f712[0+m]+7k},r-(z-Mod[z,12])]
-Scale[k_Integer,m_Integer, opts___?OptionQ] := Scale[Table[f712[i,k,m],{i,0,7}],opts]
-Scale[k_Integer, opts___?OptionQ] := Scale[Table[f712[i,k,3k],{i,0,7}]+12Quotient[k + 5,7*12],opts]
+KeyMode[k_Integer,m_Integer, opts___?OptionQ] := KeyMode[Table[f712[i,k,m],{i,0,7}],opts]
+KeyMode[k_Integer, opts___?OptionQ] := KeyMode[Table[f712[i,k,3k],{i,0,7}]+12Quotient[k + 5,7*12],opts]
 
-Scale[x_Intervals,   opts___?OptionQ] := Scale[PitchCode[x],opts]
-Scale[x:{__Integer}, opts___?OptionQ] := Scale[{Min[x],ValuesToDeltas[x]},opts] (* todo: what about strange, unsorted scales? *)
+KeyMode[x_Intervals,   opts___?OptionQ] := KeyMode[PitchCode[x],opts]
+KeyMode[x:{__Integer}, opts___?OptionQ] := KeyMode[{Min[x],ValuesToDeltas[x]},opts] (* todo: what about strange, unsorted scales? *)
 
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Chord]        := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Counterpoint] := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Integer]      := Convert[ScaleStep,PitchCode,Scale[o,d]][x]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Melody]       := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Note]         := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
-Scale[o_?OptionQ, d_?(DataQ[Scale])][x_Progression]  := Module[{f=Convert[ScaleStep,PitchCode,Scale[o,d]]},Map[f,x,PitchCode]]
+KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Chord]        := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},Map[f,x,PitchCode]]
+KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Counterpoint] := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},Map[f,x,PitchCode]]
+KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Integer]      := Convert[ScaleStep,PitchCode,KeyMode[o,d]][x]
+KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Melody]       := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},Map[f,x,PitchCode]]
+KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Note]         := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
+KeyMode[o_?OptionQ, d_?(DataQ[KeyMode])][x_Progression]  := Module[{f=Convert[ScaleStep,PitchCode,KeyMode[o,d]]},Map[f,x,PitchCode]]
 
 Seq[x:{__Chord}]        := Progression[x]
 Seq[x:{__Counterpoint}] := Counterpoint[Seq[Progression /@ x]]
@@ -436,7 +460,7 @@ ThirdStack[x_Chord,     opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 ThirdStack[x_FigBass,   opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 ThirdStack[x_Intervals, opts___?OptionQ] := ThirdStack[#,opts]& /@ PitchCode[x]
 ThirdStack[x_Melody,    opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
-ThirdStack[x_Scale,     opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
+ThirdStack[x_KeyMode,     opts___?OptionQ] := ThirdStack[PitchCode[x],opts]
 
 ThirdStack[x_Integer, opts___?OptionQ] := ThirdStack[{{3,4},{0,x}},opts]
 
@@ -454,9 +478,9 @@ ThirdStack[{base:{__Integer},pc:{__Integer}}, opts___?OptionQ] := (* todo: this 
 
 ThirdStack[x:{__Integer}, opts___?OptionQ] :=  ThirdStack[{Union[ValuesToDeltas[Union[x]]],x},opts] (* todo: this is too easy, should be the last try really *)
 
-Scale /: TestSuite[Scale] = Join[TestSuite[Scale],{
+KeyMode /: TestSuite[KeyMode] = Join[TestSuite[KeyMode],{
   TestCase[Convert[PitchCode, ScaleStep] /@ Convert[ScaleStep, PitchCode] /@ Range[-10, 10], Range[-10, 10]],
-  TestCase[Data[Scale[PitchCode[Scale[]]]],{0, {2, 2, 1, 2, 2, 2, 1}}]
+  TestCase[Data[KeyMode[PitchCode[KeyMode[]]]],{0, {2, 2, 1, 2, 2, 2, 1}}]
   }]
   
 Note /: TestSuite[Note] = Join[TestSuite[Note],{
@@ -475,6 +499,30 @@ Note /: TestSuite[Note] = Join[TestSuite[Note],{
     ]
   }]
   
+Melody /: TestSuite[Melody] = Join[TestSuite[Melody],{
+ TestCase[PitchCode[Append[Melody[{1, 2, 3}], Note[4]]], {1, 2, 3, 4}], 
+ TestCase[PitchCode[Delete[Melody[{1, 2, 3}], 2]], {1, 3}], 
+ TestCase[PitchCode[Drop[Melody[{1, 2, 3}], 2]], {3}], 
+ TestCase[PitchCode[Extract[Melody[{1, 2, 3}], 2]], 2], 
+ TestCase[PitchCode[First[Melody[{1, 2, 3}]]], 1], 
+ TestCase[PitchCode[Insert[Melody[{1, 2, 3}], Note[4], 2]], {1, 4, 2, 3}], 
+ TestCase[PitchCode[Last[Melody[{1, 2, 3}]]], 3], TestCase[Length[Melody[{1, 2, 3}]], 3], 
+ TestCase[PitchCode /@ Melody[{1, 2, 3}], {1, 2, 3}], 
+ TestCase[MapIndexed[{PitchCode[#1], #2} & , Melody[{1, 2, 3}]], {{1, {1}}, {2, {2}}, {3, {3}}}],
+ TestCase[PitchCode[Most[Melody[{1, 2, 3}]]], {1, 2}],
+ TestCase[PitchCode[Melody[{1, 2, 3}][[2]]], 2], 
+ TestCase[PitchCode[Prepend[Melody[{1, 2, 3}], Note[0]]], {0, 1, 2, 3}], 
+ TestCase[PitchCode[ReplacePart[Melody[{1, 2, 3}], Note[7], 2]], {1, 7, 3}], 
+ TestCase[PitchCode[Reverse[Melody[{1, 2, 3}]]], {3, 2, 1}], 
+ TestCase[PitchCode[Rest[Melody[{1, 2, 3}]]], {2, 3}], 
+ TestCase[PitchCode[Select[Melody[{1, 2, 3}], Mod[PitchCode[#1], 2] == 1 & ]], {1, 3}], 
+ TestCase[PitchCode[Take[Melody[{1, 2, 3}], 2]], {1, 2}], 
+ TestCase[PitchCode[Map[#1 + 1 & , Melody[{1, 2, 3}], PitchCode]], {2, 3, 4}], 
+ TestCase[PitchCode[MapIndexed[#1 + #2[[1]] & , Melody[{1, 2, 3}], PitchCode]], {2, 4, 6}], 
+ TestCase[PitchCode[Sort[Melody[{3, 2, 1}], PitchCode]], {1, 2, 3}], 
+ TestCase[PitchCode[ReplacePart[Melody[{1, 2, 3}], 6, PitchCode]], {6, 6, 6}], 
+ TestCase[PitchCode[ReplacePart[Melody[{1, 2, 3}], {4, 3, 2}, PitchCode]], {4, 3, 2}]
+  }]
 End[]
 
 Protect[
@@ -495,6 +543,8 @@ Protect[
   FigBassQ,
   Intervals,
   IntervalsQ,
+  KeyMode,
+  KeyModeQ,
   Melody,
   MelodyQ,
   ModeAeolian,
@@ -518,9 +568,6 @@ Protect[
   Octave,
   Progression,
   ProgressionQ,
-  Scale,
-  ScaleFunction,
-  ScaleQ,
   ScaleStep,
   ThirdStack,
   ThirdStackQ,

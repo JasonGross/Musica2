@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2005-01-25  bch :  renamed pkgs to Packages and made it public
   2005-01-24  bch :  added DurVal to the list of pkg's
   2005-01-15  bch :  added Test to the list of pkg's
                      added Setup
@@ -58,7 +59,7 @@ BeginPackage["Musica2`Setup`",
     "Musica2`Midi`",
     "Musica2`PianoRoll`",
     "Musica2`Test`",
-    "Musica2`Type`",
+    "Musica2`ObjectType`",
     "Musica2`Utils`"
     }
   ]
@@ -72,17 +73,20 @@ Unprotect[
 ClearInitDotEm::usage = "ClearInitDotEm[pkg_, pkgs_, fn_] clears the file init.m."
 MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_] rewrites the file init.m."
 Setup::usage = "todo"
+Packages::usage = "todo"
+Symbols::usage = "todo"
+PrintUsage::usage = "todo"
 
 Begin["`Private`"]
 
 fn="Musica2/Applications/Musica2/Kernel/init.m";
 pkg="Musica2";
-pkgs={"Common","DurVal","Instrument","Midi","Naming","Note","PianoRoll","Setup","Sound","Spectrum","Test","Tuning","Type","Utils"};
+Packages={"Common","DurVal","Instrument","Midi","Naming","Note","ObjectType","PianoRoll","Setup","Sound","Spectrum","Test","Tuning","Utils"};
 
 ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
 ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]
 
-MakeInitDotEm[] := MakeInitDotEm[pkg, pkgs, fn]
+MakeInitDotEm[] := MakeInitDotEm[pkg, Packages, fn]
 MakeInitDotEm[pkg_, pkgs_, fn_] :=
   Module[{fout = OpenWrite[fn],d=ToString/@Date[],pr=True},
     WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
@@ -97,7 +101,7 @@ MakeInitDotEm[pkg_, pkgs_, fn_] :=
     WriteString[fout, "\n"];
     (
       If[pr,Print[#]];
-      Get[pkg <> "`" <> # <> "`"];
+      Needs[pkg <> "`" <> # <> "`"];
       n = Names[pkg <> "`" <> # <> "`*"];
       WriteString[fout,"DeclarePackage[\"" <> pkg <> "`" <> # <> "`\",\n"];
       Write[fout, n];
@@ -109,10 +113,28 @@ MakeInitDotEm[pkg_, pkgs_, fn_] :=
     ]
 
 Setup /: TestSuite[Setup] := (
-  ContainerQ /@ pkgs;
-  TestSuite /@ {Musica2`Type`Type,PianoRoll,Utils}
+  Needs["Musica2`" <> # <> "`"]& /@ Packages;
+  TestSuite /@ {ObjectType,PianoRoll,Utils}
   )
-    
+
+Symbols[p_String] :=
+  Module[{},
+    Sort[Names["Musica2`" <> p <> "`*"]]
+    ]
+  
+Symbols[] :=
+  Module[{},
+    Sort[Flatten[Symbols /@ Packages]]
+    ]
+  
+PrintUsage[s_String] :=
+  Module[{},
+    Print[StyleForm[s, FontWeight -> "Bold"]];
+    Print[ToExpression[s<>"::usage"]];
+    ]
+
+PrintUsage[] := (PrintUsage /@ Symbols[];)
+   
 End[]
 
 Protect[

@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-1-24 at 15:52 *)
+(* :History: File created 2005-1-29 at 12:38 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -15,7 +15,8 @@ If[!MemberQ[$Packages,"Musica2`"],
 
 DeclarePackage["Musica2`Common`",
 {"Content", "Convert", "Duration", "Frequency", "Mix", "Octave", "Overtone", 
- "Par", "PitchCode", "Play2", "Seq", "Time", "TotalDuration"}
+ "Par", "PitchCode", "Play2", "Seq", "Time", "TotalDuration", "UnPar", 
+ "UnSeq"}
 ];
 
 DeclarePackage["Musica2`DurVal`",
@@ -47,13 +48,19 @@ DeclarePackage["Musica2`Naming`",
 
 DeclarePackage["Musica2`Note`",
 {"Base", "Bass", "Chord", "ChordQ", "Code", "Counterpoint", "CounterpointQ", 
- "FigBass", "FigBassQ", "Intervals", "IntervalsQ", "Melody", "MelodyQ", 
- "ModeAeolian", "ModeDorian", "ModeIonian", "ModeLocrian", "ModeLydian", 
- "ModeMajor", "ModeMinor", "ModeMixolydian", "ModePhrygian", "Note", 
- "NoteFunction", "NotePlot", "NoteQ", "NoteRest", "NoteRestQ", "NoteTie", 
- "NoteTieQ", "Progression", "ProgressionQ", "Scale", "ScaleFunction", 
- "ScaleQ", "ScaleStep", "Steps", "ThirdStack", "ThirdStackQ", "Tonic", 
- "Velocity"}
+ "FigBass", "FigBassQ", "Intervals", "IntervalsQ", "KeyMode", "KeyModeQ", 
+ "Melody", "MelodyQ", "ModeAeolian", "ModeDorian", "ModeIonian", 
+ "ModeLocrian", "ModeLydian", "ModeMajor", "ModeMinor", "ModeMixolydian", 
+ "ModePhrygian", "Note", "NoteFunction", "NotePlot", "NoteQ", "NoteRest", 
+ "NoteRestQ", "NoteTie", "NoteTieQ", "Progression", "ProgressionQ", 
+ "ScaleStep", "Steps", "ThirdStack", "ThirdStackQ", "Tonic", "Velocity"}
+];
+
+DeclarePackage["Musica2`ObjectType`",
+{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
+ "DataToRules", "ElementType", "Members", "ObjectType", "ObjectTypeQ", 
+ "ObjectTypes", "Opts", "Pack", "Pos", "Struct", "Tidy", "UnPack", 
+ "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`PianoRoll`",
@@ -61,7 +68,8 @@ DeclarePackage["Musica2`PianoRoll`",
 ];
 
 DeclarePackage["Musica2`Setup`",
-{"ClearInitDotEm", "MakeInitDotEm", "Setup"}
+{"ClearInitDotEm", "MakeInitDotEm", "Packages", "PrintUsage", "Setup", 
+ "Symbols"}
 ];
 
 DeclarePackage["Musica2`Sound`",
@@ -70,7 +78,7 @@ DeclarePackage["Musica2`Sound`",
 ];
 
 DeclarePackage["Musica2`Spectrum`",
-{"Amplitude", "Phase", "Spectrum", "SpectrumQ", "Tone", "ToneQ"}
+{"Amplitude", "Phase", "Tone", "ToneQ", "ToneSpectrum", "ToneSpectrumQ"}
 ];
 
 DeclarePackage["Musica2`Test`",
@@ -81,12 +89,6 @@ DeclarePackage["Musica2`Tuning`",
 {"CustomTuning", "CustomTuningQ", "EqualTemperament", "EqualTemperamentQ", 
  "FrequencyOctave", "FrequencyRatios", "FrequencyRef", "PitchCodeOctave", 
  "PitchCodeRef", "Tuning"}
-];
-
-DeclarePackage["Musica2`Type`",
-{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
- "DataToRules", "ElementType", "Members", "Opts", "Pack", "Pos", "Struct", 
- "Tidy", "Type", "TypeQ", "Types", "UnPack", "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",

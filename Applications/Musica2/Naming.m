@@ -41,8 +41,8 @@ BeginPackage["Musica2`Naming`",
   {
     "Musica2`Common`",
     "Musica2`Note`",
+    "Musica2`ObjectType`",
     "Musica2`Test`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -63,25 +63,28 @@ Unprotect[
   ];
 
 CreateElement[HelixNoteNaming,{
-  Octave_Integer,
-  NoteNames:{__String},
-  Helix:{PitchCodeStart_Integer,PitchCodeInterval_Integer,NameCodeStart_Integer},
-  FlatsCount_Integer
-  },Null,"todo"]
+Octave_Integer,
+NoteNames:{__String},
+Helix:{PitchCodeStart_Integer,PitchCodeInterval_Integer,NameCodeStart_Integer},
+FlatsCount_Integer
+},Null,
+"todo.\[NewLine]"
+]
 
 CreateElement[HelixChordNaming,{
-  RootNaming_,
-  ChordNames:{
-    {{__String},{__Integer}}..
-    }
-  },Null,"todo"]
+RootNaming_,
+ChordNames:{
+  {{__String},{__Integer}}..
+  }
+},Null,
+"todo.\[NewLine]"
+]
 
+ChordNames::usage = "ChordNames is a member of HelixChordNaming."
 ChordNaming::usage = "todo"
-ChordNamingFunction::usage = "todo" (* to be removed *)
 FlatSymbols::usage = "todo"
 Naming::usage = "todo"
 NoteNaming::usage = "todo"
-NoteNamingFunction::usage = "todo" (* to be removed *)
 PrepareString::usage = "todo"
 SharpSymbols::usage = "todo"
 

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Spectrum` *)
 
 (* :History:
+  2005-01-27  bch :  renamed Spectrum to ToneSpectrum to avoid collision with Combinatorica
   2004-10-07  bch :  created
 *)
 
@@ -39,9 +40,9 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Spectrum`",
   {
     "Musica2`Common`",
+    "Musica2`ObjectType`",
     "Musica2`Sound`",
     "Musica2`Test`",
-    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -52,20 +53,26 @@ Unprotect[
   ];
 
 Unprotect[
-  Spectrum,
-  SpectrumQ,
+  ToneSpectrum,
+  ToneSpectrumQ,
   Tone,
   ToneQ
   ];
 
-CreateElement[Tone, {Frequency_, {Amplitude_, Phase_}},{440,{1,0}},"todo"];
-CreateContainer[Spectrum,Tone,"todo"];
+CreateElement[Tone, {Frequency_, {Amplitude_, Phase_}},{440,{1,0}},
+"todo.\[NewLine]"
+];
+CreateContainer[ToneSpectrum,Tone,
+"todo.\[NewLine]"
+];
+
+Amplitude::usage = "Amplitude is a member of Tone."
 
 Begin["`Private`"]
 
-Mix[x:{__Spectrum}, opts___?OptionQ] := Spectrum[Flatten[Tone /@ x]]
+Mix[x:{__ToneSpectrum}, opts___?OptionQ] := ToneSpectrum[Flatten[Tone /@ x]]
 
-Spectrum /: Snippet[x_Spectrum, opts___?OptionQ] := (* todo: an option to use IFFT *)
+ToneSpectrum /: Snippet[x_ToneSpectrum, opts___?OptionQ] := (* todo: an option to use IFFT *)
   Module[
     {
       sr = Round[SampleRate /. {opts} /. Opts[x] /. Options[Sound]],
@@ -77,7 +84,7 @@ Spectrum /: Snippet[x_Spectrum, opts___?OptionQ] := (* todo: an option to use IF
       Snippet[{SampledSoundFunction,f,sr,sc}]
     ]
 
-Spectrum[x_Snippet, opts___?OptionQ] :=
+ToneSpectrum[x_Snippet, opts___?OptionQ] :=
   Module[
     {
       s = Snippet[x,SoundType -> SampledSoundList],
@@ -92,13 +99,13 @@ Spectrum[x_Snippet, opts___?OptionQ] :=
     d = Take[d,Ceiling[Length[d]/2]];
 
     d = {2Abs[#],Arg[#]}& /@ d;
-    r = Spectrum[MapIndexed[Tone[{sr #2[[1]]/sc, #1}]&, d], opts, SampleRate->sr, SampleCount->sc];
+    r = ToneSpectrum[MapIndexed[Tone[{sr #2[[1]]/sc, #1}]&, d], opts, SampleRate->sr, SampleCount->sc];
     r
     ]
 
-Spectrum[x:{__?AtomQ}, opts___?OptionQ] := Spectrum[Tone /@ x,opts]
+ToneSpectrum[x:{__?AtomQ}, opts___?OptionQ] := ToneSpectrum[Tone /@ x,opts]
 
-Tidy[Spectrum] = Module[{r = #,i,c},
+Tidy[ToneSpectrum] = Module[{r = #,i,c},
   r = Tidy /@ r;
   r = Select[r, 0 =!= Amplitude[#]&];
   r = Sort[r, Frequency];
@@ -114,7 +121,7 @@ Tidy[Spectrum] = Module[{r = #,i,c},
       i--;
       ];
     ];
-  r = Spectrum[r, Sequence @@ Opts[#]];
+  r = ToneSpectrum[r, Sequence @@ Opts[#]];
   r
   ]&
 
@@ -133,22 +140,22 @@ Tidy[Tone] = Module[{r = #},
   r
   ]&
 
-Spectrum /: Plus[a_Spectrum,b_Spectrum] := Spectrum[Join[Tone[a],Tone[b]]]
-Spectrum /: Plus[a_Spectrum,b_Tone] := Spectrum[Append[Tone[a],b]]
-Spectrum /: Plus[b_Tone,a_Spectrum] := Spectrum[Append[Tone[a],b]]
-Tone /: Plus[a_Tone,b_Tone] := Spectrum[{a,b}]
+ToneSpectrum /: Plus[a_ToneSpectrum,b_ToneSpectrum] := ToneSpectrum[Join[Tone[a],Tone[b]]]
+ToneSpectrum /: Plus[a_ToneSpectrum,b_Tone] := ToneSpectrum[Append[Tone[a],b]]
+ToneSpectrum /: Plus[b_Tone,a_ToneSpectrum] := ToneSpectrum[Append[Tone[a],b]]
+Tone /: Plus[a_Tone,b_Tone] := ToneSpectrum[{a,b}]
 
-Spectrum /: Power[a_Spectrum,2] := a*a
+ToneSpectrum /: Power[a_ToneSpectrum,2] := a*a
 Tone /: Power[a_Tone,2] := a*a
 
-Spectrum /: Times[a_Spectrum,b_Spectrum] := Spectrum[Flatten[Tone /@ (a*Tone[b])]]
-Spectrum /: Times[a_Spectrum,b_Tone] := Spectrum[Flatten[Tone /@ (Tone[a] * b)]]
-Spectrum /: Times[b_Tone,a_Spectrum] := Spectrum[Flatten[Tone /@ (Tone[a] * b)]]
+ToneSpectrum /: Times[a_ToneSpectrum,b_ToneSpectrum] := ToneSpectrum[Flatten[Tone /@ (a*Tone[b])]]
+ToneSpectrum /: Times[a_ToneSpectrum,b_Tone] := ToneSpectrum[Flatten[Tone /@ (Tone[a] * b)]]
+ToneSpectrum /: Times[b_Tone,a_ToneSpectrum] := ToneSpectrum[Flatten[Tone /@ (Tone[a] * b)]]
 Tone /: Times[a_Tone,b_Tone] :=
   Module[{af,aa,ap,bf,ba,bp},
     {af,{aa,ap}}=Data[Tidy[a]];
     {bf,{ba,bp}}=Data[Tidy[b]];
-    Spectrum[{
+    ToneSpectrum[{
       Tone[{Abs[af-bf],{ aa*ba/2,ap-bp+Pi/2}}],
       Tone[{Abs[af+bf],{-aa*ba/2,ap+bp+Pi/2}}]
       }]
@@ -167,8 +174,8 @@ Protect[
   ];
 
 Protect[
-  Spectrum,
-  SpectrumQ,
+  ToneSpectrum,
+  ToneSpectrumQ,
   Tone,
   ToneQ
   ];
