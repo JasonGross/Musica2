@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-12-21  bch :  Tidy[Track] now much slower, but handles opts, i think...
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
   2004-11-28  bch :  added EventTypeKeySignature and EventTypeTimeSignature
   2004-10-06  bch :  Tidy[Track] now also converts all NoteOn's with zero velocity till NoteOff's
@@ -154,7 +155,9 @@ EventTypeTimeSignature::usage = "todo"
 FileFormat::usage = "todo"
 MidiChannel::usage = "todo"
 MilliSecond::usage = "todo"
+QPM::usage = "todo"
 TempoFunction::usage = "" (* to be removed *)
+TempoTime::usage = "todo"
 Tick::usage = "todo"
 TimeUnit::usage = "todo"
 TPQ::usage = "todo"
@@ -172,20 +175,18 @@ Tidy[Midi] = Module[{r = #,eot = Duration[#]},
   ]&
 
 Tidy[Track] = Module[{r = #,eot},
-  r[[0]] = List;
-  r[[2]] = Sort[r[[2]]]; (* todo: what about if the events has options? *)
-  eot = r[[2,-1,1]];
-  r[[2]] = Select[r[[2]],(#[[2,1]]=!=EventTypeEOT)&]; (* todo: what about if the events has options? *)
-  r[[2]] = Append[r[[2]],{eot,EOT}];
-  r[[2]] = If[MatchQ[#,{_,{EventTypeNoteOn,{_,_,0}}}],ReplacePart[#,EventTypeNoteOff,{2,1}],#]& /@ r[[2]]; (* todo: what about if the events has options? *)
-  r[[0]] = Track;
+  r = Event[r];
+  r = Sort[r,OrderedQ[#1,#2,{EventTime,EventType}]&];
+  eot = EventTime[r[[-1]]];
+  r = Select[r,(EventType[#]=!=EventTypeEOT)&];
+  r = Append[r,Event[{eot,EOT}]];
+  r = If[EventType[#]===EventTypeNoteOn&&Velocity[#]===0,ReplacePart[#,EventTypeNoteOff,EventType],#]& /@ r;
+  r = Track[r, Sequence @@ Opts[#]];
   r
   ]&
 
 Tidy[TempoTrack] = Module[{r = #},
-  r[[0]] = List;
-  r[[2]] = Sort[r[[2]]]; (* todo: what about if the events has options? *)
-  r[[0]] = TempoTrack;
+  r = Sort[r,TempoTime];
   r
   ]&
 

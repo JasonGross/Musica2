@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-12-13 at 14:27 *)
+(* :History: File created 2004-12-25 at 14:19 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -67,9 +67,9 @@ DeclarePackage["Musica2`Tuning`",
 ];
 
 DeclarePackage["Musica2`Type`",
-{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataAsRules", 
- "DataQ", "ElementType", "Members", "Opts", "Pack", "Pos", "Struct", "Tidy", 
- "TypeQ", "UnPack", "UnPackOpts"}
+{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
+ "DataToRules", "ElementType", "Members", "Opts", "Pack", "Pos", 
+ "RulesToData", "Struct", "Tidy", "TypeQ", "UnPack", "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",
