@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-08-07  bch :  moved MakeInitDotEm[] to Setup.m
+  2004-08-06  bch :  added EventList to the list of pkg's
   2004-08-04  bch :  first release
   2004-07-28  bch :  created
 *)
@@ -51,7 +53,6 @@ Unprotect[
   Func1ToList,
   FunctionQ,
   ListToFunc1,
-  MakeInitDotEm,
   MakeNestedIfs,
   ReArg1,
   UnCompile,
@@ -65,7 +66,6 @@ Func1Normalize::usage = "Func1Normalize[f_?Func1Q]"
 Func1ToList::usage = "Func1ToList[f_, sr_, duration_]"
 FunctionQ::usage = ""
 ListToFunc1::usage = "ListToFunc1[d_, sr_, smooth_:False]"
-MakeInitDotEm::usage = "MakeInitDotEm[pkg_, pkgs_, fn_]";
 MakeNestedIfs::usage = "MakeNestedIfs[deltas$_, expr$_, default$_]"
 ReArg1::usage = "ReArg1[f_?Func1Q, p_, a_]"
 UnCompile::usage = "UnCompile[f_?FunctionQ]"
@@ -114,31 +114,6 @@ ListToFunc1[d_, sr_, sm_:False] :=
         d[[1 + Floor[Mod[t*sr, sc]]]]
         ]
       ]
-    ]
-
-MakeInitDotEm[pkg_:"Musica2", pkgs_:{"Midi","Sound","Utils"}, fn_:"Musica2/Applications/Musica2/Kernel/init.m"] :=
-  Module[{fout = OpenWrite[fn],d=ToString/@Date[]},
-    WriteString[fout,"(* :Title: Master Declarations File for " <> pkg <> " *)\n"];
-    WriteString[fout, "\n"];
-    WriteString[fout, "(* :Summary: This file contains declarations of all the major symbols contained in files in this directory.\nWhen loaded, it sets up the symbols with attribute Stub, so the correct package will be loaded when the symbol is called. *)\n"];
-    WriteString[fout, "\n"];
-    WriteString[fout,"(* :Author: This file was created by the function Musica2`Utils`MakeInitDotEm[], written by Bo C. Herlin *)\n"];
-    WriteString[fout, "\n"];
-    WriteString[fout, "(* :History: File created "<>d[[1]]<>"-"<>d[[2]]<>"-"<>d[[3]]<>" at "<>d[[4]]<>":"<>d[[5]]<>" *)\n"];
-    WriteString[fout, "\n"];
-    WriteString[fout, "If[!MemberQ[$Packages,\"" <> pkg <> "`\"],\n  System`Private`p = Unprotect[$Packages];\n  PrependTo[$Packages,\"" <> pkg <> "`\"];\n  Protect @@ System`Private`p  \n];\n"];
-    WriteString[fout, "\n"];
-    (
-      Print[#];
-      Get[pkg <> "`" <> # <> "`"];
-      n = Names[pkg <> "`" <> # <> "`*"];
-      WriteString[fout,"DeclarePackage[\"" <> pkg <> "`" <> # <> "`\",\n"];
-      Write[fout, n];
-      WriteString[fout, "];\n"];
-      WriteString[fout, "\n"];
-      ) & /@ pkgs;
-    WriteString[fout, "Null\n"];
-    Close[fout];
     ]
 
 MNI[x$_, c$_, e$_, p$_, d$_] :=
@@ -200,7 +175,6 @@ Protect[
   Func1ToList,
   FunctionQ,
   ListToFunc1,
-  MakeInitDotEm,
   MakeNestedIfs,
   ReArg1,
   UnCompile,

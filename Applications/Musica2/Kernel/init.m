@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Utils`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-4 at 11:36 *)
+(* :History: File created 2004-8-8 at 13:47 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -13,20 +13,31 @@ If[!MemberQ[$Packages,"Musica2`"],
   Protect @@ System`Private`p  
 ];
 
+DeclarePackage["Musica2`EventList`",
+{"EventListToMidi", "MidiToEventList"}
+];
+
 DeclarePackage["Musica2`Midi`",
 {"Midi", "MidiAbsolute", "MidiAddEOT", "MidiChord", "MidiControlChange", 
- "MidiDelta", "MidiEOT", "MidiEqualizeEOT", "MidiExportSMF", "MidiFile", 
- "MidiFileFormat", "MidiGetChannels", "MidiGetDuration", "MidiGetDurations", 
- "MidiGetInfo", "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", 
+ "MidiDelta", "MidiEOT", "MidiEqualizeEOT", "MidiExpandStatePaths", 
+ "MidiExpandStates", "MidiExportSMF", "MidiFile", "MidiFileFormat", 
+ "MidiGetChannels", "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", 
+ "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
  "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
  "MidiGetTPQ", "MidiImportSMF", "MidiKeySignature", "MidiMeta", 
  "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", "MidiPatternChord", 
  "MidiPatternData", "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", 
  "MidiPatternMusic", "MidiPatternTiming", "MidiPatternTrack", 
  "MidiPatternType", "MidiPatternVoice", "MidiQPM", "MidiSec", "MidiSetShape", 
- "MidiSetTimeUnit", "MidiSetTiming", "MidiShape", "MidiSysX0", "MidiSysX7", 
- "MidiTempo", "MidiTick", "MidiTie", "MidiTimeSignature", "MidiTimeUnit", 
- "MidiTiming", "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
+ "MidiSetState", "MidiSetStateLow", "MidiSetTimeUnit", "MidiSetTiming", 
+ "MidiShape", "MidiStatePaths", "MidiStatePathsExpanded", "MidiStateRoutes", 
+ "MidiStates", "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", 
+ "MidiTick", "MidiTie", "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", 
+ "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
+];
+
+DeclarePackage["Musica2`Setup`",
+{"CalcMidiStateRoutes", "MakeInitDotEm"}
 ];
 
 DeclarePackage["Musica2`Sound`",
@@ -40,8 +51,8 @@ DeclarePackage["Musica2`Sound`",
 
 DeclarePackage["Musica2`Utils`",
 {"DeltasToValues", "Func1ListQ", "Func1Normalize", "Func1Q", "Func1ToList", 
- "FunctionQ", "ListToFunc1", "MakeInitDotEm", "MakeNestedIfs", "ReArg1", 
- "UnCompile", "ValuesToDeltas"}
+ "FunctionQ", "ListToFunc1", "MakeNestedIfs", "ReArg1", "UnCompile", 
+ "ValuesToDeltas"}
 ];
 
 Null
