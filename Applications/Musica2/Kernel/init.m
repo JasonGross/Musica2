@@ -3,9 +3,9 @@
 (* :Summary: This file contains declarations of all the major symbols contained in files in this directory.
 When loaded, it sets up the symbols with attribute Stub, so the correct package will be loaded when the symbol is called. *)
 
-(* :Author: This file was created by the function Musica2`Utils`MakeInitDotEm[], written by Bo C. Herlin *)
+(* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-10 at 8:45 *)
+(* :History: File created 2004-8-10 at 18:43 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -18,11 +18,11 @@ DeclarePackage["Musica2`EventList`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"Midi", "MidiAbsolute", "MidiAddEOT", "MidiChord", "MidiControlChange", 
- "MidiDelta", "MidiEOT", "MidiEqualizeEOT", "MidiExpandStatePaths", 
- "MidiExpandStates", "MidiExportSMF", "MidiFile", "MidiFileFormat", 
- "MidiGetChannels", "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", 
- "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
+{"Midi", "MidiAbsolute", "MidiChord", "MidiControlChange", "MidiDelta", 
+ "MidiEOT", "MidiEqualizeEOT", "MidiExpandStatePaths", "MidiExpandStates", 
+ "MidiExportSMF", "MidiFile", "MidiFileFormat", "MidiGetChannels", 
+ "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", "MidiGetQPM", 
+ "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
  "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
  "MidiGetTPQ", "MidiImportSMF", "MidiKeySignature", "MidiMeta", 
  "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", "MidiPatternChord", 
@@ -46,13 +46,13 @@ DeclarePackage["Musica2`Sound`",
  "SoundGetDuration", "SoundGetFunc", "SoundGetInfo", "SoundGetList", 
  "SoundGetSampleCount", "SoundGetSampleRate", "SoundImportWav", "SoundListQ", 
  "SoundLoop", "SoundMakeFunc", "SoundMakeList", "SoundMix", "SoundOfSilence", 
- "SoundPar", "SoundSampleCount", "SoundSeq", "SoundSmooth", "SoundType", 
+ "SoundPar", "SoundPitchShift", "SoundSampleCount", "SoundSeq", "SoundType", 
  "SoundUnPar", "SoundUnSeq", "Zound"}
 ];
 
 DeclarePackage["Musica2`Utils`",
-{"DeltasToValues", "Func1ListQ", "Func1Q", "Func1ToList", "FunctionQ", 
- "ListToFunc1", "MakeNestedIfs", "UnCompile", "ValuesToDeltas"}
+{"DeltasToValues", "FunctionQ", "FuncToList", "ListToFunc", "MakeNestedIfs", 
+ "UnCompile", "ValuesToDeltas"}
 ];
 
 Null

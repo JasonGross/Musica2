@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-08-10  bch :  removed MidiAddEOT, now incorporated into MidiEqualizeEOT
   2004-08-10  bch :  added MidiRest* and MidiTie*
   2004-08-09  bch :  used Reap/Sow and AppendTo as a speed boost, changed param to MidiVoiceReleaseTimeFunction
   2004-08-08  bch :  added this whole "state"-thing, all the MidiSetXxx called by a MidiSetStateLow will have its code moved to its caller and then be deleted
@@ -52,7 +53,6 @@ BeginPackage["Musica2`Midi`",
 Unprotect[
   Midi,
   MidiAbsolute,
-  MidiAddEOT,
   MidiChord,
   MidiControlChange,
   MidiDelta,
@@ -123,7 +123,6 @@ Unprotect[
 
 Midi::usage = "Midi[i, d] represents a midi object where i is the info about d, the midi data."
 MidiAbsolute::usage = "MidiTiming can be either MidiAbsolute or MidiDelta. If MidiTiming is MidiAbsolute, all timing information are absolute values. Observe that when in shape MidiVoice or MidiChord, MidiAbsolute means end-timing"
-MidiAddEOT::usage = "MidiAddEOT[m:Midi[_,_]]"
 MidiChord::usage = ""
 MidiControlChange::usage = ""
 MidiDelta::usage = "MidiTiming can be either MidiAbsolute or MidiDelta. If MidiTiming is MidiDelta, all timing information are delta values."
@@ -202,7 +201,7 @@ Format[m:Midi[_,_]] :=
       StringForm["Midi[`1`,{{{type, track},{{timing, data}...}}...}]",m[[1]]],
       If[MidiGetShape[m]===MidiChord,
         StringForm["Midi[`1`,{{{type, {track...}},{{timing, {data...}}...}}...}]",m[[1]]],
-        StringForm["Midi[`1`,<unknown data shape>]",m[[1]]]
+        StringForm["Midi[`1`,<unknown shape>]",m[[1]]]
         ]
       ]
     ]
@@ -214,31 +213,19 @@ Options[Midi]=
     MidiTPQ -> 960
     }
 
-MidiAddEOT[m:Midi[_,_]]:=
-  Midi[
-    Sort[m[[1]]],
-    If[
-      Length[#]==0||#[[-1,2]]!=EOT,
-      Append[#,{0,EOT}],
-      #
-      ]& /@ m[[2]]
-    ] /; MidiGetShape[m]===MidiFile && MidiGetTiming[m]===MidiDelta
-
 MidiControlChange = 3;
 
 MidiEOT = {MidiMeta,16^^2F};
 
-MidiEqualizeEOT[mx:Midi[_,_]] :=
+MidiEqualizeEOT[mx:Midi[_,_],keep_:False] := (* this function also adds EOT if missing. if the keep parameter is true the max-duration is kept *)
   Module[{d,m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]},
-    d=MidiGetDuration[m];
+    If[keep,d=MidiGetDuration[m]];
+    m[[2]] = Cases[Sort[#],e$_/;!MatchQ[e$,{_,EOT}]->e$]& /@ m[[2]];
+    If[!keep,d=MidiGetDuration[m]];
     MidiSetState[
       Midi[
         Sort[m[[1]]],
-        If[
-          Length[#]!=0&&#[[-1,2]]==EOT,
-          ReplacePart[#,d,{-1,1}],
-          #
-          ]& /@ m[[2]]
+        Append[#,{d,EOT}]& /@ m[[2]]
         ],
       MidiGetState[mx]
       ]
@@ -287,7 +274,7 @@ MidiExpandStatePaths[p_] :=
 MidiExportSMF[fn_String,mx:Midi[_,_], opts___] :=
   Module[{m=mx,f=Null},
     m = MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiDelta,MidiTimeUnit->MidiTick}];
-    m = MidiAddEOT[m];
+    m = MidiEqualizeEOT[m];
     f=OpenWriteBinary[fn];
     Catch[
       WriteString[f,"MThd"];
@@ -1045,7 +1032,6 @@ End[]
 Protect[
   Midi,
   MidiAbsolute,
-  MidiAddEOT,
   MidiChord,
   MidiControlChange,
   MidiDelta,

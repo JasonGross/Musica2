@@ -103,7 +103,7 @@ MakeInitDotEm[pkg_:"Musica2", pkgs_:{"EventList","Midi","Setup","Sound","Utils"}
     WriteString[fout, "\n"];
     WriteString[fout, "(* :Summary: This file contains declarations of all the major symbols contained in files in this directory.\nWhen loaded, it sets up the symbols with attribute Stub, so the correct package will be loaded when the symbol is called. *)\n"];
     WriteString[fout, "\n"];
-    WriteString[fout,"(* :Author: This file was created by the function Musica2`Utils`MakeInitDotEm[], written by Bo C. Herlin *)\n"];
+    WriteString[fout,"(* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)\n"];
     WriteString[fout, "\n"];
     WriteString[fout, "(* :History: File created "<>d[[1]]<>"-"<>d[[2]]<>"-"<>d[[3]]<>" at "<>d[[4]]<>":"<>d[[5]]<>" *)\n"];
     WriteString[fout, "\n"];

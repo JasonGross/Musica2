@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-08-10  bch :  used the ListInterpolation function inside ListToFunc
+                     changed FunctionQ and UnCompile to also handle InterpolatingFunction's
   2004-08-08  bch :  just found out about Composition which has now replaced ReArg1
                      also removed Func1Normalize, only used by ReArg1 and quite a silly function actually
                      changed FunctionQ and UnCompile to also handle Composition's
@@ -50,22 +52,18 @@ BeginPackage["Musica2`Utils`",
 
 Unprotect[
   DeltasToValues,
-  Func1Q,
-  Func1ListQ,
-  Func1ToList,
+  FuncToList,
   FunctionQ,
-  ListToFunc1,
+  ListToFunc,
   MakeNestedIfs,
   UnCompile,
   ValuesToDeltas
   ];
 
 DeltasToValues::usage = "DeltasToValues[d_, c_:0]";
-Func1Q::usage = "Func1Q[f_?FunctionQ]"
-Func1ListQ::usage = ""
-Func1ToList::usage = "Func1ToList[f_, sr_, duration_]"
+FuncToList::usage = "FuncToList[f_, sr_, duration_]"
 FunctionQ::usage = ""
-ListToFunc1::usage = "ListToFunc1[d_, sr_, smooth_:False]"
+ListToFunc::usage = "ListToFunc[d_, sr_, opts___]"
 MakeNestedIfs::usage = "MakeNestedIfs[deltas$_, expr$_, default$_]"
 UnCompile::usage = "UnCompile[f_?FunctionQ]"
 ValuesToDeltas::usage = "ValuesToDeltas[t_]";
@@ -80,39 +78,23 @@ DeltasToValues[d_List, c_Integer:0] :=
 SlotQ[expr_] := !AtomQ[expr] && Length[expr]==1 && expr[[0]]===Slot && IntegerQ[expr[[1]]] && 0<expr[[1]]
 GetSlotNrs[f_]:=If[FunctionQ[f]||AtomQ[f],{},If[SlotQ[f],f[[1]],GetSlotNrs/@ReplacePart[f,List,{0}]]]
 
-Func1Q[f_?FunctionQ]:= (* is this really working? *)
-  Module[{g=UnCompile[f]},
-    g[[0]]=List;
-    If[Length[g]==2,
-      AtomQ[g[[1]]] || Length[g[[1]]]==1,
-      Max[Union[Flatten[GetSlotNrs[g]]]]<=1
-      ]
-    ]
-
-Func1ListQ[expr_] := ListQ[expr] && And @@ Func1Q /@ expr
-
-Func1ToList[f_, sr_, sd_] :=
+FuncToList[f_, sr_, sd_] :=
   Module[{sc},
     sc = sr*sd;
-    Table[f[i/sr], {i, 0, sc - 1}]
+    Table[N[f[i/sr]], {i, 0, sc - 1}]
     ]
 
-FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition]
+FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition | _InterpolatingFunction]
 
-ListToFunc1[d_, sr_, sm_:False] :=
-  Module[{sc = Length[d], sf = (#1 + (#2 - #1)#3) &},
-    If[sm,
-      Compile[{{t, _Real}},
-        sf[
-          d[[1 + Floor[Mod[t*sr, sc]]]],
-          d[[1 + Floor[Mod[1 + t*sr, sc]]]],
-          FractionalPart[t*sr]
-          ]
-        ],
-      Compile[{{t, _Real}},
-        d[[1 + Floor[Mod[t*sr, sc]]]]
-        ]
-      ]
+ListToFunc[d_, sr_, opts___] :=
+  Module[
+    {
+      sc = Length[d],
+      f,
+      io = InterpolationOrder /. {opts} /. {InterpolationOrder->0} (* is this wise? *)
+      },
+    f = ListInterpolation[Append[d,d[[-1]]],InterpolationOrder->io];
+    Function[t,Evaluate[f[1 + Mod[t*sr, sc]]]]
     ]
 
 MNI[x$_, c$_, e$_, p$_, d$_] :=
@@ -146,6 +128,7 @@ MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] :=
 UnCompile[f_CompiledFunction] := f[[5]]
 UnCompile[f_Function] := f
 UnCompile[f_Composition] := Function[x,Evaluate[f[x]]]
+UnCompile[f_InterpolatingFunction] := f
 
 ValuesToDeltas[v_List] := Drop[v, 1] - Drop[v, -1]
 
@@ -153,11 +136,9 @@ End[]
 
 Protect[
   DeltasToValues,
-  Func1Q,
-  Func1ListQ,
-  Func1ToList,
+  FuncToList,
   FunctionQ,
-  ListToFunc1,
+  ListToFunc,
   MakeNestedIfs,
   UnCompile,
   ValuesToDeltas
