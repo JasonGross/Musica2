@@ -1,0 +1,21 @@
+:Title: todo.txt
+
+:Summary: todo-file for Musica2
+
+:Author: Bo C. Herlin
+
+:Contact: bo@gcab.net
+
+:History:
+  2004-09-12  bch :  started writing it
+
+------------------------------------------------------------
+
+Important todo's:
+
+...
+
+Possible todo's:
+
+Get rid of all Midi- and Sound prefix.
+
