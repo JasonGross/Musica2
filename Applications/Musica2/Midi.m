@@ -118,9 +118,10 @@ seti[i_,n_,v_] := If[(n/.i)===n,Append[i,n->v],i/.(n->_)->(n->v)]
 (*****************)
 
 Options[Midi] = {Tempo -> 120,FileFormat -> 1,TimeUnit -> Tick,TPQ -> 960}
-Tidy[Midi] = Module[{r = #},
-  r = Tidy /@ #;
-  (* todo: equalize eot between tracks? *)
+
+Tidy[Midi] = Module[{r = #,eot = Duration[#]},
+  r = Append[#,Event[{eot,EOT}]]& /@ r;
+  r = Tidy /@ r;
   r
   ]&
 
@@ -144,30 +145,30 @@ Tidy[TempoTrack] = Module[{r = #},
 (*****************)
 
 Convert[m_?MidiQ, Tick, Second] :=
-  Module[{f=TempoFunction[TempoTrack[m[[1]]],False,TPQ->TPQ[m]]},
+  Module[{f = TempoFunction[TempoTrack[m[[1]]], False, TPQ->TPQ[m]]},
     Midi[
-      (Event[{f[EventTime[#]],{EventType[#],EventData[#]}},Sequence@@Opts[#]]&/@#)&/@Track[m],
+      (Event[{f[EventTime[#]],{EventType[#],EventData[#]}},Sequence @@ Opts[#]]& /@ #)& /@ Track[m],
       Sequence @@ seti[Opts[m],TimeUnit,Second]
       ]
     ]
 
 Convert[m_?MidiQ, Second, Tick] :=
-  Module[{f=TempoFunction[TempoTrack[m[[1]]],True,TPQ->TPQ[m]]},
+  Module[{f = TempoFunction[TempoTrack[m[[1]]], True, TPQ->TPQ[m]]},
     Midi[
-      (Event[{f[EventTime[#]],{EventType[#],EventData[#]}},Sequence@@Opts[#]]&/@#)&/@Track[m],
+      (Event[{f[EventTime[#]],{EventType[#],EventData[#]}},Sequence @@ Opts[#]]& /@ #)& /@ Track[m],
       Sequence @@ seti[Opts[m],TimeUnit,Tick]
       ]
     ]
 
 Convert[m_?MidiQ, Second, MilliSecond] :=
   Midi[
-    (Event[{EventTime[#]*1000,{EventType[#],EventData[#]}},Sequence@@Opts[#]]&/@#)&/@Track[m],
+    (Event[{EventTime[#]*1000,{EventType[#],EventData[#]}},Sequence @@ Opts[#]]& /@ #)& /@ Track[m],
     Sequence @@ seti[Opts[m],TimeUnit,MilliSecond]
     ]
 
 Convert[m_?MidiQ, MilliSecond, Second] :=
   Midi[
-    (Event[{EventTime[#]/1000,{EventType[#],EventData[#]}},Sequence@@Opts[#]]&/@#)&/@Track[m],
+    (Event[{EventTime[#]/1000,{EventType[#],EventData[#]}},Sequence @@ Opts[#]]& /@ #)& /@ Track[m],
     Sequence @@ seti[Opts[m],TimeUnit,Second]
     ]
 
@@ -303,11 +304,17 @@ Midi /: Import[fn_String,Midi]:=
       ]
     ]
 
+Midi[c_Counterpoint, opts___?OptionQ] := Midi[Track /@ c, opts]
+
 Midi[mx_Midi, opts___?OptionQ] :=
   Module[{m=mx,tuout=TimeUnit/.{opts}/.(TimeUnit->TimeUnit[mx]),tuin=TimeUnit[mx]},
     If[tuout=!=tuin,m=Convert[m,tuin,tuout]];
     m
     ]
+
+Midi /: Show[x_Midi,opts___?OptionQ] := Show[Mix[Sound[x,opts],2]]
+
+Midi /: Sound[x_Midi,opts___?OptionQ] := Sound[Counterpoint[Midi[x,TimeUnit->Second]],opts]
 
 Tempo[x_?EventQ, opts___?OptionQ] := Tempo[{#[[1]],60000000/Total[{65536, 256, 1}*#[[2,2]]]},opts]&[Data[x]] /; MatchQ[Data[x],{_,{EventTypeTempo,{_,_,_}}}]
 
@@ -352,9 +359,9 @@ TempoTrack[x_?TrackQ, opts___?OptionQ] :=
     TempoTrack[u,opts]
     ]
 
-TimeUnit[x_Midi] := (TimeUnit /. Opts[x] /. Options[Midi])
+TimeUnit[x_Midi] := TimeUnit /. Opts[x] /. Options[Midi]
 
-TPQ[x_Midi] := (TPQ /. Opts[x] /. Options[Midi])
+TPQ[x_Midi] := TPQ /. Opts[x] /. Options[Midi]
 
 Track[x_Melody, opts___?OptionQ] :=
   Module[{d,t=0},
@@ -375,10 +382,6 @@ Track[x_Melody, opts___?OptionQ] :=
     ]
 
 Track[x_TempoTrack, opts___?OptionQ] := Track[Event/@x]
-
-Midi /: Show[x_Midi,opts___?OptionQ] := Show[Mix[Sound[x,opts],2]]
-
-Midi /: Sound[x_Midi,opts___?OptionQ] := Sound[Counterpoint[Midi[x,TimeUnit->Second]],opts]
 
 (******** private functions used by ImportSMF and ExportSMF ********)
 

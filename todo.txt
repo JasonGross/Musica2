@@ -11,6 +11,7 @@
 Important todo's:
 
 Add the features to this new major rewrite that where present in the previous version.
+Handle the passing of opts in a natural fashion when converting between types.
 
 ------------------------------------------------------------
 

@@ -107,7 +107,7 @@ DefineCommon[T_Symbol] := (
   (* default constructor *)
   T[d_?(DataQ[T]),opts___?OptionQ] := T[{opts},d];
 
-  (* basic format *)
+  (* basic format, the precondition (/; TypeQ[T][x]) might go away later, currentli its good for debugging *)
   Format[x_T] := "\[SkeletonIndicator]"<>SymbolName[T]<>"\[SkeletonIndicator]" /; TypeQ[T][x];
 
   (* the "backdoor" to the info and data *)

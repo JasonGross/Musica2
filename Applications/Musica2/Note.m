@@ -58,6 +58,7 @@ CreateContainer[Melody,Note];
 CreateContainer[Progression,Chord];
 CreateContainer[Counterpoint,Melody];
 
+NoteFunction::usage = ""
 PitchCode::usage = ""
 Velocity::usage = ""
 
@@ -81,24 +82,33 @@ Options[Progression] = {NoteDuration:>(NoteDuration/.Options[Note]),Velocity:>(V
 
 (*****************)
 
-Chord /: Duration[x_Chord] := Duration /. Opts[x]
+Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
+
+Counterpoint[x_Progression, opts___?OptionQ] := Counterpoint[Melody[#]&/@SeqOfParToParOfSeq[{Duration[#],Data[#]}& /@ x]]
+
+Chord /: Duration[x_Chord] := NoteDuration /. Opts[x]
 Counterpoint /: Duration[x_Counterpoint] := Max[Duration /@ x]
-Melody /: Duration[x_Melody] := Total[Duration /@ x]
+Melody /: Duration[x_Melody] := Total[NoteDuration /@ x]
 Note /: Duration[x_Note] := NoteDuration[x]
 Progression /: Duration[x_Progression] := Total[Duration /@ x]
 
-Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[{NoteDuration/.{opts}/.Options[Melody],{#,Velocity/.{opts}/.Options[Melody]}}&/@p,opts]
+NoteFunction[x_Melody, s:(PitchCode|Velocity)] := MakeNestedIfs[Transpose[{NoteDuration /@ x,s /@ x /. {DataNoValue -> 0}}]]
+
+Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[{NoteDuration/.{opts}/.Options[Melody],{#,Velocity/.{opts}/.Options[Melody]}}& /@ p,opts]
 
 Note[p_, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
 
 Melody /: Show[x_Melody] := Show[Snippet[x]]
 
+Progression[x_Counterpoint, opts___?OptionQ] := Progression[Chord[#]&/@ParOfSeqToSeqOfPar[Data /@ x]]
+
 p2f = Function[p, 220*2^((p - 57)/12)];
 v2a = Function[v, v/127];
-zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]] &];
+zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]]&];
 
 Melody /: Snippet[x_Melody, opts___?OptionQ] :=
   Module[{d,p,v,f,a,sr=SampleRate/.{opts}/.Options[Snippet]},
+    (* todo: use NoteFunction here *)
     d = (Duration /@ x) * sr;
     p = PitchCode /@ x /. {DataNoValue -> 0};
     v = Velocity /@ x /. {DataNoValue -> 0};
