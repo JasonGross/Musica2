@@ -848,6 +848,19 @@ MidiSetShape[m : Midi[_, _], MidiChord] :=
     MidiChord
     ] /; MidiGetShape[m]===MidiFile
 
+MidiSetState[m : Midi[_, _], s_, pr_:False] :=
+  Module[{f, t = FillPath[MidiGetState[m], MidiGetState[s]], p, r = m},
+    f = Position[MidiStatesExpanded, MidiGetState[m]][[1, 1]];
+    t = Position[MidiStatesExpanded, t][[1, 1]];
+    If[pr,Print[{f, t}]];
+    p = Drop[MidiStateRoutes[[f, t]], 1];
+    If[pr,Print[p]];
+    p = MidiStatesExpanded[[#]] & /@ p;
+    If[pr,Print[ColumnForm[p]]];
+    Scan[(r = MidiSetStateLow[r, #]) &, p];
+    r
+    ]
+
 MidiSetStateLow[m:Midi[_,_],i_]:=
   MidiSetShape[m,MidiVoice]/;
     MatchQ[MidiGetState[m],
@@ -927,19 +940,6 @@ MidiSetStateLow[m:Midi[_,_],i_]:=
         FillState[{MidiShape\[Rule](MidiVoice|MidiChord),
             MidiTiming\[Rule]MidiAbsolute}]]&&
       Complement[i,MidiGetState[m]]\[Equal]{MidiTiming\[Rule]MidiDelta}
-
-MidiSetState[m : Midi[_, _], s_] :=
-  Module[{f, t = FillPath[MidiGetState[m], MidiGetState[s]], p, r = m},
-    f = Position[MidiStatesExpanded, MidiGetState[m]][[1, 1]];
-    t = Position[MidiStatesExpanded, t][[1, 1]];
-    Print[{f, t}];
-    p = Drop[MidiStateRoutes[[f, t]], 1];
-    Print[p];
-    p = MidiStatesExpanded[[#]] & /@ p;
-    Print[ColumnForm[p]];
-    Scan[(r = MidiSetStateLow[r, #]) &, p];
-    r
-    ]
 
 MidiSetTimeUnit[m:Midi[_,_],u_] := m /; MidiGetTimeUnit[m]===u
 
