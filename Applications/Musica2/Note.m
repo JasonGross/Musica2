@@ -158,7 +158,8 @@ ChordQ[expr_] := MatchQ[expr,Chord[_?OptionQ,{_,{{_,_}...}}]]
 
 ChordsToMelodies[c:{_Chord,_Chord...}] := Melody/@SeqOfParToParOfSeq[#[[2]]&/@c]
 
-GetData[x_?((ChordQ[#]||MelodyQ[#])&)] := x[[2]]
+GetData[c_?ChordQ] := c[[2]]
+GetData[m_?MelodyQ] := m[[2]]
 
 GetDuration[c_?ChordQ] := c[[2,1]]
 GetDuration[m_?MelodyQ] := Total[GetDurations[m]]
@@ -169,7 +170,8 @@ GetDurationLCM[x_] := LCM@@Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$
 GetDurationMean[x_] := Mean[Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]]
 GetDurationRange[x_] := {Min[#],Max[#]}&[Cases[Flatten[GetDurations[x]],p$_/;(!DataNoValueQ[p$])]]
 
-GetInfo[x_?((ChordQ[#]||MelodyQ[#])&)] := x[[1]]
+GetInfo[c_?ChordQ] := c[[1]]
+GetInfo[m_?MelodyQ] := m[[1]]
 
 GetNoteCount[c_?ChordQ] := Length[c[[2,2]]]
 GetNoteCount[m_?MelodyQ] := Length[m[[2]]]

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`EventList` *)
 
 (* :History:
+  2004-09-13  bch :  Musica and Musica2 dont seem to get along very well.
   2004-08-27  bch :  added message todo
   2004-08-26  bch :  added some help/usage-text
   2004-08-10  bch :  changed MidiToEventList to call MidiSetState
@@ -55,9 +56,11 @@ Unprotect[
   MidiToEventList
   ];
 
+EventList::todo = "Having Note, Track and Event in both Musica and Musica2 seems to cause problems."
 EventListToMidi::todo = "Currently the only channel-events processed are NoteOn's and NoteOff's."
 MidiToEventList::todo = "Currently the only channel-events processed are NoteOn's and NoteOff's."
 
+EventList::usage = ""<>ToDoString<>EventList::todo
 EventListToMidi::usage = "EventListToMidi[e] takes an EventList-object as an argument and converts it to a Midi-object."<>ToDoString<>EventListToMidi::todo
 MidiToEventList::usage = "MidiToEventList[m] takes an Midi-object as an argument and converts it to a EventList-object."<>ToDoString<>MidiToEventList::todo
 
@@ -80,10 +83,10 @@ EventListToMidi[e_] :=
       ]
     ]
 
-MidiToEventList[m_] :=
+MidiToEventList[m_Midi] :=
   Module[{},
     EventList[MIDI, Tick, {},Evaluate[{MIDIFileFormat -> (MidiFileFormat /. m[[1]] /. Options[Midi]), TPQ -> (MidiTPQ /. m[[1]] /. Options[Midi])}]] @@ (
-      (Track @@ (Event[#[[1]],
+      (Musica`Track @@ (Musica`Event[#[[1]],
         If[#[[2, 1]] === MidiNoteOn, NoteOn[#[[2, 2, 2]], #[[2, 2, 3]], #[[2, 2, 1]]+1],
           If[#[[2, 1]] === MidiNoteOff,NoteOff[#[[2, 2, 2]], #[[2, 2, 3]], #[[2, 2, 1]]+1],
             If[#[[2, 1]] === MidiSysX0, Sysex[Prepend[#[[2, 2]],MidiSysX0]],

@@ -6,16 +6,14 @@
 
 :Contact: bo@gcab.net
 
-:History:
-  2004-09-12  bch :  started writing it
-
 ------------------------------------------------------------
 
 Important todo's:
 
-...
+Introduce a Track- and an Event-object.
+
+------------------------------------------------------------
 
 Possible todo's:
 
-Get rid of all Midi- and Sound prefix.
-
+Get rid of all Midi- and Sound- prefix's.

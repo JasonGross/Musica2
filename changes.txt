@@ -6,8 +6,5 @@
 
 :Contact: bo@gcab.net
 
-:History:
-  2004-09-12  bch :  started writing it
-
 ------------------------------------------------------------
 

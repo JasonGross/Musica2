@@ -24,11 +24,6 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 :Contact: bo@gcab.net
 
-:History:
-  2004-09-12  bch :  better words..?
-  2004-08-10  bch :  then added some
-  2004-08-05  bch :  started writing it
-
 ------------------------------------------------------------
 
 Welcome to Musica2.

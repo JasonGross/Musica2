@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-9-12 at 12:28 *)
+(* :History: File created 2004-9-13 at 16:49 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -18,16 +18,13 @@ DeclarePackage["Musica2`Common`",
  "SetDuration", "SetDurations", "SetInfo"}
 ];
 
-DeclarePackage["Musica2`EventList`",
-{"EventListToMidi", "MidiToEventList"}
-];
-
 DeclarePackage["Musica2`Midi`",
-{"Midi", "MidiAbsolute", "MidiAddChords", "MidiAddEvents", "MidiAddMelodies", 
- "MidiAddNotes", "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDelta", 
- "MidiEmpty", "MidiEOT", "MidiExportSMF", "MidiFile", "MidiFileFormat", 
- "MidiFixEOT", "MidiFixNoteOff", "MidiFixTime", "MidiGetChannels", 
- "MidiGetChords", "MidiGetMelodies", "MidiGetNotes", "MidiGetPitchRange", 
+{"AddEvents", "AddTracks", "Event", "EventQ", "GetEvents", "GetTracks", 
+ "Midi", "MidiAbsolute", "MidiAddChords", "MidiAddMelodies", "MidiAddNotes", 
+ "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDelta", "MidiEmpty", 
+ "MidiEOT", "MidiExportSMF", "MidiFile", "MidiFileFormat", "MidiFixEOT", 
+ "MidiFixNoteOff", "MidiFixTime", "MidiGetChannels", "MidiGetChords", 
+ "MidiGetMelodies", "MidiGetNotes", "MidiGetPitchRange", 
  "MidiGetPitchRanges", "MidiGetQPM", "MidiGetSecToTickFunction", 
  "MidiGetShape", "MidiGetState", "MidiGetTickToSecFunction", 
  "MidiGetTimeUnit", "MidiGetTiming", "MidiGetTPQ", "MidiImportSMF", 
@@ -45,7 +42,7 @@ DeclarePackage["Musica2`Midi`",
  "MidiStateRoutes", "MidiStates", "MidiStatesExpanded", "MidiSysX0", 
  "MidiSysX7", "MidiTempo", "MidiTick", "MidiTimeBend", "MidiTimeFlip", 
  "MidiTimeShift", "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", 
- "MidiTPQ", "MidiUnPar", "MidiUnSeq"}
+ "MidiTPQ", "MidiUnPar", "MidiUnSeq", "Track", "TrackQ"}
 ];
 
 DeclarePackage["Musica2`MidiPlay`",

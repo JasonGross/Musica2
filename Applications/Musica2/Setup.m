@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-09-13  bch :  removed EventList from the list of pkg's
   2004-09-03  bch :  added Note and Common to the list of pkg's
   2004-08-27  bch :  added ToDo function
   2004-08-26  bch :  added some help/usage-text
@@ -108,7 +109,7 @@ CalcMidiStateRoutes[m_Midi, opts___] :=
 
 fn="Musica2/Applications/Musica2/Kernel/init.m";
 pkg="Musica2";
-pkgs={"Common","EventList","Midi","MidiPlay","Note","Setup","Sound","Utils"};
+pkgs={"Common","Midi","MidiPlay","Note","Setup","Sound","Utils"};
 
 ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
 ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]
