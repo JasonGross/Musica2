@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Instrument` *)
 
 (* :History:
+  2005-01-17  bch :  renamed SimpleSine to BasicInstrument and changed its struct
   2005-01-09  bch :  created
 *)
 
@@ -55,38 +56,37 @@ Unprotect[
 Unprotect[
   ];
 
-CreateElement[SimpleSine, {Tuner_},Null,"todo"];
+CreateElement[BasicInstrument, {P2F_,V2A_,T2S_},Null,"todo"];
   
 Instrument::usage = "todo"
 
 Begin["`Private`"]
 
-v2a = Function[v, v/127];
-zin = Function[{f, a, sr}, N[a Sin[2Pi f#/sr]]&];
-
-Convert[Melody, Snippet, x_SimpleSine, opts___?OptionQ] :=
+Convert[Melody, Snippet, x_BasicInstrument, opts___?OptionQ] :=
   Module[
     {
       sr = SampleRate/.{opts}/.Options[Sound],
-      tf = Convert[PitchCode,Frequency,Tuner[x]]
+      p2f = P2F[x],
+      v2a = V2A[x],
+      t2s = T2S[x]
       },
     Function[m,
       Module[{d,p,v,f,a},
         (* todo: use NoteFunction here *)
         d = NoteDuration[m] * sr;
         {p,v}=Transpose[MapThread[If[DataPlainValueQ[{#1,#2}],{#1,#2},{0,0}]&,{PitchCode[m],Velocity[m]}]];
-        f = MakeNestedIfs[Transpose[{d,tf /@ p}]];
+        f = MakeNestedIfs[Transpose[{d,p2f /@ p}]];
         a = MakeNestedIfs[Transpose[{d,v2a /@ v}]];
-        Snippet[{SampledSoundFunction,Function[t, zin[f[t], a[t], sr][t]],Round[sr],Round[Duration[m]sr]},Sequence@@RemOpts[{opts},SampleRate]]
+        Snippet[{SampledSoundFunction,Function[t, t2s[f[t],a[t],sr][t]],Round[sr],Round[Duration[m]sr]},Sequence @@ RemOpts[{opts},SampleRate]]
         ]
       ]
     ]
 
 Convert[Melody, Snippet, opts___?OptionQ] := Convert[Melody, Snippet, Instrument, opts]
 
-Instrument := SimpleSine[]
+Instrument := BasicInstrument[]
 
-SimpleSine[] := SimpleSine[{Tuning}]
+BasicInstrument[] := BasicInstrument[{Convert[PitchCode,Frequency,Tuning],Function[v, v/127],Function[{f,a,sr},N[a Sin[2Pi f #/sr]]&]}]
 
 End[]
 
