@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-11 at 10:18 *)
+(* :History: File created 2004-8-13 at 14:50 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -18,11 +18,12 @@ DeclarePackage["Musica2`EventList`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"Midi", "MidiAbsolute", "MidiChord", "MidiControlChange", "MidiDelta", 
+{"e", "e$", "m", "Midi", "MidiAbsolute", "MidiAddEvents", "MidiAddNotes", 
+ "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDelta", "MidiEmpty", 
  "MidiEOT", "MidiEqualizeEOT", "MidiExpandStatePaths", "MidiExpandStates", 
  "MidiExportSMF", "MidiFile", "MidiFileFormat", "MidiGetChannels", 
- "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", "MidiGetQPM", 
- "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
+ "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", "MidiGetNotes", 
+ "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
  "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
  "MidiGetTPQ", "MidiImportSMF", "MidiKeySignature", "MidiMeta", 
  "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", "MidiPatternChord", 
@@ -34,7 +35,8 @@ DeclarePackage["Musica2`Midi`",
  "MidiShape", "MidiStatePaths", "MidiStatePathsExpanded", "MidiStateRoutes", 
  "MidiStates", "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", 
  "MidiTick", "MidiTie", "MidiTieQ", "MidiTimeSignature", "MidiTimeUnit", 
- "MidiTiming", "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
+ "MidiTiming", "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction", "mx", 
+ "m$", "n", "n$"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -52,7 +54,7 @@ DeclarePackage["Musica2`Sound`",
 
 DeclarePackage["Musica2`Utils`",
 {"DeltasToValues", "FunctionQ", "FuncToList", "ListToFunc", "MakeNestedIfs", 
- "UnCompile", "ValuesToDeltas"}
+ "NormalizeList", "UnCompile", "ValuesToDeltas"}
 ];
 
 Null

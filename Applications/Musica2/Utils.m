@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-08-11  bch :  moved FuncToList & ListToFunc from Utils.m to Sound.m
   2004-08-10  bch :  used the ListInterpolation function inside ListToFunc
                      changed FunctionQ and UnCompile to also handle InterpolatingFunction's
   2004-08-08  bch :  just found out about Composition which has now replaced ReArg1
@@ -52,19 +53,17 @@ BeginPackage["Musica2`Utils`",
 
 Unprotect[
   DeltasToValues,
-  FuncToList,
   FunctionQ,
-  ListToFunc,
   MakeNestedIfs,
+  NormalizeList,
   UnCompile,
   ValuesToDeltas
   ];
 
 DeltasToValues::usage = "DeltasToValues[d_, c_:0]";
-FuncToList::usage = "FuncToList[f_, sr_, duration_]"
 FunctionQ::usage = ""
-ListToFunc::usage = "ListToFunc[d_, sr_, opts___]"
 MakeNestedIfs::usage = "MakeNestedIfs[deltas$_, expr$_, default$_]"
+NormalizeList::usage = "NormalizeList[d_,opts___]"
 UnCompile::usage = "UnCompile[f_?FunctionQ]"
 ValuesToDeltas::usage = "ValuesToDeltas[t_]";
 
@@ -78,24 +77,7 @@ DeltasToValues[d_List, c_Integer:0] :=
 SlotQ[expr_] := !AtomQ[expr] && Length[expr]==1 && expr[[0]]===Slot && IntegerQ[expr[[1]]] && 0<expr[[1]]
 GetSlotNrs[f_]:=If[FunctionQ[f]||AtomQ[f],{},If[SlotQ[f],f[[1]],GetSlotNrs/@ReplacePart[f,List,{0}]]]
 
-FuncToList[f_, sr_, sd_] :=
-  Module[{sc},
-    sc = sr*sd;
-    Table[N[f[i/sr]], {i, 0, sc - 1}]
-    ]
-
 FunctionQ[expr_] := MatchQ[expr, _Function | _CompiledFunction | _Composition | _InterpolatingFunction]
-
-ListToFunc[d_, sr_, opts___] :=
-  Module[
-    {
-      sc = Length[d],
-      f,
-      io = InterpolationOrder /. {opts} /. {InterpolationOrder->0} (* is this wise? *)
-      },
-    f = ListInterpolation[Append[d,d[[-1]]],InterpolationOrder->io];
-    Function[t,Evaluate[f[1 + Mod[t*sr, sc]]]]
-    ]
 
 MNI[x$_, c$_, e$_, p$_, d$_] :=
   Module[{t$ = x$, r$},
@@ -125,6 +107,18 @@ MakeNestedIfs[de$:{{_,_}...}, defaultLo$_, defaultHi$_] :=
     Function[Evaluate[c$], Evaluate[i$]]
     ]
 
+NormalizeList[d_,opts___] :=
+  Module[
+    {
+      pr = PlayRange /. {opts},
+      md,sp
+      },
+    If[pr === PlayRange, pr = {Min[d],Max[d]}];
+    md = (pr[[1]]+pr[[2]])/2;
+    sp = (pr[[2]]-pr[[1]])/2;
+    N[(d-md)/sp]
+    ]
+
 UnCompile[f_CompiledFunction] := f[[5]]
 UnCompile[f_Function] := f
 UnCompile[f_Composition] := Function[x,Evaluate[f[x]]]
@@ -136,10 +130,9 @@ End[]
 
 Protect[
   DeltasToValues,
-  FuncToList,
   FunctionQ,
-  ListToFunc,
   MakeNestedIfs,
+  NormalizeList,
   UnCompile,
   ValuesToDeltas
   ];

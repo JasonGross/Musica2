@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-08-13  bch :  added MidiAddEvents, MidiAddNotes, MidiAddQPM, MidiEmpty and MidiGetNotes
   2004-08-10  bch :  removed MidiAddEOT, now incorporated into MidiEqualizeEOT
   2004-08-10  bch :  added MidiRest* and MidiTie*
   2004-08-09  bch :  used Reap/Sow and AppendTo as a speed boost, changed param to MidiVoiceReleaseTimeFunction
@@ -53,9 +54,13 @@ BeginPackage["Musica2`Midi`",
 Unprotect[
   Midi,
   MidiAbsolute,
+  MidiAddEvents,
+  MidiAddNotes,
+  MidiAddQPM,
   MidiChord,
   MidiControlChange,
   MidiDelta,
+  MidiEmpty,
   MidiEOT,
   MidiEqualizeEOT,
   MidiExpandStates,
@@ -67,6 +72,7 @@ Unprotect[
   MidiGetDuration,
   MidiGetDurations,
   MidiGetInfo,
+  MidiGetNotes,
   MidiGetQPM,
   MidiGetSecToTickFunction,
   MidiGetShape,
@@ -123,32 +129,37 @@ Unprotect[
 
 Midi::usage = "Midi[i, d] represents a midi object where i is the info about d, the midi data."
 MidiAbsolute::usage = "MidiTiming can be either MidiAbsolute or MidiDelta. If MidiTiming is MidiAbsolute, all timing information are absolute values. Observe that when in shape MidiVoice or MidiChord, MidiAbsolute means end-timing"
+MidiAddEvents::usage = "MidiAddEvents[mx_Midi,e:MidiPatternFile]"
+MidiAddNotes::usage = "MidiAddNotes[m_Midi,n:{{{{_,_},{_,_,_}}...}...}]"
+MidiAddQPM::usage = "MidiAddQPM[m : Midi[_, _], q : {{_, _} ...}]"
 MidiChord::usage = ""
 MidiControlChange::usage = ""
 MidiDelta::usage = "MidiTiming can be either MidiAbsolute or MidiDelta. If MidiTiming is MidiDelta, all timing information are delta values."
+MidiEmpty::usage = ""
 MidiEOT::usage = ""
-MidiEqualizeEOT::usage = "MidiEqualizeEOT[m:Midi[_,_]]"
+MidiEqualizeEOT::usage = "MidiEqualizeEOT[m_Midi]"
 MidiExpandStates::usage = "MidiExpandStates[s_]"
 MidiExpandStatePaths::usage = "MidiExpandStatePaths[p_]"
-MidiExportSMF::usage = "MidiExportSMF[fn_String,m:Midi[_,_],opts___]"
+MidiExportSMF::usage = "MidiExportSMF[fn_String,m_Midi,opts___]"
 MidiFile::usage = ""
 MidiFileFormat::usage = ""
-MidiGetChannels::usage = "MidiGetChannels[m:Midi[_,_]]"
-MidiGetDuration::usage = "MidiGetDuration[m:Midi[_,_]]"
-MidiGetDurations::usage = "MidiGetDurations[m:Midi[_,_]]"
+MidiGetChannels::usage = "MidiGetChannels[m_Midi]"
+MidiGetDuration::usage = "MidiGetDuration[m_Midi]"
+MidiGetDurations::usage = "MidiGetDurations[m_Midi]"
 MidiGetInfo::usage = ""
+MidiGetNotes::usage = "MidiGetNotes[mx_Midi]"
 MidiGetQPM::usage = "MidiGetQPM[m : Midi[_, _]]"
 MidiGetSecToTickFunction::usage = "MidiGetSecToTickFunction[m : Midi[_, _]]"
-MidiGetShape::usage = "MidiGetShape[m:Midi[_,_]]"
+MidiGetShape::usage = "MidiGetShape[m_Midi]"
 MidiGetState::usage = "MidiGetState[m : Midi[_, _]]"
 MidiGetTickToSecFunction::usage = "MidiGetTickToSecFunction[m : Midi[_, _]]"
-MidiGetTimeUnit::usage = "MidiGetTimeUnit[m:Midi[_,_]]"
-MidiGetTiming::usage = "MidiGetTiming[m:Midi[_,_]]"
-MidiGetTPQ::usage = "MidiGetTPQ[m:Midi[_,_]]"
+MidiGetTimeUnit::usage = "MidiGetTimeUnit[m_Midi]"
+MidiGetTiming::usage = "MidiGetTiming[m_Midi]"
+MidiGetTPQ::usage = "MidiGetTPQ[m_Midi]"
 MidiImportSMF::usage = "MidiImportSMF[fn_String,opts___]"
 MidiKeySignature::usage = ""
 MidiMeta::usage = ""
-MidiNormalizeNoteOff::usage = "MidiNormalizeNoteOff[m:Midi[_,_], v2z_:False]"
+MidiNormalizeNoteOff::usage = "MidiNormalizeNoteOff[m_Midi, v2z_:False]"
 MidiNoteOff::usage = ""
 MidiNoteOn::usage = ""
 MidiPatternData::usage = ""
@@ -194,7 +205,7 @@ Begin["`Private`"]
 
 EOT = {MidiEOT,{}};
 
-Format[m:Midi[_,_]] :=
+Format[m_Midi] :=
   If[MidiGetShape[m]===MidiFile,
     StringForm["Midi[`1`,{{{timing, {type, data}}...}...}]",m[[1]]],
     If[MidiGetShape[m]===MidiVoice,
@@ -213,11 +224,47 @@ Options[Midi]=
     MidiTPQ -> 960
     }
 
+MidiAddEvents[mx_Midi,e_]:=
+  Module[{m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}],t,te,tm},
+    t=Max[te=Length[e],tm=Length[m[[2]]]];
+    MidiSetState[
+      Midi[
+        m[[1]],
+        MapThread[Join,{Join[m[[2]],Table[{},{t-tm}]],Join[e,Table[{},{t-te}]]}]
+        ],
+      MidiGetState[mx]
+      ]
+    ]
+
+MidiAddNotes[m_Midi,n:{{{{_,_},{_,_,_}}...}...}]:=
+  MidiAddEvents[m,
+    Flatten[
+      {
+        {#[[1,1]],{MidiNoteOn,#[[2]]}},
+        {#[[1,2]],{MidiNoteOff,ReplacePart[#[[2]],0,{3}]}}
+        }&
+        /@#,1]&/@n
+    ]
+
+MidiAddQPM[m : Midi[_, _], q : {{_, _} ...}] :=
+  MidiAddEvents[m, {{
+    #[[1]],
+    Round[
+      {MidiTempo, {
+        Mod[IntegerPart[#/65536], 256],
+        Mod[IntegerPart[#/256], 256],
+        Mod[#, 256]
+        } &[60000000/#[[2]]]}
+      ]
+    } & /@ q}]
+
 MidiControlChange = 3;
+
+MidiEmpty = Midi[{MidiShape->MidiFile,MidiTiming->MidiAbsolute,MidiTimeUnit->MidiTick},{}]
 
 MidiEOT = {MidiMeta,16^^2F};
 
-MidiEqualizeEOT[mx:Midi[_,_],keep_:False] := (* this function also adds EOT if missing. if the keep parameter is true the max-duration is kept *)
+MidiEqualizeEOT[mx_Midi,keep_:False] := (* this function also adds EOT if missing. if the keep parameter is true the max-duration is kept *)
   Module[{d,m=MidiSetState[mx,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]},
     If[keep,d=MidiGetDuration[m]];
     m[[2]] = Cases[Sort[#],e$_/;!MatchQ[e$,{_,EOT}]->e$]& /@ m[[2]];
@@ -271,11 +318,11 @@ MidiExpandStatePaths[p_] :=
     Sort[Flatten[r, 1]]
     ]
 
-MidiExportSMF[fn_String,mx:Midi[_,_], opts___] :=
+MidiExportSMF[fn_String,mx_Midi, opts___] :=
   Module[{m=mx,f=Null},
     m = MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiDelta,MidiTimeUnit->MidiTick}];
-    m = MidiEqualizeEOT[m];
-    f=OpenWriteBinary[fn];
+    m = MidiEqualizeEOT[m];(* an option for this? especially since it sorts the events! *)
+    f = OpenWriteBinary[fn];
     Catch[
       WriteString[f,"MThd"];
       WriteInt[f,4,6];
@@ -292,16 +339,28 @@ MidiExportSMF[fn_String,mx:Midi[_,_], opts___] :=
     m
     ]
 
-MidiGetChannels[m:Midi[_,_]] :=
+MidiGetChannels[m_Midi] :=
   Union[
     Cases[#,{_,{MidiNoteOn,{c$_,_,_}}}->c$]
     ]& /@ m[[2]] /; MidiGetShape[m]===MidiFile
 
-MidiGetDuration[m:Midi[_,_]] := Max[MidiGetDurations[m]]
+MidiGetDuration[m_Midi] := Max[MidiGetDurations[m]]
 
-MidiGetDurations[m:Midi[_,_]] := (Max[#[[1]]& /@ #]& /@ MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}][[2]])
+MidiGetDurations[m_Midi] := (Max[#[[1]]& /@ #]& /@ MidiSetState[m,{MidiShape->MidiFile,MidiTiming->MidiAbsolute}][[2]])
 
-MidiGetInfo[m:Midi[_,_]] := m[[1]]
+MidiGetInfo[m_Midi] := m[[1]]
+
+MidiGetNotes[mx_Midi] :=
+  Module[{m = MidiNormalizeNoteOff[MidiSetState[mx, {MidiShape -> MidiFile, MidiTiming -> MidiAbsolute}]], on, off},
+    Function[t,
+      (*get note - on as {{ch, p, tick, v} ...}*)
+      on = Cases[t, {tick$_, {MidiNoteOn, {c$_, p$_, v$_}}} -> {c$, p$, tick$, v$}];
+      (*get note - off as {{ch, p, tick, v} ...}*)
+      off = Cases[t, {tick$_, {MidiNoteOff, {c$_, p$_, v$_}}} -> {c$, p$, tick$, v$}];
+      (*set to {{{on, off}, {ch, p, v}} ...}*)
+      MapThread[{{#1[[3]], #2[[3]]}, {#1[[1]], #1[[2]], #1[[4]]}} &, {on, off}]
+      ] /@ m[[2]]
+    ]
 
 MidiGetQPMLow[m : Midi[_, _]] :=
   Module[{ma = MidiSetState[m, {MidiTiming->MidiAbsolute}],u},
@@ -390,7 +449,7 @@ MidiGetSecToTickFunction[m : Midi[_, _]] :=
     Function[t, Evaluate[Round[MakeNestedIfs[Transpose[{td, Drop[f, -1]}], f[[1]], f[[-1]]][t][t]]]]
     ] /; MidiGetTimeUnit[m] === MidiSec
 
-MidiGetShape[m:Midi[_,_]] := MidiShape /. m[[1]]
+MidiGetShape[m_Midi] := MidiShape /. m[[1]]
 
 MidiGetState[s_List] := Module[{t = #[[1]] & /@ MidiStates}, Sort[Cases[s, Rule[p$_, _] /; MemberQ[t, p$]]]]
 
@@ -429,11 +488,11 @@ MidiGetTickToSecFunction[m : Midi[_, _]] :=
     Function[t, Evaluate[MakeNestedIfs[Transpose[{td, Drop[f, -1]}], f[[1]], f[[-1]]][t][t]]]
     ] /; MidiGetTimeUnit[m] === MidiTick
 
-MidiGetTimeUnit[m:Midi[_,_]] := MidiTimeUnit /. m[[1]]
+MidiGetTimeUnit[m_Midi] := MidiTimeUnit /. m[[1]]
 
-MidiGetTiming[m:Midi[_,_]] := MidiTiming /. m[[1]]
+MidiGetTiming[m_Midi] := MidiTiming /. m[[1]]
 
-MidiGetTPQ[m:Midi[_,_]] := MidiTPQ /. m[[1]] /. Options[Midi]
+MidiGetTPQ[m_Midi] := MidiTPQ /. m[[1]] /. Options[Midi]
 
 MidiImportSMF[fn_String,opts___]:=
   Module[
@@ -469,7 +528,7 @@ MidiKeySignature = {MidiMeta,16^^59};
 
 MidiMeta = 16^^FF;
 
-MidiNormalizeNoteOff[m:Midi[_,_],v2z_:False]:=
+MidiNormalizeNoteOff[m_Midi,v2z_:False]:=
   Midi[
     Sort[m[[1]]],
     (
@@ -536,7 +595,7 @@ MidiSetState[m : Midi[_, _], s_, opts___] :=
     r
     ]
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[
     {
       am = MidiNormalizeNoteOff[m],
@@ -642,7 +701,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m],FS[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiVoice,MidiTiming->MidiDelta}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[{trm, trn, trx, tr},
     (* get all meta and sysx as {{{type, track}, {{end-tick, data}...}}...} *)
     trm = Select[m[[2]], MatchQ[#[[1, 1]], MidiSysX0 | MidiSysX7 | {MidiMeta,_}] &];
@@ -692,7 +751,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiVoice,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiFile}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[{g},
     (* group each type together, set g to {{{{type,track},{{timing,data}...}}...}...} *)
     g = Split[Sort[m[[2]]],(#1[[1,1]]===#2[[1,1]])&];
@@ -755,7 +814,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m],FS[{MidiShape->MidiVoice,MidiTimeUnit->MidiTick,MidiTiming->MidiDelta}]]&&(* DONT ALLOW MidiSec HERE!!! *)
          Complement[s,MidiGetState[m]]=={MidiShape->MidiChord}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[{g=m[[2]]},
     (* g is {{{type,{track...}},{{timing,{data...}}...}}...}, remember? *)
     (* set to {{{{type,track}...},{{{timing,data}...}...}}...} *)
@@ -797,7 +856,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiChord, MidiTiming->MidiDelta}]]&&
          Complement[s,MidiGetState[m]]=={MidiShape->MidiVoice}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[{f=MidiGetTickToSecFunction[m]},
     Midi[
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiSec)],
@@ -806,7 +865,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTimeUnit->MidiTick, MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiSec}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
 Module[{f=MidiGetTickToSecFunction[m]},
     Midi[
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiSec)],
@@ -815,7 +874,7 @@ Module[{f=MidiGetTickToSecFunction[m]},
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTimeUnit->MidiTick,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiSec}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[{f=MidiGetSecToTickFunction[m]},
     Midi[
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiTick)],
@@ -824,7 +883,7 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTimeUnit->MidiSec, MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiTick}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Module[{f=MidiGetSecToTickFunction[m]},
     Midi[
       Sort[m[[1]]/.(MidiTimeUnit->_)->(MidiTimeUnit->MidiTick)],
@@ -833,28 +892,28 @@ MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTimeUnit->MidiSec,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTimeUnit->MidiTick}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiAbsolute)],
     If[0<Length[#],Module[{td=Transpose[#]},td[[1]]=Drop[DeltasToValues[td[[1]]],1];Transpose[td]],#]& /@ m[[2]]
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTiming->MidiDelta}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiAbsolute}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiAbsolute)],
     {#[[1]],Module[{td=Transpose[#[[2]]]},Transpose[{Drop[DeltasToValues[td[[1]]],1],td[[2]]}]]}&/@m[[2]]
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->(MidiVoice|MidiChord), MidiTiming->MidiDelta}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiAbsolute}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiDelta)],
     If[0<Length[#],Module[{td=Transpose[Sort[#]]},td[[1]]=ValuesToDeltas[Prepend[td[[1]],0]];Transpose[td]],#]& /@ m[[2]]
     ] /; MatchQ[MidiGetState[m], FS[{MidiShape->MidiFile,MidiTiming->MidiAbsolute}]]&&
          Complement[s,MidiGetState[m]]=={MidiTiming->MidiDelta}
 
-MidiSetStateLow[m:Midi[_,_],s_, opts___]:=
+MidiSetStateLow[m_Midi,s_, opts___]:=
   Midi[
     Sort[m[[1]]/.(MidiTiming->_)->(MidiTiming->MidiDelta)],
     {#[[1]],Module[{td=Transpose[Sort[#[[2]]]]},Transpose[{ValuesToDeltas[Prepend[td[[1]],0]],td[[2]]}]]}&/@m[[2]]
@@ -964,34 +1023,45 @@ ListVarLen[i_]:=
     Join[16^^80+Drop[r,-1],Take[r,-1]]
     ]
 
+ReadSysX[f_,type_] :=
+  Module[{s},
+    s=ReadVarLen[f];
+    If[s!=0,
+      {type,ReadList[f,Byte,s]},
+      {type,{}}
+      ]
+    ]
+
+ReadMeta[f_] :=
+  Module[{subtype,s},
+    subtype=Read[f,Byte];
+    s=ReadVarLen[f];
+    If[s!=0,
+      {{MidiMeta,subtype},ReadList[f,Byte,s]},
+      {{MidiMeta,subtype},{}}
+      ]
+    ]
+
+ReadChannel[f_,r_] :=
+  Module[{type,channel,s,x={}},
+    type=BitAnd[IntegerPart[r[[1]]/2^4],16^^7];
+    channel=BitAnd[r[[1]],16^^F];
+    s={3,3,3,3,2,2,3}[[type+1]]-Length[r];
+    If[s!=0,x=ReadList[f,Byte,s]];
+    {type,Join[{channel},Drop[r,1],x]}
+    ]
+
 ReadEvent[f_,rt_]:=
-  Module[{d=ReadVarLen[f],b,s,t,c,r,z={3,3,3,3,2,2,3}},
+  Module[{d=ReadVarLen[f],b,r},
     b=Read[f,Byte];
     If[b==MidiSysX0||b==MidiSysX7,
-      s=ReadVarLen[f];
-      If[s!=0,
-        r={rt,{d,{b,ReadList[f,Byte,s]}}},
-        r={rt,{d,{b,{}}}}
-        ],
+      {rt,{d,ReadSysX[f,b]}},
       If[b==MidiMeta,
-        t=Read[f,Byte];
-        s=ReadVarLen[f];
-        If[s!=0,
-          r={rt,{d,{{b,t},ReadList[f,Byte,s]}}},
-          r={rt,{d,{{b,t},{}}}}
-          ],
-        If[b<16^^80,
-          r={rt,b},
-          r={b}
-          ];
-        t=BitAnd[IntegerPart[r[[1]]/2^4],16^^7];
-        c=BitAnd[r[[1]],16^^F];
-        s=z[[t+1]]-Length[r];
-        If[s!=0,r=Join[r,ReadList[f,Byte,s]]];
-        r={r[[1]],{d,{t,Prepend[Drop[r,1],c]}}};
+        {rt,{d,ReadMeta[f]}},
+        r=If[b<16^^80,{rt,b},{b}];
+        {r[[1]],{d,ReadChannel[f,r]}}
         ]
-      ];
-    r
+      ]
     ]
 
 ReadTrack[f_]:=
@@ -1010,12 +1080,27 @@ ReadTrack[f_]:=
       ]
     ]
 
+ListSysX[{type_,data_}]:=
+  {type,Length[data],data}
+
+ListMeta[{type:{_,sybtype_},data_}]:=
+  {type,Length[data],data}
+
+ListChannel[{type_,{channel_,data__}}]:=
+  {16^^80+2^4type+channel,data}
+
 ListTrack[t_]:=
   Function[e,
-    If[MatchQ[e[[2,1]],MidiSysX0|MidiSysX7|{MidiMeta,_}],
-      {ListVarLen[e[[1]]],e[[2,1]],Length[e[[2,2]]],e[[2,2]]},
-      {ListVarLen[e[[1]]],16^^80+2^4e[[2,1]]+e[[2,2,1]],Drop[e[[2,2]],1]}
-      ]
+    {
+      ListVarLen[e[[1]]],
+      If[MatchQ[e[[2,1]],MidiSysX0|MidiSysX7],
+        ListSysX[e[[2]]],
+        If[MatchQ[e[[2,1]],{MidiMeta,_}],
+          ListMeta[e[[2]]],
+          ListChannel[e[[2]]]
+          ]
+        ]
+      }
     ]/@t
 
 WriteTrack[f_,t_]:=
@@ -1032,9 +1117,13 @@ End[]
 Protect[
   Midi,
   MidiAbsolute,
+  MidiAddEvents,
+  MidiAddNotes,
+  MidiAddQPM,
   MidiChord,
   MidiControlChange,
   MidiDelta,
+  MidiEmpty,
   MidiEOT,
   MidiEqualizeEOT,
   MidiExpandStates,
@@ -1046,6 +1135,7 @@ Protect[
   MidiGetDuration,
   MidiGetDurations,
   MidiGetInfo,
+  MidiGetNotes,
   MidiGetQPM,
   MidiGetSecToTickFunction,
   MidiGetShape,
