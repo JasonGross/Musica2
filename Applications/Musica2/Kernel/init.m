@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-8-13 at 17:47 *)
+(* :History: File created 2004-8-14 at 17:37 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -18,26 +18,26 @@ DeclarePackage["Musica2`EventList`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"e", "e$", "m", "Midi", "MidiAbsolute", "MidiAddEvents", "MidiAddNotes", 
- "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDelta", "MidiEmpty", 
- "MidiEOT", "MidiEqualizeEOT", "MidiExpandStatePaths", "MidiExpandStates", 
+{"Midi", "MidiAbsolute", "MidiAddEOT", "MidiAddEvents", "MidiAddNotes", 
+ "MidiAddQPM", "MidiChord", "MidiControlChange", "MidiDataAnyValue", 
+ "MidiDataAnyValueQ", "MidiDataNoValue", "MidiDataNoValueQ", "MidiDelta", 
+ "MidiEmpty", "MidiEOT", "MidiExpandStatePaths", "MidiExpandStates", 
  "MidiExportSMF", "MidiFile", "MidiFileFormat", "MidiGetChannels", 
  "MidiGetDuration", "MidiGetDurations", "MidiGetInfo", "MidiGetNotes", 
  "MidiGetQPM", "MidiGetSecToTickFunction", "MidiGetShape", "MidiGetState", 
  "MidiGetTickToSecFunction", "MidiGetTimeUnit", "MidiGetTiming", 
  "MidiGetTPQ", "MidiImportSMF", "MidiKeySignature", "MidiMeta", 
- "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", "MidiPatternChord", 
- "MidiPatternData", "MidiPatternFile", "MidiPatternInfo", "MidiPatternMidi", 
- "MidiPatternMusic", "MidiPatternTiming", "MidiPatternTrack", 
- "MidiPatternType", "MidiPatternVoice", "MidiQPM", "MidiRemEvents", 
- "MidiRemNotes", "MidiRemQPM", "MidiRest", "MidiRestPitch", "MidiRestPitchQ", 
- "MidiRestQ", "MidiRestVelocity", "MidiRestVelocityQ", "MidiSec", 
- "MidiSetNotes", "MidiSetQPM", "MidiSetState", "MidiSetStateLow", 
- "MidiShape", "MidiStatePaths", "MidiStatePathsExpanded", "MidiStateRoutes", 
- "MidiStates", "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", 
- "MidiTick", "MidiTie", "MidiTieQ", "MidiTimeSignature", "MidiTimeUnit", 
- "MidiTiming", "MidiTPQ", "MidiVoice", "MidiVoiceReleaseTimeFunction", "mx", 
- "m$", "n", "n$"}
+ "MidiMilliSec", "MidiNormalizeNoteOff", "MidiNoteOff", "MidiNoteOn", 
+ "MidiPar", "MidiPatternChord", "MidiPatternData", "MidiPatternFile", 
+ "MidiPatternInfo", "MidiPatternMidi", "MidiPatternMusic", 
+ "MidiPatternTiming", "MidiPatternTrack", "MidiPatternType", 
+ "MidiPatternVoice", "MidiQPM", "MidiRemEvents", "MidiRemNotes", 
+ "MidiRemQPM", "MidiSec", "MidiSeq", "MidiSetNotes", "MidiSetQPM", 
+ "MidiSetState", "MidiSetStateLow", "MidiShape", "MidiStatePaths", 
+ "MidiStatePathsExpanded", "MidiStateRoutes", "MidiStates", 
+ "MidiStatesExpanded", "MidiSysX0", "MidiSysX7", "MidiTempo", "MidiTick", 
+ "MidiTie", "MidiTieQ", "MidiTimeSignature", "MidiTimeUnit", "MidiTiming", 
+ "MidiTPQ", "MidiUnTie", "MidiVoice", "MidiVoiceReleaseTimeFunction"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -45,17 +45,18 @@ DeclarePackage["Musica2`Setup`",
 ];
 
 DeclarePackage["Musica2`Sound`",
-{"SoundChannelCount", "SoundDuration", "SoundFuncQ", "SoundGetChannelCount", 
- "SoundGetDuration", "SoundGetFunc", "SoundGetInfo", "SoundGetList", 
- "SoundGetSampleCount", "SoundGetSampleRate", "SoundImportWav", "SoundListQ", 
- "SoundLoop", "SoundMakeFunc", "SoundMakeList", "SoundMix", "SoundOfSilence", 
- "SoundPar", "SoundPitchShift", "SoundSampleCount", "SoundSeq", 
- "SoundSetDuration", "SoundType", "SoundUnPar", "SoundUnSeq", "Zound"}
+{"FuncToList", "ListToFunc", "SoundChannelCount", "SoundDuration", 
+ "SoundFuncQ", "SoundGetChannelCount", "SoundGetDuration", "SoundGetFunc", 
+ "SoundGetInfo", "SoundGetList", "SoundGetSampleCount", "SoundGetSampleRate", 
+ "SoundImportWav", "SoundListQ", "SoundLoop", "SoundMakeFunc", 
+ "SoundMakeList", "SoundMix", "SoundOfSilence", "SoundPar", 
+ "SoundPitchShift", "SoundSampleCount", "SoundSeq", "SoundSetDuration", 
+ "SoundType", "SoundUnPar", "SoundUnSeq", "Zound"}
 ];
 
 DeclarePackage["Musica2`Utils`",
-{"DeltasToValues", "FunctionQ", "FuncToList", "ListToFunc", "MakeNestedIfs", 
- "NormalizeList", "UnCompile", "ValuesToDeltas"}
+{"DeltasToValues", "FunctionQ", "MakeNestedIfs", "NormalizeList", 
+ "UnCompile", "ValuesToDeltas"}
 ];
 
 Null

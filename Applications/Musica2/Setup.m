@@ -82,7 +82,10 @@ CalcMidiStateRoutes[m : Midi[_, _],opts___] :=
     MidiStatePathsExpanded = MidiExpandStatePaths[MidiStatePaths];
     e = {Position[MidiStatesExpanded, #][[1, 1]] & /@ #, \[Infinity]} & /@ MidiStatePathsExpanded;
     e = SW[e, m, pr];
-    If[MemberQ[e, {{_, _}, \[Infinity]}], Print["not connected?"]];
+    If[MemberQ[e, {{_, _}, \[Infinity]}],
+      Print["not connected?"];
+      Print[ColumnForm[Cases[e, {{_, _}, \[Infinity]}]]];
+      ];
     g = AddEdges[EmptyGraph[Length[MidiStatesExpanded], Type -> Directed], ReplacePart[#, EdgeWeight -> #[[2]], {2}] & /@ e];
     If[pr,ShowGraph[SetVertexLabels[g,StringJoin[(StringTake[ToString[#[[2]]], {5}]) & /@ #] & /@ MidiStatesExpanded], VertexNumber -> True]];
     sc=Length[MidiStatesExpanded];
