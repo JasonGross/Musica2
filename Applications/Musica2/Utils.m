@@ -115,7 +115,7 @@ ValuesToRatios::usage = "todo"
 
 Begin["`Private`"]
 
-AddOpts[x:{___?OptionQ},opts__?OptionQ] :=
+AddOpts[x:{___?OptionQ},opts___?OptionQ] :=
   Module[{o=x},
     Scan[
       If[(#[[1]]/.o)===#[[1]],o=AppendTo[o,#],o=o/.(#[[1]]->_)->#]&,

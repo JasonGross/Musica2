@@ -53,10 +53,10 @@ Unprotect[
 
 CreateElement[DurVal, {Duration_, Value_}, {1, Null}, "todo"]
 CreateContainer[DurValList, DurVal,
-"todo.\[NewLine]"
+"DurVal is experimental and might change A LOT or even be REMOVED.\[NewLine]"
 ]
 CreateElement[DurValType, {ValueType_, ValueList_DurValList}, {0, DurValList[{}]},
-"todo.\[NewLine]"
+"DurValType is experimental and might change A LOT or even be REMOVED.\[NewLine]"
 ]
 
 Begin["`Private`"]
@@ -74,6 +74,8 @@ Convert[Time, Value, x_DurValList] := MakeNestedIfs[Data /@ x,DataNoValue[x[[1,V
 Par[x : {__DurVal}]  := DurVal[{Duration[x[[1]]], Value /@ x}] /; (Length[Union[Duration /@ x]] === 1)
 Par[x : {__DurVal}]  := Par[DurValList /@ x]                   /; (Length[Union[Duration /@ x]] =!= 1)
 Par[x:{__DurValList}]:=DurValList[DurVal /@ ParOfSeqToSeqOfPar[Data[#]& /@ x]]
+Par[x:{__DurValType}]:=DurValType[{ValueType /@ x,Par[ValueList /@ x]}]
+
 Seq[x:{__DurVal}]    := DurValList[x]
 Seq[x:{__DurValList}]:=DurValList[Flatten[Data[#]& /@ x,1]]
 
@@ -111,6 +113,8 @@ DurValType /: TotalDuration[x_DurValType] := TotalDuration[ValueList[x]]
 
 DurVal     /: UnPar[x_DurVal]     := DurVal[{Duration[x], #}]& /@ Value[x]
 DurValList /: UnPar[x_DurValList] := DurValList[Transpose[{Duration[x],#}]]& /@ Transpose[Value[x]]
+DurValType /: UnPar[x_DurValType] := DurValType /@ Transpose[{ValueType[x],UnPar[ValueList[x]]}]
+
 DurValList /: UnSeq[x_DurValList] := DurVal[x]
 
 End[]

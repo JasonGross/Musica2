@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2005-1-29 at 12:38 *)
+(* :History: File created 2005-2-6 at 10:58 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -14,9 +14,9 @@ If[!MemberQ[$Packages,"Musica2`"],
 ];
 
 DeclarePackage["Musica2`Common`",
-{"Content", "Convert", "Duration", "Frequency", "Mix", "Octave", "Overtone", 
- "Par", "PitchCode", "Play2", "Seq", "Time", "TotalDuration", "UnPar", 
- "UnSeq"}
+{"Content", "Convert", "Damping", "Duration", "Frequency", "MidiChannel", 
+ "Mix", "Octave", "Overtone", "Par", "PitchCode", "Play2", "Seq", "Time", 
+ "TotalDuration", "UnPar", "UnSeq"}
 ];
 
 DeclarePackage["Musica2`DurVal`",
@@ -30,12 +30,14 @@ DeclarePackage["Musica2`Instrument`",
 ];
 
 DeclarePackage["Musica2`Midi`",
-{"Event", "EventData", "EventQ", "EventTime", "EventType", "EventTypeEOT", 
- "EventTypeKeySignature", "EventTypeMeta", "EventTypeNoteOff", 
- "EventTypeNoteOn", "EventTypeSysX0", "EventTypeSysX7", "EventTypeTempo", 
- "EventTypeTimeSignature", "Midi", "MidiChannel", "MidiQ", "MilliSecond", 
- "QPM", "Tempo", "TempoFunction", "TempoQ", "TempoTime", "TempoTrack", 
- "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
+{"Event", "EventData", "EventQ", "EventTime", "EventType", 
+ "EventTypeChannelPressure", "EventTypeControlChange", "EventTypeEOT", 
+ "EventTypeKeyPressure", "EventTypeKeySignature", "EventTypeMeta", 
+ "EventTypeNoteOff", "EventTypeNoteOn", "EventTypePitchBend", 
+ "EventTypeProgramChange", "EventTypeSysX0", "EventTypeSysX7", 
+ "EventTypeTempo", "EventTypeTimeSignature", "Midi", "MidiQ", "MilliSecond", 
+ "QPM", "Tempo", "TempoQ", "TempoTime", "TempoTrack", "TempoTrackQ", "Tick", 
+ "TimeUnit", "TPQ", "Track", "TrackQ"}
 ];
 
 DeclarePackage["Musica2`Naming`",
@@ -51,9 +53,9 @@ DeclarePackage["Musica2`Note`",
  "FigBass", "FigBassQ", "Intervals", "IntervalsQ", "KeyMode", "KeyModeQ", 
  "Melody", "MelodyQ", "ModeAeolian", "ModeDorian", "ModeIonian", 
  "ModeLocrian", "ModeLydian", "ModeMajor", "ModeMinor", "ModeMixolydian", 
- "ModePhrygian", "Note", "NoteFunction", "NotePlot", "NoteQ", "NoteRest", 
- "NoteRestQ", "NoteTie", "NoteTieQ", "Progression", "ProgressionQ", 
- "ScaleStep", "Steps", "ThirdStack", "ThirdStackQ", "Tonic", "Velocity"}
+ "ModePhrygian", "Note", "NotePlot", "NoteQ", "NoteRest", "NoteRestQ", 
+ "NoteTie", "NoteTieQ", "Progression", "ProgressionQ", "ScaleStep", "Steps", 
+ "ThirdStack", "ThirdStackQ", "Tonic", "Velocity"}
 ];
 
 DeclarePackage["Musica2`ObjectType`",

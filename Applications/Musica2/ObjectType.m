@@ -93,7 +93,7 @@ DeclareUsage[T_Symbol,text_String] := MessageName[T,"usage"] = If[StringQ[T::usa
 
 DeclareCommon[T_Symbol, U_String] := (
   DeclareUsage[T,
-    U<>"\[NewLine]"<>
+    U<>"\[NewLine]\[NewLine]"<>
     SymbolName[T]<>" is a generated object-type (see ObjectType.m).\[NewLine]"<>
     "An object of type "<>SymbolName[T]<>" has Head "<>SymbolName[T]<>" and two parts; opts and data.\[NewLine]"<>
     "The opts part must make OptionQ[opts] return True.\[NewLine]"<>
@@ -277,7 +277,7 @@ DefineContainer[T_Symbol, ET_Symbol] :=
       ];
 
     (* get member data *)
-    Scan[(T /: #[x_T] := # /@ x)&,Members[T]];
+    Scan[(T /: #[x_T] := # /@ ET[x])&,Members[T]];
 
     T /: DataToRules[x_T] := (# -> #[x]) & /@ Members[T];
 

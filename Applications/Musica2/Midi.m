@@ -29,6 +29,10 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2005-01-31  bch :  moved TimedNote to doc as an example
+                     bugfix in TotalDuration[x_Track]
+  2005-01-31  bch :  added some EventType* constants
+                     added the experimental object-type TimedNote
   2005-01-25  bch :  made Export work with both 5.0 and 5.1
                      yet another bugfix in Tidy[Track]
   2005-01-23  bch :  changed how channel-events are stored as Event's
@@ -100,7 +104,7 @@ Module[
     },
     If[$VersionNumber <= 5.0,p = Prepend[p,"Utilities`BinaryFiles`"]];
     BeginPackage["Musica2`Midi`",p]
-  ]
+  ];
 
 Unprotect[
   Convert,
@@ -119,6 +123,11 @@ Unprotect[
   EventTypeMeta,
   EventTypeNoteOff,
   EventTypeNoteOn,
+  EventTypeKeyPressure,
+  EventTypeControlChange,
+  EventTypeProgramChange,
+  EventTypeChannelPressure,
+  EventTypePitchBend,
   EventTypeSysX0,
   EventTypeSysX7,
   EventTypeKeySignature,
@@ -126,7 +135,6 @@ Unprotect[
   EventTypeTimeSignature,
   FileFormat,
   Midi,
-  MidiChannel,
   MidiQ,
   MilliSecond,
   QPM,
@@ -166,13 +174,17 @@ EventTypeEOT::usage = "todo"
 EventTypeMeta::usage = "todo"
 EventTypeNoteOff::usage = "todo"
 EventTypeNoteOn::usage = "todo"
+EventTypeKeyPressure::usage = "todo"
+EventTypeControlChange::usage = "todo"
+EventTypeProgramChange::usage = "todo"
+EventTypeChannelPressure::usage = "todo"
+EventTypePitchBend::usage = "todo"
 EventTypeSysX0::usage = "todo"
 EventTypeSysX7::usage = "todo"
 EventTypeKeySignature::usage = "todo"
 EventTypeTempo::usage = "todo"
 EventTypeTimeSignature::usage = "todo"
 FileFormat::usage = "todo"
-MidiChannel::usage = "todo"
 MilliSecond::usage = "todo"
 QPM::usage = "todo"
 TempoTime::usage = "todo"
@@ -215,6 +227,73 @@ Tidy[TempoTrack] = Module[{r = #},
   ]&
 
 (*****************)
+
+Track[x_DurValType?(MatchQ[Data[#], {{EventTypeNoteOn, _}, _}] &)] :=
+  Module[
+    {
+      t = ValueType[x],
+      d = Partition[DeltasToValues[Duration[ValueList[x]]], 2, 1],
+      v = Value[ValueList[x]],
+      dv
+      },
+    dv = Transpose[{d, v}];
+    dv = Select[dv, DataPlainValueQ[#[[2]]] &];
+    dv = Flatten[
+      {
+        {#[[1, 1]], {{EventTypeNoteOn, t[[2]]}, #[[2]]}},
+        {#[[1, 2]], {{EventTypeNoteOff, t[[2]]}, #[[2]]}}
+        } & /@ dv,
+      1];
+    dv = Append[dv, {d[[-1, 2]], {EventTypeEOT, {}}}];
+    Track[Event /@ dv]
+    ]
+
+DurValType /: Track[x_DurValType] :=
+  Module[
+    {
+      t = ValueType[x],
+      d = Partition[DeltasToValues[Duration[ValueList[x]]], 2, 1],
+      v = Value[ValueList[x]],
+      dv
+      },
+    dv = Transpose[{d, v}];
+    dv = Select[dv, DataPlainValueQ[#[[2]]] &];
+    dv = {#[[1, 1]], {t, #[[2]]}} & /@ dv;
+    dv = Append[dv, {d[[-1, 2]], {EventTypeEOT, {}}}];
+    Track[Event /@ dv]
+    ]
+
+Track[x : {__DurValType}] := Tidy[Mix[Track /@ x]]
+
+Midi[x : {{__DurValType}..}, opts___?OptionQ] := Midi[Track /@ x, opts]
+
+Track /: DurValType[x_Track, t_] := DurValType /@ Melody[x] /; (t === EventTypeNoteOn)
+
+Midi /: DurValType[x_Midi, t_] := DurValType /@ Melody[x] /; (t === EventTypeNoteOn)
+
+Track /: DurValType[x_Track, t_] :=
+  Module[{y = Tidy[x], z, d, v},
+    z = Data /@ Event[Select[y, MatchQ[Data[#][[2]], t] &]];
+    If[z === {} || z[[1, 1]] =!= 0,
+      z = Prepend[z,
+        {0, {t[[1]], If[z =!= {}, DataNoValue[z[[1, 2, 2]]], DataNoValue]}}
+        ]
+      ];
+    {d, v} = Transpose[z];
+    d = ValuesToDeltas[Append[d, y[[-1, EventTime]]]];
+    v = #[[2]] & /@ v;
+    DurValType[{t[[1]], DurValList[Transpose[{d, v}]]}]
+    ] /; (t =!= EventTypeNoteOn)
+
+Track /: DurValType[x_Track] :=
+  Module[{t = Union[EventType /@ Event[x]]},
+    DurValType[x, {#,_}] & /@ t
+    ]
+
+Midi /: DurValType[x_Midi] := DurValType /@ Track[x]
+
+(*****************)
+
 
 Midi  /: Chord[x_Midi] := Chord[Counterpoint[x]]
 Track /: Chord[x_Track] := Chord[Counterpoint[x]]
@@ -294,7 +373,7 @@ Track /: Counterpoint[x_Track,rtf_:(0&)] := (* todo: parameters of rtf are not s
     ]
 
 Midi  /: TotalDuration[x_Midi]  := Max[TotalDuration /@ x]
-Track /: TotalDuration[x_Track] := Max[EventTime /@ x]
+Track /: TotalDuration[x_Track] := Max[EventTime /@ Event[x]]
 
 Event[x_Chord]                  := Event[Midi[x]]
 Event[x_Counterpoint]           := Event[Midi[x]]
@@ -307,6 +386,11 @@ EventTypeEOT = {EventTypeMeta,16^^2F};
 EventTypeMeta = 16^^FF;
 EventTypeNoteOff = 0;
 EventTypeNoteOn = 1;
+EventTypeKeyPressure = 2;
+EventTypeControlChange = 3;
+EventTypeProgramChange = 4;
+EventTypeChannelPressure = 5;
+EventTypePitchBend = 6;
 EventTypeSysX0 = 16^^F0;
 EventTypeSysX7 = 16^^F7;
 EventTypeKeySignature = {EventTypeMeta,16^^59};
@@ -484,6 +568,7 @@ Seq[x:{__Midi}, opts___?OptionQ] :=
     m = Midi[m,Sequence @@ o];
     m
     ]
+    
 Seq[x:{__Track}] :=
   Module[{t=0,s},
     Tidy[Track[Flatten[Data[s=t;t+=TotalDuration[#];Map[#+s&,#,EventTime]]& /@ x,1]]]
@@ -694,6 +779,8 @@ WriteTrack[f_,t_] :=
     wrt[f,w]
     ]
 
+(*************************)
+    
 Midi /: TestSuite[Midi] = Join[TestSuite[Midi],{
   TestCase[
     Module[{o, c},
@@ -726,6 +813,11 @@ Protect[
   EventTypeMeta,
   EventTypeNoteOff,
   EventTypeNoteOn,
+  EventTypeKeyPressure,
+  EventTypeControlChange,
+  EventTypeProgramChange,
+  EventTypeChannelPressure,
+  EventTypePitchBend,
   EventTypeSysX0,
   EventTypeSysX7,
   EventTypeKeySignature,
@@ -733,12 +825,10 @@ Protect[
   EventTypeTimeSignature,
   FileFormat,
   Midi,
-  MidiChannel,
   MidiQ,
   MilliSecond,
   QPM,
   Tempo,
-  TempoFunction,
   TempoQ,
   TempoTime,
   TempoTrack,

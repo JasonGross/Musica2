@@ -53,8 +53,10 @@ BeginPackage["Musica2`Common`",
 Unprotect[
   Content,
   Convert,
+  Damping,
   Duration,
   Frequency,
+  MidiChannel,
   Mix,
   Octave,
   Overtone,
@@ -70,8 +72,10 @@ Unprotect[
 
 Content::usage = "todo"
 Convert::usage = "todo"
+Damping::usage = "todo"
 Duration::usage = "todo"
 Frequency::usage = "todo"
+MidiChannel::usage = "todo"
 Mix::usage = "todo"
 Octave::usage = "todo"
 Par::usage = "todo"
@@ -90,8 +94,10 @@ End[]
 Protect[
   Content,
   Convert,
+  Damping,
   Duration,
   Frequency,
+  MidiChannel,
   Mix,
   Octave,
   Overtone,

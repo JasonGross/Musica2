@@ -110,7 +110,6 @@ Unprotect[
   ModePhrygian,
   Note,
   Duration,
-  NoteFunction, (* to be removed *)
   NotePlot,
   NoteRest,
   NoteRestQ,
@@ -225,7 +224,7 @@ Melody[      x_DurValList] := Melody[Note /@ x, Sequence @@ Opts[x]]
 Progression[ x_DurValList] := Progression[Chord /@ x, Sequence @@ Opts[x]]
 
 (**)
-(*
+
 Counterpoint /: DurValType[x_Counterpoint] := DurValType[{{1, MidiChannel /. Opts[x] /. {MidiChannel -> 0}}, DurValList[x]}, Sequence @@ Opts[x]]
 Melody       /: DurValType[x_Melody]       := DurValType[{{1, MidiChannel /. Opts[x] /. {MidiChannel -> 0}}, DurValList[x]}, Sequence @@ Opts[x]]
 Progression  /: DurValType[x_Progression]  := DurValType[{{1, MidiChannel /. Opts[x] /. {MidiChannel -> 0}}, DurValList[x]}, Sequence @@ Opts[x]]
@@ -233,7 +232,7 @@ Progression  /: DurValType[x_Progression]  := DurValType[{{1, MidiChannel /. Opt
 Counterpoint[x_DurValType] := Counterpoint[Melody[#,MidiChannel->ValueType[x][[2]]]& /@ UnPar[x], Sequence @@ Opts[x]]
 Melody[      x_DurValType] := Melody[Note /@ x, Sequence @@ AddOpts[Opts[x],MidiChannel->ValueType[x][[2]]]]
 Progression[ x_DurValType] := Progression[Chord /@ x, Sequence @@ Opts[x]]
-*)
+
 (*****************)
 
 Chord[d:{_,{{_,_}...}},opts___?OptionQ] := Chord[Note[{d[[1]],#}]&/@d[[2]],opts]
@@ -372,6 +371,7 @@ NotePlot[x_Melody,       s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],
 NotePlot[x_Note,         s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 NotePlot[x_Progression,  s_Symbol, opts___?OptionQ] := NotePlot[Counterpoint[x],s,opts]
 
+NoteRest[x_] := Note[{x,{DataNoValue,DataNoValue}}]
 NoteRest[x_Note] := Note[{Duration[x],{DataNoValue,DataNoValue}},Sequence@@Opts[x]]
 NoteRestQ[x_Note] := DataNoValueQ[PitchCode[x]] || DataNoValueQ[Velocity[x]] || (Velocity[x] === 0)
 
@@ -444,7 +444,7 @@ Seq[x:{__Melody}]       := Melody[Flatten[Note /@ x]]
 Seq[x:{__Note}]         := Melody[x]
 Seq[x:{__Progression}]  := Progression[Flatten[Chord /@ x]]
 
-Chord         /: Snippet[x_Chord, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
+Chord        /: Snippet[x_Chord, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
 Counterpoint /: Snippet[x_Counterpoint, opts___?OptionQ] := Snippet[#,opts]& /@ x
 Melody       /: Snippet[x_Melody, opts___?OptionQ] := Convert[Melody,Snippet,Instrument,opts][x]
 Note         /: Snippet[x_Note, opts___?OptionQ] := Snippet[Melody[x],opts]
@@ -558,7 +558,6 @@ Protect[
   ModePhrygian,
   Note,
   Duration,
-  NoteFunction,
   NotePlot,
   NoteRest,
   NoteRestQ,
