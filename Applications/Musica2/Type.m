@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Type` *)
 
 (* :History:
+  2004-12-13  bch :  added DataAsRules
   2004-12-11  bch :  added some automated usage text
   2004-10-07  bch :  added Sort and Reverse to containers
   2004-10-04  bch :  not much, lost track... sorry
@@ -51,21 +52,22 @@ BeginPackage["Musica2`Type`",
 Unprotect[
   ];
 
-ContainerQ::usage = ""
-CreateElement::usage = ""
-CreateContainer::usage = ""
-Data::usage = ""
-DataQ::usage = ""
-ElementType::usage = ""
-Members::usage = ""
-Opts::usage = ""
-Pack::usage = ""
-Pos::usage = ""
-Struct::usage = ""
-TypeQ::usage = ""
-Tidy::usage = ""
-UnPack::usage = ""
-UnPackOpts::usage = ""
+ContainerQ::usage = "todo"
+CreateElement::usage = "todo"
+CreateContainer::usage = "todo"
+Data::usage = "todo"
+DataAsRules::usage = "todo"
+DataQ::usage = "todo"
+ElementType::usage = "todo"
+Members::usage = "todo"
+Opts::usage = "todo"
+Pack::usage = "todo"
+Pos::usage = "todo"
+Struct::usage = "todo"
+TypeQ::usage = "todo"
+Tidy::usage = "todo"
+UnPack::usage = "todo"
+UnPackOpts::usage = "todo"
 
 Begin["`Private`"]
 
@@ -86,6 +88,7 @@ CreateContainer[T_Symbol, ET_Symbol, U_String] := (
 
 M[T_Symbol, P_] := P[[Sequence @@ #]] & /@ (Append[Drop[#, -1], 1] & /@ Position[P, Pattern])
 
+(* we dont want to mess with the already present usage-text for Sound *)
 DeclareUsage[T_Symbol,text_String] := MessageName[T,"usage"] = If[StringQ[T::usage],T::usage<>"\[NewLine]\[NewLine]Musica2: ",""]<>text;
 
 DeclareCommon[T_Symbol, U_String] := (
@@ -137,6 +140,7 @@ DefineCommon[T_Symbol] := (
   MessageName[T,"usage"] = T::usage <> "TypeQ["<>SymbolName[T]<>"] returns a function that returns True if the argument is of type "<>SymbolName[T]<>" by checking both Head and data.\[NewLine]";
   MessageName[T,"usage"] = T::usage <> "Opts[x_"<>SymbolName[T]<>"] returns the opts part of an object of type "<>SymbolName[T]<>".\[NewLine]";
   MessageName[T,"usage"] = T::usage <> "Data[x_"<>SymbolName[T]<>"] returns the data part of an object of type "<>SymbolName[T]<>".\[NewLine]";
+  MessageName[T,"usage"] = T::usage <> "DataAsRules[x_"<>SymbolName[T]<>"] returns the data part of an object of type "<>SymbolName[T]<>" as a list of Rules.\[NewLine]";
   MessageName[T,"usage"] = T::usage <> "Tidy[x_"<>SymbolName[T]<>"] returns x in a tidy shape. It might not do anything though...\[NewLine]";
   MessageName[T,"usage"] = T::usage <> "ContainerQ[x_"<>SymbolName[T]<>"] returns ContainerQ["<>SymbolName[T]<>"].\[NewLine]";
   );
@@ -176,6 +180,8 @@ DefineElement[T_Symbol, P_, K_] :=
       ];
 
     ContainerQ[T] = False;
+
+    T /: DataAsRules[x_T] := (# -> #[x]) & /@ Members[T];
 
     MessageName[T,"usage"] = T::usage <> SymbolName[T]<>" is an element (not a container).\[NewLine]";
     MessageName[T,"usage"] = T::usage <> SymbolName[T]<>"[d_?(DataQ["<>SymbolName[T]<>"]),opts___?OptionQ] is the standard constructor and returns an object of type "<>SymbolName[T]<>".\[NewLine]";
@@ -222,6 +228,8 @@ DefineContainer[T_Symbol, ET_Symbol] :=
 
     (* get member data *)
     Scan[(T /: #[x_T] := # /@ x)&,Members[T]];
+
+    T /: DataAsRules[x_T] := (# -> #[x]) & /@ Members[T];
 
     (* handy list-manipulation-functions *)
     T /: Append[x_T, y_ET] := T[Append[ET[x],y], Sequence @@ Opts[x]];

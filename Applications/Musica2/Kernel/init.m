@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-11-29 at 15:4 *)
+(* :History: File created 2004-12-13 at 14:27 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -14,8 +14,8 @@ If[!MemberQ[$Packages,"Musica2`"],
 ];
 
 DeclarePackage["Musica2`Common`",
-{"Content", "Convert", "Duration", "Frequency", "Mix", "Octave", "Par", 
- "PitchCode", "Play2", "Seq", "Time"}
+{"Content", "Convert", "Duration", "Frequency", "Mix", "Octave", "Overtone", 
+ "Par", "PitchCode", "Play2", "Seq", "Time"}
 ];
 
 DeclarePackage["Musica2`Midi`",
@@ -41,7 +41,7 @@ DeclarePackage["Musica2`Note`",
  "ModeAeolian", "ModeDorian", "ModeIonian", "ModeLocrian", "ModeLydian", 
  "ModeMajor", "ModeMinor", "ModeMixolydian", "ModePhrygian", "Note", 
  "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "NoteRestQ", 
- "NoteTieQ", "PcV", "Progression", "ProgressionQ", "Scale", "ScaleFunction", 
+ "NoteTieQ", "Progression", "ProgressionQ", "Scale", "ScaleFunction", 
  "ScaleQ", "ScaleStep", "ThirdStack", "ThirdStackQ", "Velocity"}
 ];
 
@@ -67,9 +67,9 @@ DeclarePackage["Musica2`Tuning`",
 ];
 
 DeclarePackage["Musica2`Type`",
-{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
- "ElementType", "Members", "Opts", "Pack", "Pos", "Struct", "Tidy", "TypeQ", 
- "UnPack", "UnPackOpts"}
+{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataAsRules", 
+ "DataQ", "ElementType", "Members", "Opts", "Pack", "Pos", "Struct", "Tidy", 
+ "TypeQ", "UnPack", "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",

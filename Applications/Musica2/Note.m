@@ -32,6 +32,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2004-12-13  bch :  removed PcV from Note
   2004-11-29  bch :  added use of Convert for getting ConversionFunctions
                      added ScaleStep
   2004-11-28  bch :  moved PitchCode to Common.m
@@ -115,7 +116,7 @@ Unprotect[
   Velocity
   ];
 
-CreateElement[Note, {NoteDuration_, PcV:{PitchCode_,Velocity_}},"todo\[NewLine]"];
+CreateElement[Note, {NoteDuration_, {PitchCode_,Velocity_}},"todo\[NewLine]"];
 CreateContainer[Chord,Note,"todo\[NewLine]"];
 CreateContainer[Melody,Note,"todo\[NewLine]"];
 CreateContainer[Progression,Chord,"todo\[NewLine]"];
@@ -147,7 +148,7 @@ Begin["`Private`"]
 
 DataQ[Chord] = MatchQ[#, {({_,_}|{_?OptionQ,{_,_}})...}]&
 Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{{__?OptionQ},{_,_}}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]],Note[{NoteDuration/.Opts[sup],sub}]]];
-UnPack[Chord] = Function[{sub,opts},If[Opts[sub]=={},Data[sub][[2]],{Opts[sub],PcV[sub]}]];
+UnPack[Chord] = Function[{sub,opts},If[Opts[sub]=={},Data[sub][[2]],{Opts[sub],{PitchCode[sub],Velocity[sub]}}]];
 UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,NoteDuration->NoteDuration[subs[[1]]]]];
 
 Tidy[Melody] = Module[{n = Note[#],i},
@@ -195,6 +196,8 @@ Convert[Time,Velocity,x_Melody] := NoteFunction[x, Velocity]
 
 Convert[ScaleStep,PitchCode,x_Scale] := ScaleFunction[x]
 Convert[PitchCode,ScaleStep,x_Scale] := ScaleFunction[Inverse[x]]
+Convert[ScaleStep,PitchCode] := Convert[ScaleStep,PitchCode,Scale[]]
+Convert[PitchCode,ScaleStep] := Convert[PitchCode,ScaleStep,Scale[]]
 
 FigBass[x_Chord,      opts___?OptionQ] := FigBass[PitchCode[x],opts]
 FigBass[x_Intervals,  opts___?OptionQ] := FigBass[PitchCode[x],opts]

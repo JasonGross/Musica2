@@ -35,6 +35,10 @@ overwritten.
 
 
 
+
+
+
+
 <<Graphics`Colors`
 
 
@@ -64,6 +68,88 @@ pre:=DataFolder<>"pre.mid";(* 8.9kb, J.S.Bach, bwv 847a,
 
 MidiTestFile:=cor;
 MidiTestFileList:={cor,fug,cun,pre};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
