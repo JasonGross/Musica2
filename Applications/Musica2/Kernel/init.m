@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-10-4 at 7:35 *)
+(* :History: File created 2004-10-20 at 10:30 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -26,12 +26,13 @@ DeclarePackage["Musica2`Midi`",
 ];
 
 DeclarePackage["Musica2`Note`",
-{"Chord", "ChordQ", "Counterpoint", "CounterpointQ", "Melody", "MelodyQ", 
+{"Base", "Bass", "Chord", "ChordQ", "Code", "Counterpoint", "CounterpointQ", 
+ "FigBass", "FigBassQ", "Intervals", "IntervalsQ", "Melody", "MelodyQ", 
  "ModeAeolian", "ModeDorian", "ModeIonian", "ModeLocrian", "ModeLydian", 
  "ModeMajor", "ModeMinor", "ModeMixolydian", "ModePhrygian", "Note", 
- "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "PcV", "PitchCode", 
- "Progression", "ProgressionQ", "Scale", "ScaleFunction", "ScaleQ", 
- "Velocity"}
+ "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "NoteRestQ", 
+ "NoteTieQ", "PcV", "PitchCode", "Progression", "ProgressionQ", "Scale", 
+ "ScaleFunction", "ScaleQ", "ThirdStack", "ThirdStackQ", "Velocity"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -40,6 +41,15 @@ DeclarePackage["Musica2`Setup`",
 
 DeclarePackage["Musica2`Sound`",
 {"SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
+];
+
+DeclarePackage["Musica2`Spectrum`",
+{"Amplitude", "Frequency", "Phase", "Spectrum", "SpectrumQ", "Tone", "ToneQ"}
+];
+
+DeclarePackage["Musica2`Tuning`",
+{"EqualTemperament", "EqualTemperamentQ", "FrequencyOctave", "FrequencyRef", 
+ "PitchCodeOctave", "PitchCodeRef", "Tuning", "TuningFunction"}
 ];
 
 DeclarePackage["Musica2`Type`",

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2004-10-20  bch :  added Tuning and Spectrum to the list of pkg's
   2004-09-23  bch :  removed ToDo, I never have the time to use it anyway
   2004-09-19  bch :  added Type to the list of pkg's
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
@@ -67,7 +68,7 @@ Begin["`Private`"]
 
 fn="Musica2/Applications/Musica2/Kernel/init.m";
 pkg="Musica2";
-pkgs={"Common","Midi","Note","Setup","Sound","Type","Utils"};
+pkgs={"Common","Midi","Note","Setup","Sound","Spectrum","Tuning","Type","Utils"};
 
 ClearInitDotEm[] := ClearInitDotEm[pkg, fn]
 ClearInitDotEm[pkg_, fn_] := MakeInitDotEm[pkg,{},fn]

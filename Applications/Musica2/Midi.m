@@ -29,6 +29,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Midi` *)
 
 (* :History:
+  2004-10-06  bch :  Tidy[Track] now also converts all NoteOn's with zero velocity till NoteOff's
+                     Counterpoint[Track] calls Tidy[Track]
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-22  bch :  changed Show to Play2
   2004-09-18  bch :  added Tempo,TempoTrack and TempoFunction, removed SecondToTickFunction and TickToSecondFunction
@@ -165,17 +167,18 @@ Tidy[Midi] = Module[{r = #,eot = Duration[#]},
 
 Tidy[Track] = Module[{r = #,eot},
   r[[0]] = List;
-  r[[2]] = Sort[r[[2]]];
+  r[[2]] = Sort[r[[2]]]; (* todo: what about if the events has options? *)
   eot = r[[2,-1,1]];
-  r[[2]] = Select[r[[2]],(#[[2,1]]=!=EventTypeEOT)&];
+  r[[2]] = Select[r[[2]],(#[[2,1]]=!=EventTypeEOT)&]; (* todo: what about if the events has options? *)
   r[[2]] = Append[r[[2]],{eot,EOT}];
+  r[[2]] = If[MatchQ[#,{_,{EventTypeNoteOn,{_,_,0}}}],ReplacePart[#,EventTypeNoteOff,{2,1}],#]& /@ r[[2]]; (* todo: what about if the events has options? *)
   r[[0]] = Track;
   r
   ]&
 
 Tidy[TempoTrack] = Module[{r = #},
   r[[0]] = List;
-  r[[2]] = Sort[r[[2]]];
+  r[[2]] = Sort[r[[2]]]; (* todo: what about if the events has options? *)
   r[[0]] = TempoTrack;
   r
   ]&
@@ -232,11 +235,11 @@ Convert[m_Midi, MilliSecond, Tick] := Convert[Convert[m, MilliSecond, Second], S
 
 Midi  /: Counterpoint[x_Midi,rtf_:(0&)] := Counterpoint[Select[Flatten[Melody[Counterpoint[#,rtf]]& /@ x],(0<Length[#])&]]
 Track /: Counterpoint[x_Track,rtf_:(0&)] := (* todo: parameters of rtf are not set yet *)
-  Module[{on,off,n},
+  Module[{t=Tidy[x],on,off,n},
     (* get all note-on's as {{ch,p,time,v}...} *)
-    on = {EventData[#][[1]],EventData[#][[2]],EventTime[#],EventData[#][[3]]}& /@ Select[x,MatchQ[Data[#],{_,{EventTypeNoteOn,{_,_,_}}}]&];
+    on = {EventData[#][[1]],EventData[#][[2]],EventTime[#],EventData[#][[3]]}& /@ Select[t,MatchQ[Data[#],{_,{EventTypeNoteOn,{_,_,_}}}]&];
     (* get all note-on's as {{ch,p,time,v}...} *)
-    off = {EventData[#][[1]],EventData[#][[2]],EventTime[#],EventData[#][[3]]}& /@ Select[x,MatchQ[Data[#],{_,{EventTypeNoteOff,{_,_,_}}}]&];
+    off = {EventData[#][[1]],EventData[#][[2]],EventTime[#],EventData[#][[3]]}& /@ Select[t,MatchQ[Data[#],{_,{EventTypeNoteOff,{_,_,_}}}]&];
     (* sort them *)
     on = Sort[on];
     off = Sort[off];

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-10-06  bch :  added DataNoValue functions, used in ParOfSeqToSeqOfPar
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-27  bch :  DataTie of numbers dont get negative anymore
   2004-09-23  bch :  removed ToDoString
@@ -116,6 +117,9 @@ Circular[x_List,n_Integer] := x[[Mod[n, Length[x], 1]]]
 DataAnyValueQ[expr_] := If[AtomQ[expr],expr===DataAnyValue||expr===DataTie[DataAnyValue],Or@@(DataAnyValueQ/@expr)]
 
 DataApply[f_,d_] := If[DataAnyValueQ[d] || DataNoValueQ[d],d,If[DataTieQ[d],DataTie[#],#]&[f[DataUnTie[d]]]]
+
+DataNoValue[expr_List] := DataNoValue /@ expr
+DataNoValue[expr_] := DataNoValue
 
 DataNoValueQ[expr_] := If[AtomQ[expr],expr===DataNoValue||expr===DataTie[DataNoValue],Or@@(DataNoValueQ/@expr)]
 
@@ -213,7 +217,7 @@ ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to
               Function[{li,di},
                 Prepend[Table[DataTie[di],{li-1}],di]
                 ],
-              {l,If[Length[d]<Length[l],Append[d,DataNoValue],d]}
+              {l,If[Length[d]<Length[l],Append[d,DataNoValue[d[[1]]]],d]}
               ],
               1
             ]

@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Type` *)
 
 (* :History:
+  2004-10-07  bch :  added Sort and Reverse to containers
   2004-10-04  bch :  not much, lost track... sorry
   2004-09-xx  bch :  changed default test in Pack
   2004-09-18  bch :  renamed *Sup* to *Container* and *Sub* to *Element*
@@ -200,24 +201,29 @@ DefineContainer[T_Symbol, ET_Symbol] :=
     T /: Part[x_T, n_Integer, m__Integer] := Part[x,n][[m]] /; n!=0;
     T /: Prepend[x_T, y_ET] := T[Prepend[ET[x],y], Sequence @@ Opts[x]];
     T /: ReplacePart[x_T, y_ET, n_Integer] := T[ReplacePart[ET[x],y,n], Sequence @@ Opts[x]] /; n!=0;
+    T /: Reverse[x_T] := T[Reverse[ET[x]], Sequence @@ Opts[x]];
     T /: Rest[x_T] := T[Rest[Data[x]], Sequence @@ Opts[x]];
     T /: Scan[f_, x_T] := Scan[f, ET[x]];
     T /: Select[x_T, f_] := T[Select[ET[x], f], Sequence @@ Opts[x]];
     T /: Take[x_T, n_] := T[Take[Data[x],n], Sequence @@ Opts[x]];
 
 
+    (* extended list-manipulation-functions *)
     If[ContainerQ[ET],
       T /: Map[f_, x_T, s_Symbol] := Map[Map[f,#,s]&,x],
       T /: Map[f_, x_T, s_Symbol] := Map[ReplacePart[#,f[#[[s]]],s]&,x]
       ];
-    (* extended list-manipulation-functions *)
     If[ContainerQ[ET],
       T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[Function[{y,i},MapIndexed[f[#,Join[i,#2]]&,y,s]],x],
       T /: MapIndexed[f_, x_T, s_Symbol] := MapIndexed[ReplacePart[#,f[#[[s]],#2],s]&,x]
       ];
+    If[ContainerQ[ET],
+      T /: Sort[x_T, s_Symbol] := Sort[#,s]& /@ x,
+      T /: Sort[x_T, s_Symbol] := T[Sort[ET[x],OrderedQ[{s[#1], s[#2]}]&], Sequence @@ Opts[x]]
+      ];
+
     T /: Part[x_T, s_Symbol] := #[[s]]&/@ x;
     T /: Part[x_T, n_Integer, m___Integer, s_Symbol] := Part[x,n][[m,s]] /; n!=0;
-
 
     ContainerQ[T] = True;
 
