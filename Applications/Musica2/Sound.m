@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Sound` *)
 
 (* :History:
+  2004-09-24  bch :  changed SnippetData to Content
   2004-09-22  bch :  changed Show to Play2
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
   2004-09-12  bch :  using Common.m, Sound(G|S)etDuration is now (G|S)etDuration, SoundGetInfo is now GetInfo
@@ -62,6 +63,8 @@ BeginPackage["Musica2`Sound`",
   ]
 
 Unprotect[
+  Content,
+  Convert,
   Mix,
   Par,
   Seq,
@@ -76,7 +79,7 @@ Unprotect[
   SoundType
   ];
 
-CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), SnippetData_, SampleRate_Integer, SampleCount_Integer}];
+CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), Content_, SampleRate_Integer, SampleCount_Integer}];
 CreateContainer[Sound,Snippet];
 
 SampleCount::usage = ""
@@ -135,7 +138,7 @@ Pack[Sound] = Function[{sup,sub},
     ]
   ];
 UnPack[Sound] = Function[{sub,opts},
-  Convert[SnippetData[sub],
+  Convert[Content[sub],
     SoundType[sub],SampleCount[sub],
     SoundType/.opts, SampleCount/.opts
     ]
@@ -243,8 +246,8 @@ Snippet[x_Snippet, opts___?OptionQ] :=
       scin  = SampleCount[x],
       d
       },
-      d = Convert[SnippetData[s],stin,scin,stout,scout];
-      Snippet[{stout,d,srout,scout}]
+      d = Convert[Content[s],stin,scin,stout,scout];
+      Snippet[{stout,d,srout,scout},Sequence@@Opts[x]]
     ]
 
 Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
@@ -252,6 +255,8 @@ Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 End[]
 
 Protect[
+  Content,
+  Convert,
   Mix,
   Par,
   Seq,

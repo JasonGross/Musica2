@@ -47,11 +47,21 @@ BeginPackage["Musica2`Common`",
   ]
 
 Unprotect[
+  Content,
+  Convert,
+  Duration,
+  Mix,
+  Octave,
+  Par,
+  Play2,
+  Seq
   ];
 
+Content::usage = ""
 Convert::usage = ""
 Duration::usage = ""
 Mix::usage = ""
+Octave::usage = ""
 Par::usage = ""
 Play2::usage = ""
 Seq::usage = ""
@@ -61,6 +71,14 @@ Begin["`Private`"]
 End[]
 
 Protect[
+  Content,
+  Convert,
+  Duration,
+  Mix,
+  Octave,
+  Par,
+  Play2,
+  Seq
   ];
 
 EndPackage[]

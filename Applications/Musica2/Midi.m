@@ -87,6 +87,7 @@ BeginPackage["Musica2`Midi`",
 ]
 
 Unprotect[
+  Convert,
   Mix,
   Par,
   Seq
@@ -190,7 +191,7 @@ Convert[m:{__Midi}, opts___?OptionQ] :=
       TPQ     ->(TPQ     /.{opts}/.(TPQ     ->TPQ[m[[1]]])),
       QPM     ->(QPM     /.{opts}/.(QPM     ->QPM[m[[1]]]))
       };
-    Midi[#,Sequence @@ o]& /@ m
+    Midi[#,Sequence @@ o]& /@ m (* todo: handle opts *)
     ]
 
 Convert[m_Midi, MilliSecond, MilliSecond] := m
@@ -383,7 +384,7 @@ Midi[x_Midi, opts___?OptionQ] :=
       m=Midi[Data[m],Sequence @@ AddOpts[Opts[m],TPQ->tpqout,QPM->qpmout]];
       ];
     If[tuout=!=tuin,m=Convert[m,tuin,tuout]];
-    Midi[Data[m],Sequence @@ AddOpts[Opts[m],TimeUnit->tuout]]
+    Midi[Data[m],Sequence @@ AddOpts[Opts[m],TimeUnit->tuout]] (* todo: handle opts *)
     ]
 
 Mix[x:{__Midi}, opts___?OptionQ] :=
@@ -478,7 +479,7 @@ TempoTrack[x_Track, opts___?OptionQ] :=
   Module[{u = Data /@ Select[Tempo /@ x, TempoQ],tpq = TPQ[x]},
     (* add a default tempo if needed *)
     If[Length[u] == 0 || u[[1, 1]] != 0, u = Prepend[u, {0, QPM /. {opts} /. Options[Midi]}]];
-    TempoTrack[u,opts]
+    TempoTrack[u, Sequence@@RemOpts[{opts},QPM]]
     ]
 
 TimeUnit[x_Midi] := TimeUnit /. Opts[x] /. Options[Midi]
@@ -488,21 +489,28 @@ TPQ[x_Midi] := TPQ /. Opts[x] /. Options[Midi]
 Track[x_Chord]                         := Track[Counterpoint[x]]
 Track[x_Counterpoint, opts___?OptionQ] := Track /@ x
 Track[x_Melody, opts___?OptionQ]       :=
-  Module[{d,t=0},
-    If[#==={},Track[{},opts],Track[#[[1]],opts]]&[Reap[
-      Scan[(
-        d = NoteDuration[#];
-        p = PitchCode[#];
-        v = Velocity[#];
-        If[!(DataNoValueQ[p] || DataNoValueQ[v]),
-          Sow[Event[{t  ,{EventTypeNoteOn, {0,p,v}}}]];
-          Sow[Event[{t+d,{EventTypeNoteOff,{0,p,v}}}]];
-          ];
-        t += d;
-        )&,
-        x
-        ];
-      ][[2]]]
+  Module[{d,t=0,c=MidiChannel/.{opts}/.Opts[x]/.{MidiChannel->0}},
+    Track[
+      If[#==={},#,#[[1]]]&
+        [
+          Reap[
+            Scan[(
+              d = NoteDuration[#];
+              p = PitchCode[#];
+              v = Velocity[#];
+              If[!(DataNoValueQ[p] || DataNoValueQ[v]),
+                Sow[Event[{t  ,{EventTypeNoteOn, {c,p,v}}}]];
+                Sow[Event[{t+d,{EventTypeNoteOff,{c,p,v}}}]];
+                ];
+              t += d;
+              )&,
+              x
+              ];
+            ][[2]]
+          ]
+      ,
+      Sequence@@RemOpts[{opts},MidiChannel]
+      ]
     ]
 Track[x_Note]                          := Track[Melody[x]]
 Track[x_Progression]                   := Track[Counterpoint[x]]
@@ -600,19 +608,19 @@ ListMeta[{type:{_,sybtype_},data_}]:=
 ListChannel[{type_,{channel_,data__}}]:=
   {16^^80+2^4type+channel,data}
 
-ListTrack[t_]:=
-  Function[e,
-    {
-      ListVarLen[e[[1]]],
-      If[MatchQ[e[[2,1]],EventTypeSysX0|EventTypeSysX7],
-        ListSysX[e[[2]]],
-        If[MatchQ[e[[2,1]],{EventTypeMeta,_}],
-          ListMeta[e[[2]]],
-          ListChannel[e[[2]]]
-          ]
+ListEvent[e_]:=
+  {
+    ListVarLen[e[[1]]],
+    If[MatchQ[e[[2,1]],EventTypeSysX0|EventTypeSysX7],
+      ListSysX[e[[2]]],
+      If[MatchQ[e[[2,1]],{EventTypeMeta,_}],
+        ListMeta[e[[2]]],
+        ListChannel[e[[2]]]
         ]
-      }
-    ]/@t
+      ]
+    }
+
+ListTrack[t_]:= ListEvent /@ t
 
 WriteTrack[f_,t_]:=
   Module[{w=t},
@@ -626,6 +634,7 @@ WriteTrack[f_,t_]:=
 End[]
 
 Protect[
+  Convert,
   Mix,
   Par,
   Seq

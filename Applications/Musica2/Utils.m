@@ -29,6 +29,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Utils` *)
 
 (* :History:
+  2004-09-23  bch :  DataTie of numbers dont get negative anymore
   2004-09-23  bch :  removed ToDoString
                      added AddOpts
                      added DataApply
@@ -63,6 +64,7 @@ Unprotect[
   DataApply,
   DataNoValue,
   DataNoValueQ,
+  DataPlainValueQ,
   DataTie,
   DataTieQ,
   DataUnTie,
@@ -71,6 +73,7 @@ Unprotect[
   MakeNestedIfs,
   NormalizeList,
   ParOfSeqToSeqOfPar,
+  RemOpts,
   SeqOfParToParOfSeq,
   UnCompile,
   ValuesToDeltas
@@ -111,17 +114,19 @@ DataApply[f_,d_] := If[DataAnyValueQ[d] || DataNoValueQ[d],d,If[DataTieQ[d],Data
 
 DataNoValueQ[expr_] := If[AtomQ[expr],expr===DataNoValue||expr===DataTie[DataNoValue],Or@@(DataNoValueQ/@expr)]
 
+DataPlainValueQ[x_] := !(DataAnyValueQ[x]||DataNoValueQ[x]||DataTieQ[x])
+
 DataTie[d_DataTie] := d
 
-DataTie[d_?NumberQ] := If[DataTieQ[d],d,-d-1]
+(*DataTie[d_?NumberQ] := If[DataTieQ[d],d,-d-1]*)
 
 DataTie[d_List] := DataTie /@ d
 
-DataTieQ[d_] := MatchQ[d,_DataTie] || (NumberQ[d]&&d<0) || (!AtomQ[d]&&Or@@(DataTieQ/@d))
+DataTieQ[d_] := MatchQ[d,_DataTie] (*|| (NumberQ[d]&&d<0)*) || (!AtomQ[d]&&Or@@(DataTieQ/@d))
 
 DataUnTie[d_DataTie] := d[[1]]
 
-DataUnTie[d_?NumberQ] := If[DataTieQ[d],-d-1,d]
+(*DataUnTie[d_?NumberQ] := If[DataTieQ[d],-d-1,d]*)
 
 DataUnTie[d_List] := DataUnTie /@ d
 
@@ -214,6 +219,8 @@ ParOfSeqToSeqOfPar[pos:{{{_,_},{_,_}...},{{_,_},{_,_}...}...}] := (* melodies to
     Transpose[{ut,sd}]
     ]
 
+RemOpts[x:{___?OptionQ},opts__Symbol] := Cases[x,(n$_->_)/;(!MemberQ[{opts},n$])]
+
 SeqOfParToParOfSeq[sop:{{_,{__}},{_,{__}}...}] := (* chords to melodies *)
   Module[{v},
     Reap[
@@ -251,6 +258,7 @@ Protect[
   DataApply,
   DataNoValue,
   DataNoValueQ,
+  DataPlainValueQ,
   DataTie,
   DataTieQ,
   DataUnTie,
@@ -259,6 +267,7 @@ Protect[
   MakeNestedIfs,
   NormalizeList,
   ParOfSeqToSeqOfPar,
+  RemOpts,
   SeqOfParToParOfSeq,
   UnCompile,
   ValuesToDeltas

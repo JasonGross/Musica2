@@ -32,6 +32,8 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Note` *)
 
 (* :History:
+  2004-09-27  bch :  added some Scale constructors and the church-modes (plus locrian)
+                     renamed PitchCode in Scale to Content
   2004-09-22  bch :  changed Show to Play2
   2004-09-15  bch :  major rewrite, started using up-values and a kind of template for types.
   2004-09-03  bch :  created
@@ -51,6 +53,8 @@ BeginPackage["Musica2`Note`",
   ]
 
 Unprotect[
+  Content,
+  Octave,
   Par,
   Seq
   ];
@@ -62,17 +66,27 @@ Unprotect[
   CounterpointQ,
   Melody,
   MelodyQ,
+  ModeAeolian,
+  ModeDorian,
+  ModeIonian,
+  ModeLocrian,
+  ModeLydian,
+  ModeMajor,
+  ModeMinor,
+  ModeMixolydian,
+  ModePhrygian,
   Note,
   NoteDuration,
   NoteFunction,
   NotePlot,
   NoteQ,
+  Octave,
   PitchCode,
-  PitchCodeClassCount,
   Progression,
   ProgressionQ,
   Scale,
   ScaleFunction,
+  ScaleQ,
   Velocity
   ];
 
@@ -82,8 +96,17 @@ CreateContainer[Melody,Note];
 CreateContainer[Progression,Chord];
 CreateContainer[Counterpoint,Melody];
 
-CreateElement[Scale, {PitchCodeClassCount_Integer, PitchCode:{__}}];
+CreateElement[Scale, {Octave_Integer, Content:{__}}];
 
+ModeAeolian::usage = "todo"
+ModeDorian::usage = "todo"
+ModeIonian::usage = "todo"
+ModeLocrian::usage = "todo"
+ModeLydian::usage = "todo"
+ModeMajor::usage = "todo"
+ModeMinor::usage = "todo"
+ModeMixolydian::usage = "todo"
+ModePhrygian::usage = "todo"
 NoteFunction::usage = ""
 NotePlot::usage = ""
 
@@ -92,9 +115,6 @@ Begin["`Private`"]
 (*****************)
 
 DataQ[Chord] = MatchQ[#, {({_,_}|{_?OptionQ,{_,_}})...}]&
-(*
-Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{_Integer,_Integer}],Note[{NoteDuration/.Opts[sup],sub}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]]]];
-*)
 Pack[Chord] = Function[{sup,sub},If[MatchQ[sub,{{__?OptionQ},{_,_}}],Note[{NoteDuration/.Opts[sup],sub[[2]]}, Sequence @@ sub[[1]]],Note[{NoteDuration/.Opts[sup],sub}]]];
 UnPack[Chord] = Function[{sub,opts},If[Opts[sub]=={},Data[sub][[2]],{Opts[sub],PcV[sub]}]];
 UnPackOpts[Chord] = Function[{subs,opts},Prepend[opts,NoteDuration->NoteDuration[subs[[1]]]]];
@@ -119,7 +139,7 @@ Chord[x_Snippet, threshold_] := (* just for fun, when generating snippets from c
       sc = SampleCount[x],
       c,d,m
       },
-    d = Fourier[SnippetData[s],FourierParameters -> {-1, 1}];
+    d = Fourier[Content[s],FourierParameters -> {-1, 1}];
     (* skip zero-freq *)
     d = Rest[d];
     (* nyquist theorem *)
@@ -140,13 +160,32 @@ Melody       /: Duration[x_Melody]       := Total[NoteDuration /@ x]
 Note         /: Duration[x_Note]         := NoteDuration[x]
 Progression  /: Duration[x_Progression]  := Total[Duration /@ x]
 
-Scale /: Inverse[x_Scale] := Scale[{Length[PitchCode[x]],Table[If[#==={},DataAnyValue,#[[1,1]]-1]&[Position[PitchCode[x],i]],{i,0,PitchCodeClassCount[x]-1}]},Sequence @@ Opts[x]]
+Scale /: Inverse[x_Scale] :=
+  Module[{pc = Mod[Content[x],Octave[x]],c,o=Length[Content[x]]},
+    c = Table[
+      If[#==={},DataAnyValue,
+        #[[1,1]]-1-o*((Content[x][[#[[1,1]]]]-i)/Octave[x])
+        ]&[Position[pc,i]],
+      {i,0,Octave[x]-1}
+      ];
+    Scale[{o,c},Sequence @@ Opts[x]]
+    ]
 
 Melody[x_Chord]                       := Melody /@ x
 Melody[x_Progression]                 := Melody[Counterpoint[x]]
 Melody[p:{__?AtomQ}, opts___?OptionQ] := Melody[Note[#,opts]& /@ p,opts]
 
-Note[p_?AtomQ, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},opts]
+ModeAeolian = 5
+ModeDorian = 1
+ModeIonian = 0
+ModeLocrian = 6
+ModeLydian = 3
+ModeMajor = ModeIonian
+ModeMinor = ModeAeolian
+ModeMixolydian = 4
+ModePhrygian = 2
+
+Note[p_?AtomQ, opts___?OptionQ] := Note[{NoteDuration/.{opts}/.Options[Note],{p,Velocity/.{opts}/.Options[Note]}},Sequence@@RemOpts[{opts},NoteDuration,Velocity]]
 
 NoteFunction[x_Melody, s:(PitchCode|Velocity)] := MakeNestedIfs[Transpose[{NoteDuration /@ x,s /@ x /. {DataNoValue -> 0}}]]
 
@@ -171,16 +210,20 @@ Progression  /: Play2[x_Progression]  := Play2[Sound[x]]
 Progression[x_Counterpoint, opts___?OptionQ] := Progression[Chord[#]& /@ ParOfSeqToSeqOfPar[Data /@ x]]
 Progression[x_Melody]                        := Progression[Chord[x]]
 
-Scale[] := Scale[{12,{0,2,4,5,7,9,11}}]
+f712[x_] := Round[12/7(x-1)+2]
+f712[x_,k_,m_] := Module[{r=f712[x+m]+7k,z=f712[0+m]+7k},r-(z-Mod[z,12])]
+Scale[k_Integer,m_Integer, opts___?OptionQ] := Scale[{12,Table[f712[i,k,m],{i,0,6}]},opts]
+Scale[k_Integer, opts___?OptionQ] := Scale[{12,Table[f712[i,k,3k],{i,0,6}]+12Quotient[k + 5,7*12]},opts]
+Scale[] := Scale[0]
 
 Scale[o_,d_][x_Chord]        := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
-Scale[o_,d_][x_Cponterpoint] := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
+Scale[o_,d_][x_Counterpoint] := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
 Scale[o_,d_][x_Melody]       := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
 Scale[o_,d_][x_Note]         := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},ReplacePart[x,f[PitchCode[x]],PitchCode]]
 Scale[o_,d_][x_Progression]  := Module[{f=ScaleFunction[Scale[d,Sequence @@ o]]},Map[f,x,PitchCode]]
 
 ScaleFunction[x_Scale] :=
-  Module[{f=Function[ss,Module[{scalesize = Length[PitchCode[x]]},Floor[ss/scalesize]*PitchCodeClassCount[x] + x[[PitchCode, Mod[ss, scalesize] + 1]]]]},
+  Module[{f=Function[ss,Module[{scalesize = Length[Content[x]]},Floor[ss/scalesize]*Octave[x] + x[[Content, Mod[ss, scalesize] + 1]]]]},
     Function[ss,DataApply[f,ss]]
     ]
 
@@ -204,7 +247,7 @@ Melody       /: Snippet[x_Melody, opts___?OptionQ] :=
     v = Velocity /@ x /. {DataNoValue -> 0};
     f = MakeNestedIfs[Transpose[{d,p2f /@ p}]];
     a = MakeNestedIfs[Transpose[{d,v2a /@ v}]];
-    Snippet[{SampledSoundFunction,Function[t, zin[f[t], a[t], sr][t]],Round[sr],Round[Duration[x]sr]}]
+    Snippet[{SampledSoundFunction,Function[t, zin[f[t], a[t], sr][t]],Round[sr],Round[Duration[x]sr]},Sequence@@RemOpts[{opts},SampleRate]]
     ]
 Note         /: Snippet[x_Note, opts___?OptionQ] := Snippet[Melody[x],opts]
 Progression  /: Snippet[x_Progression, opts___?OptionQ] := Snippet[Counterpoint[x],opts]
@@ -218,6 +261,8 @@ Progression  /: Sound[x_Progression, opts___?OptionQ] := Sound[Snippet[x,opts]]
 End[]
 
 Protect[
+  Content,
+  Octave,
   Par,
   Seq
   ];
@@ -229,17 +274,27 @@ Protect[
   CounterpointQ,
   Melody,
   MelodyQ,
+  ModeAeolian,
+  ModeDorian,
+  ModeIonian,
+  ModeLocrian,
+  ModeLydian,
+  ModeMajor,
+  ModeMinor,
+  ModeMixolydian,
+  ModePhrygian,
   Note,
   NoteDuration,
   NoteFunction,
   NotePlot,
   NoteQ,
+  Octave,
   PitchCode,
-  PitchCodeClassCount,
   Progression,
   ProgressionQ,
   Scale,
   ScaleFunction,
+  ScaleQ,
   Velocity
   ];
 

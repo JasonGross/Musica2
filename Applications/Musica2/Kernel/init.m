@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-9-23 at 14:27 *)
+(* :History: File created 2004-9-27 at 17:9 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -14,7 +14,7 @@ If[!MemberQ[$Packages,"Musica2`"],
 ];
 
 DeclarePackage["Musica2`Common`",
-{"Convert", "Duration", "Mix", "Par", "Play2", "Seq"}
+{"Content", "Convert", "Duration", "Mix", "Octave", "Par", "Play2", "Seq"}
 ];
 
 DeclarePackage["Musica2`Midi`",
@@ -27,9 +27,11 @@ DeclarePackage["Musica2`Midi`",
 
 DeclarePackage["Musica2`Note`",
 {"Chord", "ChordQ", "Counterpoint", "CounterpointQ", "Melody", "MelodyQ", 
- "Note", "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "PcV", 
- "PitchCode", "PitchCodeClassCount", "Progression", "ProgressionQ", "Scale", 
- "ScaleFunction", "ScaleQ", "Velocity"}
+ "ModeAeolian", "ModeDorian", "ModeIonian", "ModeLocrian", "ModeLydian", 
+ "ModeMajor", "ModeMinor", "ModeMixolydian", "ModePhrygian", "Note", 
+ "NoteDuration", "NoteFunction", "NotePlot", "NoteQ", "PcV", "PitchCode", 
+ "Progression", "ProgressionQ", "Scale", "ScaleFunction", "ScaleQ", 
+ "Velocity"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -37,7 +39,7 @@ DeclarePackage["Musica2`Setup`",
 ];
 
 DeclarePackage["Musica2`Sound`",
-{"SampleCount", "Snippet", "SnippetData", "SnippetQ", "SoundQ", "SoundType"}
+{"SampleCount", "Snippet", "SnippetQ", "SoundQ", "SoundType"}
 ];
 
 DeclarePackage["Musica2`Type`",
@@ -48,9 +50,10 @@ DeclarePackage["Musica2`Type`",
 
 DeclarePackage["Musica2`Utils`",
 {"AddOpts", "DataAnyValue", "DataAnyValueQ", "DataApply", "DataNoValue", 
- "DataNoValueQ", "DataTie", "DataTieQ", "DataUnTie", "DeltasToValues", 
- "FunctionQ", "MakeNestedIfs", "NormalizeList", "ParOfSeqToSeqOfPar", 
- "SeqOfParToParOfSeq", "UnCompile", "ValuesToDeltas"}
+ "DataNoValueQ", "DataPlainValueQ", "DataTie", "DataTieQ", "DataUnTie", 
+ "DeltasToValues", "FunctionQ", "MakeNestedIfs", "NormalizeList", 
+ "ParOfSeqToSeqOfPar", "RemOpts", "SeqOfParToParOfSeq", "UnCompile", 
+ "ValuesToDeltas"}
 ];
 
 Null
