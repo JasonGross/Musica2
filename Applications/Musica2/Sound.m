@@ -55,6 +55,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 BeginPackage["Musica2`Sound`",
   {
     "Musica2`Common`",
+    "Musica2`Type`",
     "Musica2`Utils`"
     }
   ]
@@ -66,26 +67,23 @@ Unprotect[
 Unprotect[
   ];
 
-SampleCount::usage = "SampleCount is returned by the GetInfo function and is also an opt to various functions."
+CreateElement[Snippet,{SoundType:(SampledSoundFunction|SampledSoundList), SnippetData_, SampleRate_Integer, SampleCount_Integer}];
+CreateContainer[Sound,Snippet];
+
+SampleCount::usage = ""
 SoundType::usage = ""
-Snippet::usage = ""
 SnippetData::usage = ""
-SnippetQ::usage = ""
-SoundQ::usage = ""
 
 Begin["`Private`"]
 
 (*****************)
 
-DataQ[Snippet] = MatchQ[#, ({_,_Integer,_Integer}|{_List,_Integer})]&
-DefineSub[Snippet];
 Options[Snippet] = {
   SoundType:>(SoundType/.Options[Sound]),
   SampleRate:>(SampleRate/.Options[Sound]),
   SampleCount:>(SampleCount/.Options[Sound])
   }
 
-DefineSup[Sound,Snippet];
 Options[Sound] = {
   SoundType->SampledSoundFunction,
   SampleRate->2^13,
@@ -110,7 +108,7 @@ Sound[d_?(DataQ[Sound]),opts___?OptionQ] :=
       ]
     ]
   ]
-Sound /: Info[x_Sound] := ({
+Sound /: Opts[x_Sound] := ({
   SoundType->#[[1,0]],
   SampleRate->If[MatchQ[#[[1]],_SampledSoundFunction],#[[1,3]],#[[1,2]]],
   SampleCount->If[MatchQ[#[[1]],_SampledSoundFunction],#[[1,2]],Length[#[[1,1,1]]]]
@@ -130,8 +128,8 @@ Tidy[Sound] = Function[s,
 DataQ[Sound] = MatchQ[#, {__}]&;
 Pack[Sound] = Function[{sup,sub},
   If[ListQ[sub],
-    Snippet[{sub,SampleRate/.Info[sup]}],
-    Snippet[{sub,SampleCount/.Info[sup],SampleRate/.Info[sup]}]
+    Snippet[{SampledSoundList,     sub, SampleRate/.Opts[sup], Length[sub]}],
+    Snippet[{SampledSoundFunction, sub, SampleRate/.Opts[sup], SampleCount/.Opts[sup]}]
     ]
   ];
 UnPack[Sound] = Function[{sub,opts},
@@ -198,7 +196,7 @@ Sound /: Mix[x_Sound, mix : {{__}...}] :=
           ]
         ]
       ]& /@ fl;
-    Sound[fl,Sequence @@ Info[x]]
+    Sound[fl,Sequence @@ Opts[x]]
     ] /; SoundQ[x] && (SoundType[x]===SampledSoundFunction) && (Length[x] == Length[mix]) && Module[{o = Union[Length /@ mix]}, (Length[o] == 1) && (1 <= o[[1]])]
 
 Sound /: Mix[s_Sound,2] :=
@@ -209,18 +207,13 @@ Sound /: Mix[s_Sound,2] :=
       ]
     ]
 
-Snippet /: SampleCount[x_Snippet] := If[SoundType[x]===SampledSoundFunction,Data[x][[2]],Length[SnippetData[x]]]
-Sound /: SampleCount[x_Sound] := SampleCount /. Info[x]
+Sound /: SampleCount[x_Sound] := SampleCount /. Opts[x]
 
-Snippet /: SampleRate[x_Snippet] := Data[x][[-1]]
-Sound /: SampleRate[x_Sound] := SampleRate /. Info[x]
+Sound /: SampleRate[x_Sound] := SampleRate /. Opts[x]
 
 Snippet /: Show[x_Snippet] := Show[Sound[x]] /; SnippetQ[x]
 
-SnippetData[x_Snippet] := Data[x][[1]]
-
-Snippet /: SoundType[x_Snippet] := If[MatchQ[SnippetData[x],_List],SampledSoundList,SampledSoundFunction]
-Sound /: SoundType[x_Sound] := SoundType /. Info[x]
+Sound /: SoundType[x_Sound] := SoundType /. Opts[x]
 
 End[]
 

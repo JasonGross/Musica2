@@ -5,7 +5,7 @@ When loaded, it sets up the symbols with attribute Stub, so the correct package 
 
 (* :Author: This file was created by the function Musica2`Setup`MakeInitDotEm[], written by Bo C. Herlin *)
 
-(* :History: File created 2004-9-16 at 17:44 *)
+(* :History: File created 2004-9-20 at 16:56 *)
 
 If[!MemberQ[$Packages,"Musica2`"],
   System`Private`p = Unprotect[$Packages];
@@ -14,22 +14,21 @@ If[!MemberQ[$Packages,"Musica2`"],
 ];
 
 DeclarePackage["Musica2`Common`",
-{"Convert", "Data", "DataQ", "DefineSub", "DefineSup", "Duration", "Info", 
- "Mix", "Pack", "Par", "Seq", "SubType", "Tidy", "TypeQ", "UnPack", 
- "UnPackOpts"}
+{"Convert", "Duration", "Mix", "Par", "Seq"}
 ];
 
 DeclarePackage["Musica2`Midi`",
 {"Event", "EventData", "EventQ", "EventTime", "EventType", "EventTypeEOT", 
  "EventTypeMeta", "EventTypeNoteOff", "EventTypeNoteOn", "EventTypeSysX0", 
  "EventTypeSysX7", "EventTypeTempo", "Midi", "MidiQ", "MilliSecond", "QPM", 
- "SecondToTickFunction", "Tick", "TickToSecondFunction", "TimeUnit", "TPQ", 
- "Track", "TrackQ"}
+ "Tempo", "TempoFunction", "TempoQ", "TempoTime", "TempoTrack", 
+ "TempoTrackQ", "Tick", "TimeUnit", "TPQ", "Track", "TrackQ"}
 ];
 
 DeclarePackage["Musica2`Note`",
 {"Chord", "ChordQ", "Counterpoint", "CounterpointQ", "Melody", "MelodyQ", 
- "Note", "NoteQ", "PitchCode", "Progression", "ProgressionQ", "Velocity"}
+ "Note", "NoteQ", "PcV", "PitchCode", "Progression", "ProgressionQ", 
+ "Velocity"}
 ];
 
 DeclarePackage["Musica2`Setup`",
@@ -38,6 +37,12 @@ DeclarePackage["Musica2`Setup`",
 
 DeclarePackage["Musica2`Sound`",
 {"SampleCount", "Snippet", "SnippetData", "SnippetQ", "SoundQ", "SoundType"}
+];
+
+DeclarePackage["Musica2`Type`",
+{"ContainerQ", "CreateContainer", "CreateElement", "Data", "DataQ", 
+ "ElementType", "Members", "Opts", "Pack", "Pos", "Tidy", "TypeQ", "UnPack", 
+ "UnPackOpts"}
 ];
 
 DeclarePackage["Musica2`Utils`",

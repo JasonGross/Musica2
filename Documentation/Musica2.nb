@@ -41,9 +41,9 @@ Wolfram Research.
 
 (*NotebookFileLineBreakTest
 NotebookFileLineBreakTest*)
-(*NotebookOptionsPosition[     10013,        346]*)
-(*NotebookOutlinePosition[     10728,        371]*)
-(*  CellTagsIndexPosition[     10684,        367]*)
+(*NotebookOptionsPosition[     15187,        548]*)
+(*NotebookOutlinePosition[     15902,        573]*)
+(*  CellTagsIndexPosition[     15858,        569]*)
 (*WindowFrame->Normal*)
 
 
@@ -83,8 +83,10 @@ Cell[CellGroupData[{
 Cell["History", "Subtitle"],
 
 Cell["\<\
-2004-09-15 Bo C. Herlin : major rewrite, started using up-values \
-and a kind of template for types
+2004-09-20 Bo C. Herlin : more
+2004-09-18 Bo C. Herlin : renamed Info to Opts
+2004-09-15 Bo C. Herlin : major rewrite, started using up-values and a kind \
+of template for types
 2004-09-14 Bo C. Herlin : added Patterns section
 2004-09-13 Bo C. Herlin : added some use of Chord's and Melody's
 2004-09-12 Bo C. Herlin : added use of Common.m's Duration/Info-things
@@ -198,30 +200,7 @@ Cell["Read from a SMF (StandardMidiFile).", "Text"],
 Cell[BoxData[
     \(m = Import[MidiTestFile, Midi]\)], "Input"],
 
-Cell["Get the info from the Midi.", "Text"],
-
-Cell[BoxData[
-    \(Info[m]\)], "Input"],
-
-Cell["Get nr of tracks.", "Text"],
-
-Cell[BoxData[
-    \(Length[m]\)], "Input"],
-
-Cell["Get the duration in ticks.", "Text"],
-
-Cell[BoxData[
-    \(Duration[m]\)], "Input"],
-
-Cell["Get the duration in seconds.", "Text"],
-
-Cell[BoxData[
-    \(Duration[Midi[m, TimeUnit \[Rule] Second]] // N\)], "Input"],
-
-Cell["\<\
-Play it. Currently it takes about 24 sec to create the \
-sound-objects, mix it and render it in stereo on my 1GHz laptop.\
-\>", "Text"],
+Cell["Play it.", "Text"],
 
 Cell[BoxData[
     \(Timing[Show[m]]\)], "Input"],
@@ -234,112 +213,335 @@ Cell[BoxData[
 
 Cell[CellGroupData[{
 
-Cell["Note", "Subtitle"],
+Cell["Mini-tour of Musica2 (directors cut)", "Subtitle"],
 
-Cell["todo", "Text"]
+Cell["Read from a SMF.", "Text"],
+
+Cell[BoxData[
+    \(m = Import[MidiTestFile, Midi]\)], "Input"],
+
+Cell["Set time-unit to second instead of tick.", "Text"],
+
+Cell[BoxData[
+    \(m = Midi[m, TimeUnit \[Rule] Second]\)], "Input"],
+
+Cell["Get all tracks.", "Text"],
+
+Cell[BoxData[
+    \(t = Track[m]\)], "Input"],
+
+Cell["Convert each track to counterpoint.", "Text"],
+
+Cell[BoxData[
+    \(c = Counterpoint /@ t\)], "Input"],
+
+Cell["Get the melodies in each counterpoint.", "Text"],
+
+Cell[BoxData[
+    \(md = Melody /@ c\)], "Input"],
+
+Cell["Flatten it and get the ones that are non-empty.", "Text"],
+
+Cell[BoxData[
+    \(md = Select[Flatten[md], \((0 < Length[#])\) &]\)], "Input"],
+
+Cell["Convert each melody to a snippet.", "Text"],
+
+Cell[BoxData[
+    \(sn = Snippet /@ md\)], "Input"],
+
+Cell["Make a 4ch sound of them.", "Text"],
+
+Cell[BoxData[
+    \(Length[s = Sound[sn]]\)], "Input"],
+
+Cell["Mix it to two channels.", "Text"],
+
+Cell[BoxData[
+    \(s = Mix[s, 2]\)], "Input"],
+
+Cell["Play it.", "Text"],
+
+Cell[BoxData[
+    \(Show[s]\)], "Input"]
 }, Open  ]],
 
 Cell[CellGroupData[{
 
-Cell["Midi", "Subtitle"],
+Cell["Pattern (as in design)", "Subtitle"],
 
-Cell["todo", "Text"]
+Cell["\<\
+I have tried to minimize the number of new symbols by applying a \
+pattern to each object-type in Musica2.\
+\>", "Text"],
+
+Cell["\<\
+Most types in Musica2 is either a container or an element whithin a \
+container. Examples of this in Musica2 is
+  Midi that contains Track's that contains Event's
+  TempoTrack that contains Tempo's
+  Progression that contains Chord's that contains Note's
+  Counterpoint that contains Melody's that contains Note's
+  Sound that contains Snippet's\
+\>", "Text"],
+
+Cell["\<\
+Instead of having a Midi-object with a list of Track-objects I \
+wanted the Midi-object to have no other Head's on its internal data than \
+List. This since other Head's sometimes mess things up (i must admit, it may \
+be because of my bad programming). But having custom Head's its a handy \
+thing, so I want to have it both ways, at least pretend I have it.\
+\>", \
+"Text"],
+
+Cell["\<\
+This is where the design-pattern comes in. I have written code than \
+generates the code needed for this dual-face to appear.\
+\>", "Text"],
+
+Cell["\<\
+The best way to describe the pattern used is probably by giving an \
+example. I was thinking of a Tree-Branch-Leaf example, but since Tree is \
+already taken I decided to use Bush instead. When I started typing Bush- I \
+continued with War-Terrorist! Oops, a Freudian slip? Im not trying to make a \
+political statement here, im not into politics. Im not into writing \
+documentation either, but it is more fun using War-Terrorist than using \
+Branch-Leaf. If you dont like it just consider it as a bad joke, which is \
+really what it is.\
+\>", "Text"],
+
+Cell["\<\
+Creating types like this is rather easy (if you stick to some rules \
+on the pattern for the leaf element which I havent documented yet and \
+probably never will, ok, dont use \
+BlankSequence,BlankNullSequence,Alternatives and then some...nested List's is \
+ok though).\
+\>", "Text"],
+
+Cell["Always create the types in leaf to tree order.", "Text"],
+
+Cell["\<\
+Ok, lets create Bush that contains War's that contains \
+Terrorist's\
+\>", "Text"],
+
+Cell[BoxData[
+    \(CreateElement[
+      Terrorist, {Muslim : \((True | False)\), Bombs_Integer}]\)], "Input"],
+
+Cell[TextData[{
+  "Dont bother about the ",
+  Cell[BoxData[
+      \(General::"spell1"\)], "Message"],
+  " message about TerroristQ and Terrorist, its OK."
+}], "Text"],
+
+Cell[BoxData[
+    \(CreateContainer[War, Terrorist]\)], "Input"],
+
+Cell[BoxData[
+    \(CreateContainer[Bush, War]\)], "Input"],
+
+Cell["\<\
+We now have a load of code generated for us that will make it \
+easier to handle these new types.\
+\>", "Text"],
+
+Cell["Code for \"reflection\":", "Text"],
+
+Cell[BoxData[
+    \(Members[Terrorist]\)], "Input"],
+
+Cell[BoxData[
+    \(\(Pos[Terrorist, #] &\) /@ %\)], "Input"],
+
+Cell[BoxData[
+    \(ContainerQ /@ {Bush, War, Terrorist}\)], "Input"],
+
+Cell[BoxData[
+    \(ElementType /@ {Bush, War}\)], "Input"],
+
+Cell["Constructors wich all take optional options:", "Text"],
+
+Cell[BoxData[
+    \(tn = {t = Terrorist[{True, 0}, n \[Rule] v], 
+        Terrorist[{False, 1}]}\)], "Input"],
+
+Cell[BoxData[
+    \(w = War[tn]\)], "Input"],
+
+Cell[BoxData[
+    \(b = Bush[{w, w}, a \[Rule] s]\)], "Input"],
+
+Cell[BoxData[
+    \(War[b]\)], "Input"],
+
+Cell[BoxData[
+    \(Terrorist[w]\)], "Input"],
+
+Cell[BoxData[
+    \(Terrorist[b]\)], "Input"],
+
+Cell["\<\
+Each type has two parts, Opts and Data. Data is a \"raw\" format:\
+\
+\>", "Text"],
+
+Cell[BoxData[
+    \(\({Opts[#], Data[#]} &\) /@ {w, b, t} // ColumnForm\)], "Input"],
+
+Cell["The \"default-constructor\" thus works like this:", "Text"],
+
+Cell[BoxData[
+    \(\(\(#[\([0]\)]\)[Data[#], Sequence @@ Opts[#]] &\) /@ {b, w, 
+        t}\)], "Input"],
+
+Cell["\<\
+But we usually never use this \"raw\" Data, only the Opts. Instead \
+we use the members in various ways:\
+\>", "Text"],
+
+Cell[BoxData[
+    \(Bombs /@ {b, w, t} // ColumnForm\)], "Input"],
+
+Cell[BoxData[
+    \(b[\([Bombs]\)]\)], "Input"],
+
+Cell[BoxData[
+    \(b[\([1, Bombs]\)]\)], "Input"],
+
+Cell[BoxData[
+    \(b[\([1, 2, Bombs]\)]\)], "Input"],
+
+Cell["Tests:", "Text"],
+
+Cell[BoxData[
+    \(\({BushQ[#], WarQ[#], TerroristQ[#]} &\) /@ {b, w, t} // 
+      ColumnForm\)], "Input"],
+
+Cell["\<\
+(Im not so sure if the TerroristQ-test is a valid test in \
+reality...)\
+\>", "Text"],
+
+Cell[BoxData[
+    \(\({\(DataQ[Bush]\)[Data[#]], \(DataQ[War]\)[
+              Data[#]], \(DataQ[Terrorist]\)[Data[#]]} &\) /@ {b, w, t} // 
+      ColumnForm\)], "Input"],
+
+Cell["Map and many other List-functions also works on Containers:", "Text"],
+
+Cell[BoxData[
+    \(Bombs /@ b\)], "Input"],
+
+Cell[BoxData[
+    \(Append[b, w]\)], "Input"],
+
+Cell[BoxData[
+    \(Length[%]\)], "Input"],
+
+Cell["Some, like Map, are extended:", "Text"],
+
+Cell[BoxData[
+    \(Map[2 + # &, b, Bombs]\)], "Input"],
+
+Cell[BoxData[
+    \(Bombs /@ %\)], "Input"],
+
+Cell["\<\
+Until I write more documentation the best way to find out about all \
+List-functions for Containers is to look inside Type.m\
+\>", "Text"]
 }, Open  ]],
 
 Cell[CellGroupData[{
 
-Cell["Sound", "Subtitle"],
+Cell["Notes on Midi.m", "Subtitle"],
 
-Cell["todo", "Text"]
+Cell["\<\
+Tidy[_Track] sorts the events and add/fix the EOT for the track.
+Tidy[_Midi] calls Tidy for each track.
+Tidy[_TempoTrack] sorts the tempos for the tempo-track.\
+\>", "Text"],
+
+Cell["\<\
+Conversion- and extra- constructors:
+  Counterpoint[_Midi]
+  Counterpoint[_Track]
+  Event[_Tempo]
+  Midi[_Midi, opts___] is used to change time-unit
+  Sound[_Midi]
+  Tempo[_Event]
+  TempoTrack[_Track]
+  Track[_TempoTrack]\
+\>", "Text"],
+
+Cell["\<\
+Duration functions:
+  Duration[_Track]
+  Duration[_Midi]\
+\>", "Text"],
+
+Cell["\<\
+Show functions:
+  Duration[_Midi]\
+\>", "Text"]
 }, Open  ]],
 
 Cell[CellGroupData[{
 
-Cell["Patterns (as in design)", "Subtitle"],
+Cell["Notes on Note.m", "Subtitle"],
+
+Cell["Member PcV for a note is the list {PitchCode, Velocity}.", "Text"],
 
 Cell["\<\
-There are currently three \"domains\":
-  1: Midi, with subtype Track with subtype Event
-  2: Progression with subtype Chord with subtype Note, and Counterpoint with \
-subtype Melody with subtype Note
-  3: Sound with subtype Snippet\
+Duration functions:
+  Duration[_Chord], the duration is stored in its Opts-part rather in its \
+Data-part.
+  Duration[_Counterpoint]
+  Duration[_Melody]
+  Duration[_Progression]\
 \>", "Text"],
 
 Cell["\<\
-Progression, Counterpoint, Melody, Chord and Note does not have any \
-information or data concerning track-nr or channel-nr which are \
-Midi-specific.\
+Conversion-and extra-constructors:
+  Note[_] takes only PitchCode and uses Duration and Velocity from \
+Options[Note]  
+  Snippet[_Melody]
+  Sound[_Counterpoint]\
 \>", "Text"],
 
 Cell["\<\
-Each type T has default-values in its Options:
-  Options[T]\
+Show functions:
+  Show[_Melody]\
+\>", "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Notes on Sound.m", "Subtitle"],
+
+Cell["\<\
+Since Sound is a type that I don't own, the underlying logic for it \
+is somewhat messy, but it seem like Sound now acts as the rest of the \
+Containers.\
 \>", "Text"],
 
 Cell["\<\
-Each type T has functions for retrieving info and \"raw\" data:
-  Info[x_T]
-  Data[x_T]\
+Tidy[_Sound] makes sure even a monophonic Sound has a List \
+internally.\
 \>", "Text"],
 
 Cell["\<\
-Each type T has a test function for the whole type:
-  TypeQ[T]
-and one for the data:
-  DataQ[T]\
+Duration functions:
+  Duration[_Snippet]
+  Duration[_Sound]\
 \>", "Text"],
 
 Cell["\<\
-Each type T has a \"constructor\" that takes the output from Info \
-and Data as input:
-  T[Data[x], Sequence@@Info[x]]
-  T[d_?(DataQ[T]),opts___?OptionQ]
-(And sometimes versions that takes \"simplified data\" where the omitted data \
-is taken from Options[X])\
-\>", "Text"],
-
-Cell["\<\
-Most types T has a Duration-function:
-  Duration[x_T]\
-\>", "Text"],
-
-Cell["\<\
-Each type T with a subtype has functions like:
-  SubType[T]
-  SubType[x_T]\
-\>", "Text"],
-
-Cell["\<\
-Each type T that contains a subtype ST has \"constructors\" like:
-  T[{y__?(TypeQ[ST])},opts___?OptionQ]
-  T[y_?(TypeQ[ST]),opts___?OptionQ]
-and a \"constructor\" for its subtype:
-  ST[x_T]\
-\>", "Text"],
-
-Cell["\<\
-Each type T that contains a subtype ST has upvalues for functions \
-like:
-  Append[x_T, y_?(TypeQ[ST])]
-  Delete[x_T, n__]
-  Drop[x_T, n_]
-  Extract[x_T, n_Integer]
-  First[x_T]
-  Insert[x_T, y_?(TypeQ[ST]), n_Integer]
-  Last[x_T]
-  Length[x_T]
-  Map[f_, x_T]
-  MapIndexed[f_, x_T]
-  Most[x_T]
-  Part[x_T, n_Integer]
-  Prepend[x_T, y_?(TypeQ[ST])]
-  ReplacePart[x_T, y_?(TypeQ[ST]), n_Integer]
-  Rest[x_T]
-  Scan[f_, x_T]
-  Select[x_T, f_]
-  Take[x_T, n_]
-Unfortunately I havent found a way yet to trap and set an upvalue for an \
-expression like x[[n]]=expr.\
+Show functions:
+  Show[_Snippet]
+  Show[_Sound] (by the guys at Wolfram)\
 \>", "Text"]
 }, Open  ]]
 }, Open  ]]
@@ -382,80 +584,141 @@ Cell[1911, 61, 720, 16, 284, "Text"]
 
 Cell[CellGroupData[{
 Cell[2668, 82, 27, 0, 53, "Subtitle"],
-Cell[2698, 84, 1555, 27, 356, "Text"]
+Cell[2698, 84, 1633, 29, 392, "Text"]
 }, Closed]],
 
 Cell[CellGroupData[{
-Cell[4290, 116, 27, 0, 53, "Subtitle"],
-Cell[4320, 118, 658, 13, 194, "Text"]
+Cell[4368, 118, 27, 0, 53, "Subtitle"],
+Cell[4398, 120, 658, 13, 194, "Text"]
 }, Closed]],
 
 Cell[CellGroupData[{
-Cell[5015, 136, 24, 0, 53, "Subtitle"],
-Cell[5042, 138, 117, 3, 32, "Text"],
-Cell[5162, 143, 80, 2, 27, "Input",
+Cell[5093, 138, 24, 0, 53, "Subtitle"],
+Cell[5120, 140, 117, 3, 32, "Text"],
+Cell[5240, 145, 80, 2, 27, "Input",
   InitializationCell->True],
-Cell[5245, 147, 37, 0, 32, "Text"],
-Cell[5285, 149, 84, 2, 27, "Input",
+Cell[5323, 149, 37, 0, 32, "Text"],
+Cell[5363, 151, 84, 2, 27, "Input",
   InitializationCell->True],
-Cell[5372, 153, 92, 3, 32, "Text"],
-Cell[5467, 158, 72, 2, 27, "Input",
+Cell[5450, 155, 92, 3, 32, "Text"],
+Cell[5545, 160, 72, 2, 27, "Input",
   InitializationCell->True],
-Cell[5542, 162, 70, 0, 32, "Text"],
-Cell[5615, 164, 112, 2, 27, "Input",
+Cell[5620, 164, 70, 0, 32, "Text"],
+Cell[5693, 166, 112, 2, 27, "Input",
   InitializationCell->True],
-Cell[5730, 168, 775, 13, 75, "Input",
+Cell[5808, 170, 775, 13, 75, "Input",
   InitializationCell->True],
-Cell[6508, 183, 67, 0, 32, "Text"],
-Cell[6578, 185, 166, 3, 43, "Input",
+Cell[6586, 185, 67, 0, 32, "Text"],
+Cell[6656, 187, 166, 3, 43, "Input",
   InitializationCell->True]
 }, Closed]],
 
 Cell[CellGroupData[{
-Cell[6781, 193, 40, 0, 53, "Subtitle"],
-Cell[6824, 195, 51, 0, 32, "Text"],
-Cell[6878, 197, 63, 1, 27, "Input"],
-Cell[6944, 200, 43, 0, 32, "Text"],
-Cell[6990, 202, 40, 1, 27, "Input"],
-Cell[7033, 205, 33, 0, 32, "Text"],
-Cell[7069, 207, 42, 1, 27, "Input"],
-Cell[7114, 210, 42, 0, 32, "Text"],
-Cell[7159, 212, 44, 1, 27, "Input"],
-Cell[7206, 215, 44, 0, 32, "Text"],
-Cell[7253, 217, 80, 1, 27, "Input"],
-Cell[7336, 220, 145, 3, 32, "Text"],
-Cell[7484, 225, 48, 1, 27, "Input"],
-Cell[7535, 228, 31, 0, 32, "Text"],
-Cell[7569, 230, 57, 1, 27, "Input"]
+Cell[6859, 195, 40, 0, 53, "Subtitle"],
+Cell[6902, 197, 51, 0, 32, "Text"],
+Cell[6956, 199, 63, 1, 27, "Input"],
+Cell[7022, 202, 24, 0, 32, "Text"],
+Cell[7049, 204, 48, 1, 27, "Input"],
+Cell[7100, 207, 31, 0, 32, "Text"],
+Cell[7134, 209, 57, 1, 27, "Input"]
 }, Open  ]],
 
 Cell[CellGroupData[{
-Cell[7663, 236, 24, 0, 51, "Subtitle"],
-Cell[7690, 238, 20, 0, 32, "Text"]
+Cell[7228, 215, 56, 0, 51, "Subtitle"],
+Cell[7287, 217, 32, 0, 32, "Text"],
+Cell[7322, 219, 63, 1, 27, "Input"],
+Cell[7388, 222, 56, 0, 32, "Text"],
+Cell[7447, 224, 69, 1, 27, "Input"],
+Cell[7519, 227, 31, 0, 32, "Text"],
+Cell[7553, 229, 45, 1, 27, "Input"],
+Cell[7601, 232, 51, 0, 32, "Text"],
+Cell[7655, 234, 54, 1, 27, "Input"],
+Cell[7712, 237, 54, 0, 32, "Text"],
+Cell[7769, 239, 49, 1, 27, "Input"],
+Cell[7821, 242, 63, 0, 32, "Text"],
+Cell[7887, 244, 80, 1, 27, "Input"],
+Cell[7970, 247, 49, 0, 32, "Text"],
+Cell[8022, 249, 51, 1, 27, "Input"],
+Cell[8076, 252, 41, 0, 32, "Text"],
+Cell[8120, 254, 54, 1, 27, "Input"],
+Cell[8177, 257, 39, 0, 32, "Text"],
+Cell[8219, 259, 46, 1, 27, "Input"],
+Cell[8268, 262, 24, 0, 32, "Text"],
+Cell[8295, 264, 40, 1, 27, "Input"]
 }, Open  ]],
 
 Cell[CellGroupData[{
-Cell[7747, 243, 24, 0, 51, "Subtitle"],
-Cell[7774, 245, 20, 0, 32, "Text"]
+Cell[8372, 270, 42, 0, 51, "Subtitle"],
+Cell[8417, 272, 130, 3, 32, "Text"],
+Cell[8550, 277, 369, 8, 122, "Text"],
+Cell[8922, 287, 385, 7, 50, "Text"],
+Cell[9310, 296, 149, 3, 32, "Text"],
+Cell[9462, 301, 562, 9, 68, "Text"],
+Cell[10027, 312, 293, 6, 50, "Text"],
+Cell[10323, 320, 62, 0, 32, "Text"],
+Cell[10388, 322, 92, 3, 32, "Text"],
+Cell[10483, 327, 110, 2, 27, "Input"],
+Cell[10596, 331, 166, 5, 32, "Text"],
+Cell[10765, 338, 64, 1, 27, "Input"],
+Cell[10832, 341, 59, 1, 27, "Input"],
+Cell[10894, 344, 121, 3, 32, "Text"],
+Cell[11018, 349, 40, 0, 32, "Text"],
+Cell[11061, 351, 51, 1, 27, "Input"],
+Cell[11115, 354, 61, 1, 27, "Input"],
+Cell[11179, 357, 69, 1, 27, "Input"],
+Cell[11251, 360, 59, 1, 27, "Input"],
+Cell[11313, 363, 60, 0, 32, "Text"],
+Cell[11376, 365, 109, 2, 27, "Input"],
+Cell[11488, 369, 44, 1, 27, "Input"],
+Cell[11535, 372, 62, 1, 27, "Input"],
+Cell[11600, 375, 39, 1, 27, "Input"],
+Cell[11642, 378, 45, 1, 27, "Input"],
+Cell[11690, 381, 45, 1, 27, "Input"],
+Cell[11738, 384, 91, 3, 32, "Text"],
+Cell[11832, 389, 84, 1, 27, "Input"],
+Cell[11919, 392, 65, 0, 32, "Text"],
+Cell[11987, 394, 105, 2, 27, "Input"],
+Cell[12095, 398, 128, 3, 32, "Text"],
+Cell[12226, 403, 65, 1, 27, "Input"],
+Cell[12294, 406, 47, 1, 27, "Input"],
+Cell[12344, 409, 50, 1, 27, "Input"],
+Cell[12397, 412, 53, 1, 27, "Input"],
+Cell[12453, 415, 22, 0, 32, "Text"],
+Cell[12478, 417, 107, 2, 27, "Input"],
+Cell[12588, 421, 95, 3, 32, "Text"],
+Cell[12686, 426, 170, 3, 27, "Input"],
+Cell[12859, 431, 75, 0, 32, "Text"],
+Cell[12937, 433, 43, 1, 27, "Input"],
+Cell[12983, 436, 45, 1, 27, "Input"],
+Cell[13031, 439, 42, 1, 27, "Input"],
+Cell[13076, 442, 45, 0, 32, "Text"],
+Cell[13124, 444, 55, 1, 27, "Input"],
+Cell[13182, 447, 43, 1, 27, "Input"],
+Cell[13228, 450, 148, 3, 32, "Text"]
 }, Open  ]],
 
 Cell[CellGroupData[{
-Cell[7831, 250, 25, 0, 51, "Subtitle"],
-Cell[7859, 252, 20, 0, 32, "Text"]
+Cell[13413, 458, 35, 0, 51, "Subtitle"],
+Cell[13451, 460, 183, 4, 68, "Text"],
+Cell[13637, 466, 245, 10, 176, "Text"],
+Cell[13885, 478, 80, 4, 68, "Text"],
+Cell[13968, 484, 57, 3, 50, "Text"]
 }, Open  ]],
 
 Cell[CellGroupData[{
-Cell[7916, 257, 43, 0, 51, "Subtitle"],
-Cell[7962, 259, 255, 6, 86, "Text"],
-Cell[8220, 267, 174, 4, 32, "Text"],
-Cell[8397, 273, 83, 3, 50, "Text"],
-Cell[8483, 278, 111, 4, 68, "Text"],
-Cell[8597, 284, 119, 5, 86, "Text"],
-Cell[8719, 291, 283, 7, 86, "Text"],
-Cell[9005, 300, 77, 3, 50, "Text"],
-Cell[9085, 305, 98, 4, 68, "Text"],
-Cell[9186, 311, 213, 6, 104, "Text"],
-Cell[9402, 319, 583, 23, 374, "Text"]
+Cell[14062, 492, 35, 0, 51, "Subtitle"],
+Cell[14100, 494, 72, 0, 32, "Text"],
+Cell[14175, 496, 201, 7, 104, "Text"],
+Cell[14379, 505, 185, 6, 86, "Text"],
+Cell[14567, 513, 55, 3, 50, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[14659, 521, 36, 0, 51, "Subtitle"],
+Cell[14698, 523, 177, 4, 32, "Text"],
+Cell[14878, 529, 96, 3, 32, "Text"],
+Cell[14977, 534, 83, 4, 68, "Text"],
+Cell[15063, 540, 96, 4, 68, "Text"]
 }, Open  ]]
 }, Open  ]]
 }
