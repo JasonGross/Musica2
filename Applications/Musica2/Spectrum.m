@@ -38,7 +38,6 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 BeginPackage["Musica2`Spectrum`",
   {
-    (*"Miscellaneous`Audio`",*)
     "Musica2`Common`",
     "Musica2`Sound`",
     "Musica2`Type`",
