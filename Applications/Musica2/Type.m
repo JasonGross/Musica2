@@ -209,7 +209,13 @@ DefineElement[T_Symbol, P_, D_, K_] :=
       Module[{f = s, y},
         While[0 < Length[f],
           y = f[[1]];
-          If[! OrderedQ[{y[x1], y[x2]}], Return[False]];
+          If[OrderedQ[{y[x1], y[x2]}],
+            If[y[x1] =!= y[x2],
+              Return[True]
+              ],
+            Return[False]
+            ];
+          (*If[! OrderedQ[{y[x1], y[x2]}], Return[False]];*)
           f = Drop[f, 1];
           ];
         True

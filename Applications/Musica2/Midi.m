@@ -177,8 +177,8 @@ Tidy[Midi] = Module[{r = #,eot = Duration[#]},
   ]&
 
 Tidy[Track] = Module[{r = #,eot},
+  r = Sort[r,{EventTime,EventType}];
   r = Event[r];
-  r = Sort[r,OrderedQ[#1,#2,{EventTime,EventType}]&];
   eot = EventTime[r[[-1]]];
   r = Select[r,(EventType[#]=!=EventTypeEOT)&];
   r = Append[r,Event[{eot,EOT}]];
@@ -656,6 +656,15 @@ WriteTrack[f_,t_]:=
     WriteBinary[f,w,ByteConversion->Identity]
     ]
 
+Midi /: TestSuite[Midi] = Join[TestSuite[Midi],{
+  TestCase[Module[{o, c},
+    Export["tmp.mid", "almost empty", "Text"];
+    o = Import["Musica2/Documentation/Data/cor.mid", Midi];
+    Export["tmp.mid", o];
+    c = Import["tmp.mid", Midi]; 
+    PitchCode /@ Melody[o] === PitchCode /@ Melody[c]], True]
+  }]
+  
 End[]
 
 Protect[
