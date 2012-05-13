@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* :Title: Setup *)
 
 (* :Summary: Functions for Setup, You should not need them really *)
@@ -29,6 +31,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 (* :Context: Musica2`Setup` *)
 
 (* :History:
+  2012-05-13  jgross :  updated for Mathematica 8
   2005-02-16  bch :  initiated usage of Usage ;-)
   2005-02-12  bch :  renamed DurVal.m to ValueObject.m
   2005-01-25  bch :  renamed pkgs to Packages and made it public
@@ -54,7 +57,7 @@ Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 (* :Keywords: midi, music, sound *)
 
-(* :Mathematica Version: 5.0 *)
+(* :Mathematica Version: 8.0 *)
 
 BeginPackage["Musica2`Setup`",
   {
@@ -153,3 +156,6 @@ Protect[
   ];
 
 EndPackage[]
+
+
+
